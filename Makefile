@@ -20,7 +20,7 @@ build:
 	go build -v -o $(BIN) -ldflags "$(LDFLAGS)" ./cmd/app
 
 run: build
-	$(BIN) -config ./configs/monitor.yaml
+	$(BIN) -config ./configs/config.yaml
 
 test:
 	go test -race ./internal/...
