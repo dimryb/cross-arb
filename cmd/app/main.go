@@ -19,6 +19,11 @@ func init() {
 func main() {
 	flag.Parse()
 
+	printVersion()
+	if flag.Arg(0) == "version" {
+		return
+	}
+
 	cfg, err := config.NewConfig(configPath)
 	if err != nil {
 		log.Fatalf("Config error: %s", err)
