@@ -1,13 +1,16 @@
 package main
 
 import (
+	"context"
 	"flag"
-	"fmt"
 	"log"
+	"os/signal"
+	"syscall"
 
 	"github.com/dimryb/cross-arb/internal/app"
 	"github.com/dimryb/cross-arb/internal/config"
 	"github.com/dimryb/cross-arb/internal/logger"
+	"github.com/dimryb/cross-arb/internal/service"
 )
 
 var configPath string
@@ -29,12 +32,19 @@ func main() {
 		log.Fatalf("Config error: %s", err)
 	}
 
-	fmt.Println("config", cfg)
+	ctx, cancel := signal.NotifyContext(context.Background(),
+		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+	defer cancel()
 
 	logg := logger.New(cfg.Log.Level)
 	application := app.NewApp(logg)
-	_ = application
+	arbitrageService := service.NewArbitrageService(ctx, application, logg, cfg)
 
 	logg.Info("Starting app...")
-	logg.Info("Stopped gracefully")
+	if err = arbitrageService.Run(); err != nil {
+		logg.Errorf("Arbitrage service stopped with error: %v", err)
+		cancel()
+	} else {
+		logg.Infof("Arbitrage service stopped gracefully")
+	}
 }
