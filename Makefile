@@ -30,7 +30,7 @@ install-lint-deps:
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | \
 	sh -s -- -b $(GO_PATH)/bin v1.64.8
 
-
 lint: install-lint-deps
 	golangci-lint run --config golangci.yml ./...
 
+.PHONY: build run test install-lint-deps lint
