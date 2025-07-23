@@ -1,4 +1,4 @@
-name: System-monitor tests
+name: cross-arb tests
 
 on:
   push:
