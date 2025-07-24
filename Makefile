@@ -20,7 +20,10 @@ build:
 	go build -v -o $(BIN) -ldflags "$(LDFLAGS)" ./cmd/app
 
 run: build
-	$(BIN) -config ./configs/monitor.yaml
+	$(BIN) -config ./configs/config.yaml
+
+version: build
+	$(BIN) version
 
 test:
 	go test -race ./internal/...
@@ -33,4 +36,4 @@ install-lint-deps:
 lint: install-lint-deps
 	golangci-lint run --config golangci.yml ./...
 
-.PHONY: build run test install-lint-deps lint
+.PHONY: build run version test install-lint-deps lint
