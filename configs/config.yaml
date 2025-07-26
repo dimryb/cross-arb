@@ -1,2 +1,9 @@
 log:
   level: 'debug'
+
+exchanges:
+  mexc:
+    apiKey: ""
+    secretKey: ""
+    baseUrl: "https://api.mexc.com/api/v3"
+    enabled: true
