@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
+	spotlist "github.com/dimryb/cross-arb/internal/api/mexc/spot"
 	"github.com/dimryb/cross-arb/internal/config"
 	i "github.com/dimryb/cross-arb/internal/interface"
 )
@@ -36,15 +38,16 @@ func (m *Arbitrage) Run() error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		ticker := time.NewTicker(time.Second)
+		params := `{"symbol":"SOLUSDT"}`
 
 		for {
 			select {
 			case <-m.ctx.Done():
 				return
-
-			default:
-				// Здесь выполняется код в бесконечном цикле сервиса в отдельной горутине
-				time.Sleep(1 * time.Second) // Чтобы не грузить за зря процессор, убрать!
+			case <-ticker.C:
+				BookTicker := spotlist.BookTicker(params)
+				fmt.Println("Получили:", BookTicker)
 			}
 		}
 	}()
