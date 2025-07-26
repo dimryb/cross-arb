@@ -82,7 +82,7 @@ func (m *Arbitrage) Run() error {
 							results[index] = Result{
 								Symbol: sym,
 								Data:   BookTicker{},
-								Error:  fmt.Errorf("failed to parse JSON: %v", err),
+								Error:  fmt.Errorf("failed to parse JSON: %w", err),
 							}
 							return
 						}
