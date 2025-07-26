@@ -181,9 +181,9 @@ func PrivatePut(urlStr string, jsonParams string) interface{} { //nolint: dupl
 	return resp
 }
 
-// 格式化参数字符串.
+// JSONToParamStr форматирует строку параметров из JSON.
 func JSONToParamStr(jsonParams string) string {
-	// 转化json参数->参数字符串
+	// Преобразуем параметры из JSON в строку параметров
 	var paramsarr []string //nolint:prealloc
 	var arritem string
 	m := make(map[string]string)
@@ -197,13 +197,13 @@ func JSONToParamStr(jsonParams string) string {
 		arritem = fmt.Sprintf("%s=%s", key, value)
 		paramsarr = append(paramsarr, arritem)
 		i++
-		fmt.Println("遍历：", i, "总共", len(m))
+		fmt.Println("Итерация: ", i, "всего", len(m))
 		if i > len(m) {
 			break
 		}
 	}
 	paramsstr := strings.Join(paramsarr, "&")
-	fmt.Println("参数字符串：", paramsstr)
+	fmt.Println("Строка параметров:", paramsstr)
 	return paramsstr
 }
 
