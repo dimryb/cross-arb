@@ -6,6 +6,7 @@ import (
 	"github.com/dimryb/cross-arb/internal/api/mexc/config"
 	"github.com/dimryb/cross-arb/internal/api/mexc/utils"
 	i "github.com/dimryb/cross-arb/internal/interface"
+	"github.com/go-resty/resty/v2"
 )
 
 type SpotClient struct {
@@ -123,7 +124,7 @@ func Price(jsonParams string) interface{} {
 }
 
 // BookTicker ### 12. Текущие лучшие цены по инструменту (Symbol Order Book Ticker).
-func (s *SpotClient) BookTicker(jsonParams string) interface{} {
+func (s *SpotClient) BookTicker(jsonParams string) *resty.Response {
 	caseURL := "/ticker/bookTicker"
 	requestURL := s.BaseURL + caseURL
 	s.log.Debug("request", "URL", requestURL)

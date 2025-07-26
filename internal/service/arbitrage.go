@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
@@ -34,8 +35,16 @@ func NewArbitrageService(
 
 type Result struct {
 	Symbol string
-	Data   interface{}
+	Data   BookTicker
 	Error  error
+}
+
+type BookTicker struct {
+	Symbol   string `json:"symbol"`
+	BidPrice string `json:"bidPrice"`
+	BidQty   string `json:"bidQty"`
+	AskPrice string `json:"askPrice"`
+	AskQty   string `json:"askQty"`
 }
 
 func (m *Arbitrage) Run() error {
@@ -65,10 +74,22 @@ func (m *Arbitrage) Run() error {
 						defer wgSymbols.Done()
 
 						params := fmt.Sprintf(`{"symbol":"%s"}`, sym)
-						data := spot.BookTicker(params)
+						resp := spot.BookTicker(params)
+
+						var tickerData BookTicker
+						err := json.Unmarshal(resp.Body(), &tickerData)
+						if err != nil {
+							results[index] = Result{
+								Symbol: sym,
+								Data:   BookTicker{},
+								Error:  fmt.Errorf("failed to parse JSON: %v", err),
+							}
+							return
+						}
+
 						results[index] = Result{
 							Symbol: sym,
-							Data:   data,
+							Data:   tickerData,
 							Error:  nil, // TODO: можно улучшить: если BookTicker возвращает err
 						}
 					}(ind, symbol)
@@ -78,7 +99,12 @@ func (m *Arbitrage) Run() error {
 
 				fmt.Printf("=== Обновление цен (%s) ===\n", time.Now().Format("15:04:05.000"))
 				for _, r := range results {
-					fmt.Printf("  [%s] -> %v\n", r.Symbol, r.Data)
+					fmt.Printf(
+						"  [%s] -> покупка: %s (%s) продажа: %s (%s)\n",
+						r.Data.Symbol,
+						r.Data.BidPrice, r.Data.BidQty,
+						r.Data.AskPrice, r.Data.AskQty,
+					)
 				}
 			}
 		}

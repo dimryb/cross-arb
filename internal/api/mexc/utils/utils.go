@@ -16,7 +16,7 @@ import (
 )
 
 // PublicGet публичный GET-запрос.
-func PublicGet(urlStr string, jsonParams string) interface{} {
+func PublicGet(urlStr string, jsonParams string) *resty.Response {
 	var path string
 	if jsonParams == "" {
 		path = urlStr
