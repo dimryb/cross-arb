@@ -15,6 +15,7 @@ linters-settings:
           - $gostd
           - github.com/ilyakaznacheev/cleanenv
           - github.com/dimryb/cross-arb
+          - github.com/go-resty/resty/v2
       Test:
         files:
           - $test
