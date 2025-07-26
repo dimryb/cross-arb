@@ -11,6 +11,7 @@ type (
 	CrossArbConfig struct {
 		Log       Log                 `yaml:"log"`
 		Exchanges map[string]Exchange `yaml:"exchanges"`
+		Symbols   []string            `yaml:"symbols"`
 	}
 
 	Log struct {

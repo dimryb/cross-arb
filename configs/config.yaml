@@ -7,3 +7,9 @@ exchanges:
     secretKey: ""
     baseUrl: "https://api.mexc.com/api/v3"
     enabled: true
+
+symbols:
+  - SOLUSDT
+  - BTCUSDT
+  - ETHUSDT
+  - DOGEUSDT
