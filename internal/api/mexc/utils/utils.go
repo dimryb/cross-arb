@@ -15,7 +15,7 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-// 公共get请求.
+// PublicGet публичный GET-запрос.
 func PublicGet(urlStr string, jsonParams string) interface{} {
 	var path string
 	if jsonParams == "" {
@@ -23,14 +23,14 @@ func PublicGet(urlStr string, jsonParams string) interface{} {
 	} else {
 		strParams := JSONToParamStr(jsonParams)
 		path = urlStr + "?" + strParams
-		// fmt.Println("路径:", path)
+		// fmt.Println("Путь:", path)
 	}
-	// 创建请求
+	// Создаём запрос
 	client := resty.New()
-	// 发送请求
+	// Отправляем запрос
 	resp, err := client.R().Get(path)
 	if err != nil {
-		log.Fatal("请求报错：", err)
+		log.Fatal("Ошибка запроса:", err)
 	}
 
 	// fmt.Println("Response Info:", resp)
@@ -191,19 +191,19 @@ func JSONToParamStr(jsonParams string) string {
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Printf("map:%v\n", m)
+	// fmt.Printf("map:%v\n", m)
 	i := 0
 	for key, value := range m {
 		arritem = fmt.Sprintf("%s=%s", key, value)
 		paramsarr = append(paramsarr, arritem)
 		i++
-		fmt.Println("Итерация: ", i, "всего", len(m))
+		// fmt.Println("Итерация: ", i, "всего", len(m))
 		if i > len(m) {
 			break
 		}
 	}
 	paramsstr := strings.Join(paramsarr, "&")
-	fmt.Println("Строка параметров:", paramsstr)
+	// fmt.Println("Строка параметров:", paramsstr)
 	return paramsstr
 }
 

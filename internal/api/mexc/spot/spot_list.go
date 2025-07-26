@@ -114,7 +114,7 @@ func Price(jsonParams string) interface{} {
 func BookTicker(jsonParams string) interface{} {
 	caseURL := "/ticker/bookTicker"
 	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
+	// fmt.Println("requestURL:", requestURL)
 	response := utils.PublicGet(requestURL, jsonParams)
 	return response
 }
