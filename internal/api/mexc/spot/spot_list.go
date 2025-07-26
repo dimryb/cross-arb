@@ -5,13 +5,25 @@ import (
 
 	"github.com/dimryb/cross-arb/internal/api/mexc/config"
 	"github.com/dimryb/cross-arb/internal/api/mexc/utils"
+	i "github.com/dimryb/cross-arb/internal/interface"
 )
 
-// # 具体请求配置
+type SpotClient struct {
+	log     i.Logger
+	BaseURL string
+}
 
-// ## 行情接口 Market Data Endpoints
+func NewSpotClient(log i.Logger, baseURL string) *SpotClient {
+	return &SpotClient{
+		log:     log,
+		BaseURL: baseURL,
+	}
+}
 
-// ### 1 测试服务器连通性 Test Connectivity.
+// # Реализация API-запросов
+// ## Эндпоинты для получения рыночных данных (Market Data Endpoints)
+
+// Ping 1. Проверка подключения к серверу (Test Connectivity).
 func Ping(jsonParams string) interface{} {
 	caseURL := "/ping"
 	requestURL := config.BASE_URL + caseURL
@@ -20,7 +32,7 @@ func Ping(jsonParams string) interface{} {
 	return response
 }
 
-// ### 2 获取服务器时间 Check Server Time.
+// Time ### 2. Получить серверное время (Check Server Time).
 func Time(jsonParams string) interface{} {
 	caseURL := "/time"
 	requestURL := config.BASE_URL + caseURL
@@ -110,11 +122,11 @@ func Price(jsonParams string) interface{} {
 	return response
 }
 
-// ### 12 当前最优挂单 Symbol Order Book Ticker.
-func BookTicker(jsonParams string) interface{} {
+// BookTicker ### 12. Текущие лучшие цены по инструменту (Symbol Order Book Ticker).
+func (s *SpotClient) BookTicker(jsonParams string) interface{} {
 	caseURL := "/ticker/bookTicker"
-	requestURL := config.BASE_URL + caseURL
-	// fmt.Println("requestURL:", requestURL)
+	requestURL := s.BaseURL + caseURL
+	s.log.Debug("request", "URL", requestURL)
 	response := utils.PublicGet(requestURL, jsonParams)
 	return response
 }

@@ -35,6 +35,12 @@ func NewArbitrageService(
 func (m *Arbitrage) Run() error {
 	wg := &sync.WaitGroup{}
 
+	mexcCfg, ok := m.cfg.Exchanges["mexc"]
+	if !ok {
+		return fmt.Errorf("mexc exchange not configured")
+	}
+	spot := spotlist.NewSpotClient(m.log, mexcCfg.BaseURL)
+
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -46,7 +52,7 @@ func (m *Arbitrage) Run() error {
 			case <-m.ctx.Done():
 				return
 			case <-ticker.C:
-				BookTicker := spotlist.BookTicker(params)
+				BookTicker := spot.BookTicker(params)
 				fmt.Println("Получили:", BookTicker)
 			}
 		}
