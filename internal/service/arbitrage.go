@@ -97,24 +97,30 @@ func (m *Arbitrage) Run() error {
 	return nil
 }
 
-func getTicker(sc *spotlist.SpotClient, results []Result, index int, sym string) {
-	params := fmt.Sprintf(`{"symbol":"%s"}`, sym)
+func getTicker(sc *spotlist.SpotClient, results []Result, index int, symbol string) {
+	ticker, err := bookTicker(sc, symbol)
+	if err != nil {
+		results[index] = Result{
+			Symbol: symbol,
+			Data:   BookTicker{},
+			Error:  err,
+		}
+	}
+	results[index] = Result{
+		Symbol: symbol,
+		Data:   ticker,
+		Error:  nil,
+	}
+}
+
+func bookTicker(sc *spotlist.SpotClient, symbol string) (BookTicker, error) {
+	params := fmt.Sprintf(`{"symbol":"%s"}`, symbol)
 	resp := sc.BookTicker(params)
 
 	var tickerData BookTicker
 	err := json.Unmarshal(resp.Body(), &tickerData)
 	if err != nil {
-		results[index] = Result{
-			Symbol: sym,
-			Data:   BookTicker{},
-			Error:  fmt.Errorf("failed to parse JSON: %w", err),
-		}
-		return
+		return BookTicker{}, fmt.Errorf("failed to parse JSON: %w", err)
 	}
-
-	results[index] = Result{
-		Symbol: sym,
-		Data:   tickerData,
-		Error:  nil, // TODO: можно улучшить: если BookTicker возвращает err
-	}
+	return tickerData, nil
 }
