@@ -12,8 +12,15 @@ import (
 	"time"
 
 	"github.com/dimryb/cross-arb/internal/api/mexc/config"
+	i "github.com/dimryb/cross-arb/internal/interface"
 	"github.com/go-resty/resty/v2"
 )
+
+type Client struct {
+	APIKey    string
+	SecretKey string
+	Logger    i.Logger
+}
 
 // PublicGet публичный GET-запрос.
 func PublicGet(urlStr string, jsonParams string) *resty.Response {
