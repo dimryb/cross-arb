@@ -13,13 +13,15 @@ import (
 type SpotClient struct {
 	log     i.Logger
 	BaseURL string
+	client  *utils.Client
 }
 
 // NewSpotClient создаёт новый клиент для Spot API.
-func NewSpotClient(log i.Logger, baseURL string) *SpotClient {
+func NewSpotClient(log i.Logger, baseURL string, client *utils.Client) *SpotClient {
 	return &SpotClient{
 		log:     log,
 		BaseURL: baseURL,
+		client:  client,
 	}
 }
 
