@@ -492,159 +492,244 @@ func (s *SpotClient) QueryMxDeduct(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// ## 钱包接口 Wallet Endpoints
+// ## Кошелёк (Wallet Endpoints)
 
-// ### 1 查询币种信息 Query the currency information.
-func QueryCurrencyInfo(jsonParams string) interface{} {
+// QueryCurrencyInfo возвращает информацию о валюте.
+func (s *SpotClient) QueryCurrencyInfo(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/config/getall"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("QueryCurrencyInfo", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка QueryCurrencyInfo", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 2 提币 Withdraw.
-func Withdraw(jsonParams string) interface{} {
+// Withdraw выполняет вывод средств.
+func (s *SpotClient) Withdraw(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/withdraw/apply"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivatePost(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("Withdraw", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivatePost(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка Withdraw", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 3 取消提币 Cancel withdraw.
-func CancelWithdraw(jsonParams string) interface{} {
+// CancelWithdraw отменяет заявку на вывод.
+func (s *SpotClient) CancelWithdraw(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/withdraw"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateDelete(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("CancelWithdraw", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateDelete(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка CancelWithdraw", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 4 获取充值历史 Deposit History.
-func DepositHistory(jsonParams string) interface{} {
+// DepositHistory возвращает историю депозитов.
+func (s *SpotClient) DepositHistory(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/deposit/hisrec"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("DepositHistory", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка DepositHistory", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 5 获取提币历史 Withdraw History.
-func WithdrawHistory(jsonParams string) interface{} {
+// WithdrawHistory возвращает историю выводов.
+func (s *SpotClient) WithdrawHistory(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/withdraw/historyl"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("WithdrawHistory", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка WithdrawHistory", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 6 生成充值地址 Generate deposit address.
-func GenDepositAddress(jsonParams string) interface{} {
+// GenDepositAddress генерирует адрес депозита.
+func (s *SpotClient) GenDepositAddress(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/deposit/address"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivatePost(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("GenDepositAddress", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivatePost(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка GenDepositAddress", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 7 获取充值地址 Deposit Address.
-func DepositAddress(jsonParams string) interface{} {
+// DepositAddress возвращает адрес депозита.
+func (s *SpotClient) DepositAddress(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/deposit/address"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("DepositAddress", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка DepositAddress", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 8 获取提币地址 Withdraw Address.
-func WithdrawAddress(jsonParams string) interface{} {
+// WithdrawAddress возвращает адрес вывода.
+func (s *SpotClient) WithdrawAddress(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/withdraw/address"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("WithdrawAddress", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка WithdrawAddress", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 9 用户万向划转 User Universal Transfer.
-func Transfer(jsonParams string) interface{} {
+// Transfer выполняет универсальный перевод.
+func (s *SpotClient) Transfer(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/transfer"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivatePost(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("Transfer", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivatePost(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка Transfer", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 10 查询用户万向划转历史 Query User Universal Transfer History.
-func TransferHistory(jsonParams string) interface{} {
+// TransferHistory возвращает историю переводов.
+func (s *SpotClient) TransferHistory(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/transfer"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("TransferHistory", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка TransferHistory", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 11 查询用户万向划转历史（根据tranId） Query User Universal Transfer History （by tranId）.
-func TransferHistoryByID(jsonParams string) interface{} {
+// TransferHistoryByID возвращает перевод по tranId.
+func (s *SpotClient) TransferHistoryByID(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/transfer/tranId"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("TransferHistoryByID", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка TransferHistoryByID", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 12 获取小额资产可兑换列表 Get Assets That Can Be Converted Into MX.
-func ConvertList(jsonParams string) interface{} {
+// ConvertList возвращает список активов для конвертации.
+func (s *SpotClient) ConvertList(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/convert/list"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("ConvertList", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка ConvertList", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 13 小额资产兑换 Dust Transfer.
-func Convert(jsonParams string) interface{} {
+// Convert выполняет конвертацию мелких активов.
+func (s *SpotClient) Convert(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/convert"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivatePost(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("Convert", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivatePost(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка Convert", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 14 查询小额资产兑换历史 DustLog.
-func ConvertHistory(jsonParams string) interface{} {
+// ConvertHistory возвращает историю конвертаций.
+func (s *SpotClient) ConvertHistory(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/convert"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("ConvertHistory", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка ConvertHistory", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 15 获取ETF基础信息 Get ETF info.
-func ETFInfo(jsonParams string) interface{} {
+// ETFInfo возвращает информацию об ETF.
+func (s *SpotClient) ETFInfo(jsonParams string) (*resty.Response, error) {
 	caseURL := "/etf/info"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("ETFInfo", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка ETFInfo", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 16 用户站内转账 Internal Transfer.
-func InternalTransfer(jsonParams string) interface{} {
+// InternalTransfer выполняет внутренний перевод между пользователями.
+func (s *SpotClient) InternalTransfer(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/transfer/internal"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivatePost(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("InternalTransfer", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivatePost(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка InternalTransfer", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 17 用户站内转账历史 Internal Transfer History.
-func InternalTransferHistory(jsonParams string) interface{} {
+// InternalTransferHistory возвращает историю внутренних переводов.
+func (s *SpotClient) InternalTransferHistory(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/transfer/internal"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("InternalTransferHistory", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка InternalTransferHistory", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
 // ## WS ListenKey
