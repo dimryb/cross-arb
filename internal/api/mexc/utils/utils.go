@@ -195,16 +195,16 @@ func (c *Client) PrivatePut(urlStr string, jsonParams string) (*resty.Response, 
 
 // JSONToParamStr форматирует строку параметров из JSON.
 func JSONToParamStr(jsonParams string) string {
-	var paramsarr []string //nolint:prealloc
 	m := make(map[string]string)
 	err := json.Unmarshal([]byte(jsonParams), &m)
 	if err != nil {
 		return ""
 	}
+	params := make([]string, 0, len(m))
 	for key, value := range m {
-		paramsarr = append(paramsarr, fmt.Sprintf("%s=%s", key, value))
+		params = append(params, fmt.Sprintf("%s=%s", key, value))
 	}
-	return strings.Join(paramsarr, "&")
+	return strings.Join(params, "&")
 }
 
 // ParamsEncode кодирует строку как URL-параметры.
