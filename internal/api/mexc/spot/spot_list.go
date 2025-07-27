@@ -9,11 +9,13 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
+// SpotClient — клиент для работы с MEXC Spot API.
 type SpotClient struct {
 	log     i.Logger
 	BaseURL string
 }
 
+// NewSpotClient создаёт новый клиент для Spot API.
 func NewSpotClient(log i.Logger, baseURL string) *SpotClient {
 	return &SpotClient{
 		log:     log,
@@ -25,111 +27,99 @@ func NewSpotClient(log i.Logger, baseURL string) *SpotClient {
 // ## Эндпоинты для получения рыночных данных (Market Data Endpoints)
 
 // Ping 1. Проверка подключения к серверу (Test Connectivity).
-func Ping(jsonParams string) interface{} {
+func (s *SpotClient) Ping(jsonParams string) *resty.Response {
 	caseURL := "/ping"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PublicGet(requestURL, jsonParams)
-	return response
+	requestURL := s.BaseURL + caseURL
+	s.log.Debug("Ping request to MEXC", "url", requestURL, "params", jsonParams)
+	return utils.PublicGet(requestURL, jsonParams)
 }
 
-// Time ### 2. Получить серверное время (Check Server Time).
-func Time(jsonParams string) interface{} {
+// Time 2. Получить серверное время (Check Server Time).
+func (s *SpotClient) Time(jsonParams string) *resty.Response {
 	caseURL := "/time"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PublicGet(requestURL, jsonParams)
-	return response
+	requestURL := s.BaseURL + caseURL
+	s.log.Debug("Time request to MEXC", "url", requestURL, "params", jsonParams)
+	return utils.PublicGet(requestURL, jsonParams)
 }
 
-// ### 3 API交易对 API default symbol.
-func APISymbol(jsonParams string) interface{} {
+// APISymbol 3. Список торговых пар по умолчанию (API Default Symbol).
+func (s *SpotClient) APISymbol(jsonParams string) *resty.Response {
 	caseURL := "/defaultSymbols"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PublicGet(requestURL, jsonParams)
-	return response
+	requestURL := s.BaseURL + caseURL
+	s.log.Debug("API symbol request to MEXC", "url", requestURL, "params", jsonParams)
+	return utils.PublicGet(requestURL, jsonParams)
 }
 
-// ### 4 交易规范信息 Exchange Information.
-func ExchangeInfo(jsonParams string) interface{} {
+// ExchangeInfo 4. Информация о торгах (Exchange Information).
+func (s *SpotClient) ExchangeInfo(jsonParams string) *resty.Response {
 	caseURL := "/exchangeInfo"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PublicGet(requestURL, jsonParams)
-	return response
+	requestURL := s.BaseURL + caseURL
+	s.log.Debug("Exchange info request to MEXC", "url", requestURL, "params", jsonParams)
+	return utils.PublicGet(requestURL, jsonParams)
 }
 
-// ### 5 深度信息 Depth.
-func Depth(jsonParams string) interface{} {
+// Depth 5. Глубина стакана (Depth).
+func (s *SpotClient) Depth(jsonParams string) *resty.Response {
 	caseURL := "/depth"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PublicGet(requestURL, jsonParams)
-	return response
+	requestURL := s.BaseURL + caseURL
+	s.log.Debug("Order book depth request to MEXC", "url", requestURL, "params", jsonParams)
+	return utils.PublicGet(requestURL, jsonParams)
 }
 
-// ### 6 近期成交列表 Recent Trades List.
-func Trades(jsonParams string) interface{} {
+// Trades 6. Список последних сделок (Recent Trades List).
+func (s *SpotClient) Trades(jsonParams string) *resty.Response {
 	caseURL := "/trades"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PublicGet(requestURL, jsonParams)
-	return response
+	requestURL := s.BaseURL + caseURL
+	s.log.Debug("Recent trades request to MEXC", "url", requestURL, "params", jsonParams)
+	return utils.PublicGet(requestURL, jsonParams)
 }
 
-// ### 7 近期成交列表（归集） Aggregate Trades List.
-func AggTrades(jsonParams string) interface{} {
+// AggTrades 7. Агрегированный список сделок (Aggregate Trades List).
+func (s *SpotClient) AggTrades(jsonParams string) *resty.Response {
 	caseURL := "/aggTrades"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PublicGet(requestURL, jsonParams)
-	return response
+	requestURL := s.BaseURL + caseURL
+	s.log.Debug("Aggregate trades request to MEXC", "url", requestURL, "params", jsonParams)
+	return utils.PublicGet(requestURL, jsonParams)
 }
 
-// ### 8 K线数据 K-line Data.
-func Kline(jsonParams string) interface{} {
+// Kline 8. Данные свечей (K-line Data).
+func (s *SpotClient) Kline(jsonParams string) *resty.Response {
 	caseURL := "/klines"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PublicGet(requestURL, jsonParams)
-	return response
+	requestURL := s.BaseURL + caseURL
+	s.log.Debug("K-line data request to MEXC", "url", requestURL, "params", jsonParams)
+	return utils.PublicGet(requestURL, jsonParams)
 }
 
-// ### 9 当前平均价格 Current Average Price.
-func AvgPrice(jsonParams string) interface{} {
+// AvgPrice 9. Средняя цена за период (Current Average Price).
+func (s *SpotClient) AvgPrice(jsonParams string) *resty.Response {
 	caseURL := "/avgPrice"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PublicGet(requestURL, jsonParams)
-	return response
+	requestURL := s.BaseURL + caseURL
+	s.log.Debug("Average price request to MEXC", "url", requestURL, "params", jsonParams)
+	return utils.PublicGet(requestURL, jsonParams)
 }
 
-// ### 10 24小时价格滚动情况 24hr Ticker Price Change Statistics.
-func Ticker24hr(jsonParams string) interface{} {
+// Ticker24hr 10. Статистика изменения цены за 24 часа (24hr Ticker Price Change Statistics).
+func (s *SpotClient) Ticker24hr(jsonParams string) *resty.Response {
 	caseURL := "/ticker/24hr"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PublicGet(requestURL, jsonParams)
-	return response
+	requestURL := s.BaseURL + caseURL
+	s.log.Debug("24hr ticker stats request to MEXC", "url", requestURL, "params", jsonParams)
+	return utils.PublicGet(requestURL, jsonParams)
 }
 
-// ### 11 最新价格 Symbol Price Ticker.
-func Price(jsonParams string) interface{} {
+// Price 11. Текущая цена символа (Symbol Price Ticker).
+func (s *SpotClient) Price(jsonParams string) *resty.Response {
 	caseURL := "/ticker/price"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PublicGet(requestURL, jsonParams)
-	return response
+	requestURL := s.BaseURL + caseURL
+	s.log.Debug("Symbol price request to MEXC", "url", requestURL, "params", jsonParams)
+	return utils.PublicGet(requestURL, jsonParams)
 }
 
-// BookTicker ### 12. Текущие лучшие цены по инструменту (Symbol Order Book Ticker).
+// BookTicker 12. Лучшие цены в стакане (Symbol Order Book Ticker).
 func (s *SpotClient) BookTicker(jsonParams string) *resty.Response {
 	caseURL := "/ticker/bookTicker"
 	requestURL := s.BaseURL + caseURL
-	s.log.Debug("request", "URL", requestURL)
-	response := utils.PublicGet(requestURL, jsonParams)
-	return response
+	s.log.Debug("Order book ticker request to MEXC", "url", requestURL, "params", jsonParams)
+	return utils.PublicGet(requestURL, jsonParams)
 }
 
 // ## 母子账户接口 Sub-Account Endpoints
