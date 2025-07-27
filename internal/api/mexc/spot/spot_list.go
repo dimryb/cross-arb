@@ -29,99 +29,183 @@ func NewSpotClient(log i.Logger, baseURL string, client *utils.Client) *SpotClie
 // ## Эндпоинты для получения рыночных данных (Market Data Endpoints)
 
 // Ping 1. Проверка подключения к серверу (Test Connectivity).
-func (s *SpotClient) Ping(jsonParams string) *resty.Response {
+func (s *SpotClient) Ping(jsonParams string) (*resty.Response, error) {
 	caseURL := "/ping"
 	requestURL := s.BaseURL + caseURL
 	s.log.Debug("Ping request to MEXC", "url", requestURL, "params", jsonParams)
-	return utils.PublicGet(requestURL, jsonParams)
+
+	resp, err := s.client.PublicGet(requestURL, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка в Ping", "error", err)
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 // Time 2. Получить серверное время (Check Server Time).
-func (s *SpotClient) Time(jsonParams string) *resty.Response {
+func (s *SpotClient) Time(jsonParams string) (*resty.Response, error) {
 	caseURL := "/time"
 	requestURL := s.BaseURL + caseURL
 	s.log.Debug("Time request to MEXC", "url", requestURL, "params", jsonParams)
-	return utils.PublicGet(requestURL, jsonParams)
+
+	resp, err := s.client.PublicGet(requestURL, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка в Time", "error", err)
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 // APISymbol 3. Список торговых пар по умолчанию (API Default Symbol).
-func (s *SpotClient) APISymbol(jsonParams string) *resty.Response {
+func (s *SpotClient) APISymbol(jsonParams string) (*resty.Response, error) {
 	caseURL := "/defaultSymbols"
 	requestURL := s.BaseURL + caseURL
 	s.log.Debug("API symbol request to MEXC", "url", requestURL, "params", jsonParams)
-	return utils.PublicGet(requestURL, jsonParams)
+
+	resp, err := s.client.PublicGet(requestURL, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка в APISymbol", "error", err)
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 // ExchangeInfo 4. Информация о торгах (Exchange Information).
-func (s *SpotClient) ExchangeInfo(jsonParams string) *resty.Response {
+func (s *SpotClient) ExchangeInfo(jsonParams string) (*resty.Response, error) {
 	caseURL := "/exchangeInfo"
 	requestURL := s.BaseURL + caseURL
 	s.log.Debug("Exchange info request to MEXC", "url", requestURL, "params", jsonParams)
-	return utils.PublicGet(requestURL, jsonParams)
+
+	resp, err := s.client.PublicGet(requestURL, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка в ExchangeInfo", "error", err)
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 // Depth 5. Глубина стакана (Depth).
-func (s *SpotClient) Depth(jsonParams string) *resty.Response {
+func (s *SpotClient) Depth(jsonParams string) (*resty.Response, error) {
 	caseURL := "/depth"
 	requestURL := s.BaseURL + caseURL
 	s.log.Debug("Order book depth request to MEXC", "url", requestURL, "params", jsonParams)
-	return utils.PublicGet(requestURL, jsonParams)
+
+	resp, err := s.client.PublicGet(requestURL, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка в Depth", "error", err)
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 // Trades 6. Список последних сделок (Recent Trades List).
-func (s *SpotClient) Trades(jsonParams string) *resty.Response {
+func (s *SpotClient) Trades(jsonParams string) (*resty.Response, error) {
 	caseURL := "/trades"
 	requestURL := s.BaseURL + caseURL
 	s.log.Debug("Recent trades request to MEXC", "url", requestURL, "params", jsonParams)
-	return utils.PublicGet(requestURL, jsonParams)
+
+	resp, err := s.client.PublicGet(requestURL, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка в Trades", "error", err)
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 // AggTrades 7. Агрегированный список сделок (Aggregate Trades List).
-func (s *SpotClient) AggTrades(jsonParams string) *resty.Response {
+func (s *SpotClient) AggTrades(jsonParams string) (*resty.Response, error) {
 	caseURL := "/aggTrades"
 	requestURL := s.BaseURL + caseURL
 	s.log.Debug("Aggregate trades request to MEXC", "url", requestURL, "params", jsonParams)
-	return utils.PublicGet(requestURL, jsonParams)
+
+	resp, err := s.client.PublicGet(requestURL, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка в AggTrades", "error", err)
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 // Kline 8. Данные свечей (K-line Data).
-func (s *SpotClient) Kline(jsonParams string) *resty.Response {
+func (s *SpotClient) Kline(jsonParams string) (*resty.Response, error) {
 	caseURL := "/klines"
 	requestURL := s.BaseURL + caseURL
 	s.log.Debug("K-line data request to MEXC", "url", requestURL, "params", jsonParams)
-	return utils.PublicGet(requestURL, jsonParams)
+
+	resp, err := s.client.PublicGet(requestURL, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка в Kline", "error", err)
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 // AvgPrice 9. Средняя цена за период (Current Average Price).
-func (s *SpotClient) AvgPrice(jsonParams string) *resty.Response {
+func (s *SpotClient) AvgPrice(jsonParams string) (*resty.Response, error) {
 	caseURL := "/avgPrice"
 	requestURL := s.BaseURL + caseURL
 	s.log.Debug("Average price request to MEXC", "url", requestURL, "params", jsonParams)
-	return utils.PublicGet(requestURL, jsonParams)
+
+	resp, err := s.client.PublicGet(requestURL, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка в AvgPrice", "error", err)
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 // Ticker24hr 10. Статистика изменения цены за 24 часа (24hr Ticker Price Change Statistics).
-func (s *SpotClient) Ticker24hr(jsonParams string) *resty.Response {
+func (s *SpotClient) Ticker24hr(jsonParams string) (*resty.Response, error) {
 	caseURL := "/ticker/24hr"
 	requestURL := s.BaseURL + caseURL
 	s.log.Debug("24hr ticker stats request to MEXC", "url", requestURL, "params", jsonParams)
-	return utils.PublicGet(requestURL, jsonParams)
+
+	resp, err := s.client.PublicGet(requestURL, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка в Ticker24hr", "error", err)
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 // Price 11. Текущая цена символа (Symbol Price Ticker).
-func (s *SpotClient) Price(jsonParams string) *resty.Response {
+func (s *SpotClient) Price(jsonParams string) (*resty.Response, error) {
 	caseURL := "/ticker/price"
 	requestURL := s.BaseURL + caseURL
 	s.log.Debug("Symbol price request to MEXC", "url", requestURL, "params", jsonParams)
-	return utils.PublicGet(requestURL, jsonParams)
+
+	resp, err := s.client.PublicGet(requestURL, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка в Price", "error", err)
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 // BookTicker 12. Лучшие цены в стакане (Symbol Order Book Ticker).
-func (s *SpotClient) BookTicker(jsonParams string) *resty.Response {
+func (s *SpotClient) BookTicker(jsonParams string) (*resty.Response, error) {
 	caseURL := "/ticker/bookTicker"
 	requestURL := s.BaseURL + caseURL
 	s.log.Debug("Order book ticker request to MEXC", "url", requestURL, "params", jsonParams)
-	return utils.PublicGet(requestURL, jsonParams)
+
+	resp, err := s.client.PublicGet(requestURL, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка в BookTicker", "error", err)
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 // ## 母子账户接口 Sub-Account Endpoints
