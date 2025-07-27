@@ -54,7 +54,7 @@ func (c *Client) PublicGet(urlStr string, jsonParams string) (*resty.Response, e
 }
 
 // PrivateGet выполняет авторизованный GET-запрос.
-func (c *Client) PrivateGet(urlStr string, jsonParams string) (*resty.Response, error) {
+func (c *Client) PrivateGet(urlStr string, jsonParams string) (*resty.Response, error) { //nolint: dupl
 	var path string
 	timestamp := time.Now().UnixNano() / 1e6
 
@@ -80,7 +80,6 @@ func (c *Client) PrivateGet(urlStr string, jsonParams string) (*resty.Response, 
 		"X-MEXC-APIKEY": c.APIKey,
 		"Content-Type":  "application/json",
 	}).Get(path)
-
 	if err != nil {
 		c.Logger.Error("Ошибка при приватном GET-запросе", "error", err)
 		return nil, err
@@ -90,7 +89,7 @@ func (c *Client) PrivateGet(urlStr string, jsonParams string) (*resty.Response, 
 }
 
 // PrivatePost выполняет авторизованный POST-запрос.
-func (c *Client) PrivatePost(urlStr string, jsonParams string) (*resty.Response, error) {
+func (c *Client) PrivatePost(urlStr string, jsonParams string) (*resty.Response, error) { //nolint: dupl
 	var path string
 	timestamp := time.Now().UnixNano() / 1e6
 
@@ -116,7 +115,6 @@ func (c *Client) PrivatePost(urlStr string, jsonParams string) (*resty.Response,
 		"X-MEXC-APIKEY": c.APIKey,
 		"Content-Type":  "application/json",
 	}).Post(path)
-
 	if err != nil {
 		c.Logger.Error("Ошибка при приватном POST-запросе", "error", err)
 		return nil, err
@@ -126,7 +124,7 @@ func (c *Client) PrivatePost(urlStr string, jsonParams string) (*resty.Response,
 }
 
 // PrivateDelete выполняет авторизованный DELETE-запрос.
-func (c *Client) PrivateDelete(urlStr string, jsonParams string) (*resty.Response, error) {
+func (c *Client) PrivateDelete(urlStr string, jsonParams string) (*resty.Response, error) { //nolint: dupl
 	var path string
 	timestamp := time.Now().UnixNano() / 1e6
 
@@ -152,7 +150,6 @@ func (c *Client) PrivateDelete(urlStr string, jsonParams string) (*resty.Respons
 		"X-MEXC-APIKEY": c.APIKey,
 		"Content-Type":  "application/json",
 	}).Delete(path)
-
 	if err != nil {
 		c.Logger.Error("Ошибка при приватном DELETE-запросе", "error", err)
 		return nil, err
@@ -162,7 +159,7 @@ func (c *Client) PrivateDelete(urlStr string, jsonParams string) (*resty.Respons
 }
 
 // PrivatePut выполняет авторизованный PUT-запрос.
-func (c *Client) PrivatePut(urlStr string, jsonParams string) (*resty.Response, error) {
+func (c *Client) PrivatePut(urlStr string, jsonParams string) (*resty.Response, error) { //nolint: dupl
 	var path string
 	timestamp := time.Now().UnixNano() / 1e6
 
@@ -188,7 +185,6 @@ func (c *Client) PrivatePut(urlStr string, jsonParams string) (*resty.Response, 
 		"X-MEXC-APIKEY": c.APIKey,
 		"Content-Type":  "application/json",
 	}).Put(path)
-
 	if err != nil {
 		c.Logger.Error("Ошибка при приватном PUT-запросе", "error", err)
 		return nil, err
@@ -199,7 +195,7 @@ func (c *Client) PrivatePut(urlStr string, jsonParams string) (*resty.Response, 
 
 // JSONToParamStr форматирует строку параметров из JSON.
 func JSONToParamStr(jsonParams string) string {
-	var paramsarr []string
+	var paramsarr []string //nolint:prealloc
 	m := make(map[string]string)
 	err := json.Unmarshal([]byte(jsonParams), &m)
 	if err != nil {
