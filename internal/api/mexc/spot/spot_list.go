@@ -1,9 +1,6 @@
 package spotlist
 
 import (
-	"fmt"
-
-	"github.com/dimryb/cross-arb/internal/api/mexc/config"
 	"github.com/dimryb/cross-arb/internal/api/mexc/utils"
 	i "github.com/dimryb/cross-arb/internal/interface"
 	"github.com/go-resty/resty/v2"
@@ -208,9 +205,9 @@ func (s *SpotClient) BookTicker(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// Суб‑аккаунты (Sub‑Account Endpoints).
+// ## 1. Суб‑аккаунты (Sub‑Account Endpoints)
 
-// CreateSub создаёт виртуальный суб‑аккаунт.
+// 1. Создать суб‑аккаунт.
 func (s *SpotClient) CreateSub(jsonParams string) (*resty.Response, error) {
 	caseURL := "/sub-account/virtualSubAccount"
 	url := s.BaseURL + caseURL
@@ -224,7 +221,7 @@ func (s *SpotClient) CreateSub(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// QuerySub возвращает список суб‑аккаунтов.
+// 2. Получить список суб‑аккаунтов.
 func (s *SpotClient) QuerySub(jsonParams string) (*resty.Response, error) {
 	caseURL := "/sub-account/list"
 	url := s.BaseURL + caseURL
@@ -238,7 +235,7 @@ func (s *SpotClient) QuerySub(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// CreateSubApikey создаёт API‑ключ для суб‑аккаунта.
+// 3. Создать API‑ключ для суб‑аккаунта.
 func (s *SpotClient) CreateSubApikey(jsonParams string) (*resty.Response, error) {
 	caseURL := "/sub-account/apiKey"
 	url := s.BaseURL + caseURL
@@ -252,7 +249,7 @@ func (s *SpotClient) CreateSubApikey(jsonParams string) (*resty.Response, error)
 	return resp, nil
 }
 
-// QuerySubApikey возвращает API‑ключи суб‑аккаунта.
+// 4. Получить API‑ключи суб‑аккаунта.
 func (s *SpotClient) QuerySubApikey(jsonParams string) (*resty.Response, error) {
 	caseURL := "/sub-account/apiKey"
 	url := s.BaseURL + caseURL
@@ -266,7 +263,7 @@ func (s *SpotClient) QuerySubApikey(jsonParams string) (*resty.Response, error) 
 	return resp, nil
 }
 
-// DeleteSubApikey удаляет API‑ключ суб‑аккаунта.
+// 5. Удалить API‑ключ суб‑аккаунта.
 func (s *SpotClient) DeleteSubApikey(jsonParams string) (*resty.Response, error) {
 	caseURL := "/sub-account/apiKey"
 	url := s.BaseURL + caseURL
@@ -280,7 +277,7 @@ func (s *SpotClient) DeleteSubApikey(jsonParams string) (*resty.Response, error)
 	return resp, nil
 }
 
-// UniTransfer выполняет межаккаунтный перевод.
+// 6. Универсальный перевод между аккаунтами.
 func (s *SpotClient) UniTransfer(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/sub-account/universalTransfer"
 	url := s.BaseURL + caseURL
@@ -294,7 +291,7 @@ func (s *SpotClient) UniTransfer(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// QueryUniTransfer возвращает историю универсальных переводов.
+// 7. История универсальных переводов.
 func (s *SpotClient) QueryUniTransfer(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/sub-account/universalTransfer"
 	url := s.BaseURL + caseURL
@@ -308,9 +305,9 @@ func (s *SpotClient) QueryUniTransfer(jsonParams string) (*resty.Response, error
 	return resp, nil
 }
 
-// ## Трейдинг (Spot Account & Trade)
+// ## 2. Торговля (Spot Account & Trade)
 
-// SelfSymbols возвращает список разрешённых торговых пар пользователя.
+// 1. Список разрешённых символов пользователя.
 func (s *SpotClient) SelfSymbols(jsonParams string) (*resty.Response, error) {
 	caseURL := "/selfSymbols"
 	url := s.BaseURL + caseURL
@@ -324,7 +321,7 @@ func (s *SpotClient) SelfSymbols(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// TestOrder выполняет тестовый ордер (без размещения в книге).
+// 2. Тестовый ордер.
 func (s *SpotClient) TestOrder(jsonParams string) (*resty.Response, error) {
 	caseURL := "/order/test"
 	url := s.BaseURL + caseURL
@@ -338,7 +335,7 @@ func (s *SpotClient) TestOrder(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// PlaceOrder размещает новый ордер.
+// 3. Разместить ордер.
 func (s *SpotClient) PlaceOrder(jsonParams string) (*resty.Response, error) {
 	caseURL := "/order"
 	url := s.BaseURL + caseURL
@@ -352,7 +349,7 @@ func (s *SpotClient) PlaceOrder(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// BatchOrder размещает пакет ордеров.
+// 4. Пакетное размещение ордеров.
 func (s *SpotClient) BatchOrder(jsonParams string) (*resty.Response, error) {
 	caseURL := "/batchOrders"
 	url := s.BaseURL + caseURL
@@ -366,7 +363,7 @@ func (s *SpotClient) BatchOrder(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// CancelOrder отменяет один ордер.
+// 5. Отменить ордер.
 func (s *SpotClient) CancelOrder(jsonParams string) (*resty.Response, error) {
 	caseURL := "/order"
 	url := s.BaseURL + caseURL
@@ -380,7 +377,7 @@ func (s *SpotClient) CancelOrder(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// CancelAllOrders отменяет все ордера по символу.
+// 6. Отменить все ордера по символу.
 func (s *SpotClient) CancelAllOrders(jsonParams string) (*resty.Response, error) {
 	caseURL := "/openOrders"
 	url := s.BaseURL + caseURL
@@ -394,7 +391,7 @@ func (s *SpotClient) CancelAllOrders(jsonParams string) (*resty.Response, error)
 	return resp, nil
 }
 
-// QueryOrder возвращает информацию об ордере.
+// 7. Информация об ордере.
 func (s *SpotClient) QueryOrder(jsonParams string) (*resty.Response, error) {
 	caseURL := "/order"
 	url := s.BaseURL + caseURL
@@ -408,7 +405,7 @@ func (s *SpotClient) QueryOrder(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// OpenOrder возвращает текущие открытые ордера.
+// 8. Открытые ордера.
 func (s *SpotClient) OpenOrder(jsonParams string) (*resty.Response, error) {
 	caseURL := "/openOrders"
 	url := s.BaseURL + caseURL
@@ -422,7 +419,7 @@ func (s *SpotClient) OpenOrder(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// AllOrders возвращает историю всех ордеров.
+// 9. Все ордера.
 func (s *SpotClient) AllOrders(jsonParams string) (*resty.Response, error) {
 	caseURL := "/allOrders"
 	url := s.BaseURL + caseURL
@@ -436,7 +433,7 @@ func (s *SpotClient) AllOrders(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// SpotAccountInfo возвращает информацию об аккаунте.
+// 10. Информация об аккаунте.
 func (s *SpotClient) SpotAccountInfo(jsonParams string) (*resty.Response, error) {
 	caseURL := "/account"
 	url := s.BaseURL + caseURL
@@ -450,7 +447,7 @@ func (s *SpotClient) SpotAccountInfo(jsonParams string) (*resty.Response, error)
 	return resp, nil
 }
 
-// SpotMyTrade возвращает историю сделок.
+// 11. История сделок.
 func (s *SpotClient) SpotMyTrade(jsonParams string) (*resty.Response, error) {
 	caseURL := "/myTrades"
 	url := s.BaseURL + caseURL
@@ -464,7 +461,7 @@ func (s *SpotClient) SpotMyTrade(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// MxDeduct включает использование MX для оплаты комиссий.
+// 12. Включить MX‑дедукцию.
 func (s *SpotClient) MxDeduct(jsonParams string) (*resty.Response, error) {
 	caseURL := "/mxDeduct/enable"
 	url := s.BaseURL + caseURL
@@ -478,7 +475,7 @@ func (s *SpotClient) MxDeduct(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// QueryMxDeduct возвращает статус MX‑дедукции.
+// 13. Статус MX‑дедукции.
 func (s *SpotClient) QueryMxDeduct(jsonParams string) (*resty.Response, error) {
 	caseURL := "/mxDeduct/enable"
 	url := s.BaseURL + caseURL
@@ -492,9 +489,9 @@ func (s *SpotClient) QueryMxDeduct(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// ## Кошелёк (Wallet Endpoints)
+// ## 3. Кошелёк (Wallet Endpoints)
 
-// QueryCurrencyInfo возвращает информацию о валюте.
+// 1. Информация о валюте.
 func (s *SpotClient) QueryCurrencyInfo(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/config/getall"
 	url := s.BaseURL + caseURL
@@ -508,7 +505,7 @@ func (s *SpotClient) QueryCurrencyInfo(jsonParams string) (*resty.Response, erro
 	return resp, nil
 }
 
-// Withdraw выполняет вывод средств.
+// 2. Вывод средств.
 func (s *SpotClient) Withdraw(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/withdraw/apply"
 	url := s.BaseURL + caseURL
@@ -522,7 +519,7 @@ func (s *SpotClient) Withdraw(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// CancelWithdraw отменяет заявку на вывод.
+// 3. Отменить вывод.
 func (s *SpotClient) CancelWithdraw(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/withdraw"
 	url := s.BaseURL + caseURL
@@ -536,7 +533,7 @@ func (s *SpotClient) CancelWithdraw(jsonParams string) (*resty.Response, error) 
 	return resp, nil
 }
 
-// DepositHistory возвращает историю депозитов.
+// 4. История депозитов.
 func (s *SpotClient) DepositHistory(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/deposit/hisrec"
 	url := s.BaseURL + caseURL
@@ -550,7 +547,7 @@ func (s *SpotClient) DepositHistory(jsonParams string) (*resty.Response, error) 
 	return resp, nil
 }
 
-// WithdrawHistory возвращает историю выводов.
+// 5. История выводов.
 func (s *SpotClient) WithdrawHistory(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/withdraw/historyl"
 	url := s.BaseURL + caseURL
@@ -564,7 +561,7 @@ func (s *SpotClient) WithdrawHistory(jsonParams string) (*resty.Response, error)
 	return resp, nil
 }
 
-// GenDepositAddress генерирует адрес депозита.
+// 6. Сгенерировать адрес депозита.
 func (s *SpotClient) GenDepositAddress(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/deposit/address"
 	url := s.BaseURL + caseURL
@@ -578,7 +575,7 @@ func (s *SpotClient) GenDepositAddress(jsonParams string) (*resty.Response, erro
 	return resp, nil
 }
 
-// DepositAddress возвращает адрес депозита.
+// 7. Получить адрес депозита.
 func (s *SpotClient) DepositAddress(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/deposit/address"
 	url := s.BaseURL + caseURL
@@ -592,7 +589,7 @@ func (s *SpotClient) DepositAddress(jsonParams string) (*resty.Response, error) 
 	return resp, nil
 }
 
-// WithdrawAddress возвращает адрес вывода.
+// 8. Получить адрес вывода.
 func (s *SpotClient) WithdrawAddress(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/withdraw/address"
 	url := s.BaseURL + caseURL
@@ -606,7 +603,7 @@ func (s *SpotClient) WithdrawAddress(jsonParams string) (*resty.Response, error)
 	return resp, nil
 }
 
-// Transfer выполняет универсальный перевод.
+// 9. Универсальный перевод.
 func (s *SpotClient) Transfer(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/transfer"
 	url := s.BaseURL + caseURL
@@ -620,7 +617,7 @@ func (s *SpotClient) Transfer(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// TransferHistory возвращает историю переводов.
+// 10. История переводов.
 func (s *SpotClient) TransferHistory(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/transfer"
 	url := s.BaseURL + caseURL
@@ -634,7 +631,7 @@ func (s *SpotClient) TransferHistory(jsonParams string) (*resty.Response, error)
 	return resp, nil
 }
 
-// TransferHistoryByID возвращает перевод по tranId.
+// 11. История перевода по tranId.
 func (s *SpotClient) TransferHistoryByID(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/transfer/tranId"
 	url := s.BaseURL + caseURL
@@ -648,7 +645,7 @@ func (s *SpotClient) TransferHistoryByID(jsonParams string) (*resty.Response, er
 	return resp, nil
 }
 
-// ConvertList возвращает список активов для конвертации.
+// 12. Список активов для конвертации.
 func (s *SpotClient) ConvertList(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/convert/list"
 	url := s.BaseURL + caseURL
@@ -662,7 +659,7 @@ func (s *SpotClient) ConvertList(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// Convert выполняет конвертацию мелких активов.
+// 13. Конвертация мелких активов.
 func (s *SpotClient) Convert(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/convert"
 	url := s.BaseURL + caseURL
@@ -676,7 +673,7 @@ func (s *SpotClient) Convert(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// ConvertHistory возвращает историю конвертаций.
+// 14. История конвертаций.
 func (s *SpotClient) ConvertHistory(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/convert"
 	url := s.BaseURL + caseURL
@@ -690,7 +687,7 @@ func (s *SpotClient) ConvertHistory(jsonParams string) (*resty.Response, error) 
 	return resp, nil
 }
 
-// ETFInfo возвращает информацию об ETF.
+// 15. Информация об ETF.
 func (s *SpotClient) ETFInfo(jsonParams string) (*resty.Response, error) {
 	caseURL := "/etf/info"
 	url := s.BaseURL + caseURL
@@ -704,7 +701,7 @@ func (s *SpotClient) ETFInfo(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// InternalTransfer выполняет внутренний перевод между пользователями.
+// 16. Внутренний перевод.
 func (s *SpotClient) InternalTransfer(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/transfer/internal"
 	url := s.BaseURL + caseURL
@@ -718,7 +715,7 @@ func (s *SpotClient) InternalTransfer(jsonParams string) (*resty.Response, error
 	return resp, nil
 }
 
-// InternalTransferHistory возвращает историю внутренних переводов.
+// 17. История внутренних переводов.
 func (s *SpotClient) InternalTransferHistory(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/transfer/internal"
 	url := s.BaseURL + caseURL
@@ -732,114 +729,174 @@ func (s *SpotClient) InternalTransferHistory(jsonParams string) (*resty.Response
 	return resp, nil
 }
 
-// ## WS ListenKey
+// ## 4. WS ListenKey
 
-// ### 1 生成 Listen Key  Create a ListenKey.
-func CreateListenKey(jsonParams string) interface{} {
-	caseURL := "/userDataStream" //nolint:goconst
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivatePost(requestURL, jsonParams)
-	return response
-}
-
-// ### 2 延长 Listen Key 有效期  Keep-alive a ListenKey.
-func KeepListenKey(jsonParams string) interface{} {
+// 1. Создать ListenKey.
+func (s *SpotClient) CreateListenKey(jsonParams string) (*resty.Response, error) {
 	caseURL := "/userDataStream"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivatePut(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("CreateListenKey", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivatePost(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка CreateListenKey", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 3 关闭 Listen Key  Close a ListenKey.
-func CloseListenKey(jsonParams string) interface{} {
+// 2. Продлить ListenKey.
+func (s *SpotClient) KeepListenKey(jsonParams string) (*resty.Response, error) {
 	caseURL := "/userDataStream"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateDelete(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("KeepListenKey", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivatePut(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка KeepListenKey", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ## 邀请返佣接口
+// 3. Закрыть ListenKey.
+func (s *SpotClient) CloseListenKey(jsonParams string) (*resty.Response, error) {
+	caseURL := "/userDataStream"
+	url := s.BaseURL + caseURL
+	s.log.Debug("CloseListenKey", "url", url, "params", jsonParams)
 
-// ### 1 获取邀请返佣记录 Get Rebate History Records.
-func RebateHistory(jsonParams string) interface{} {
+	resp, err := s.client.PrivateDelete(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка CloseListenKey", "error", err)
+		return nil, err
+	}
+	return resp, nil
+}
+
+// ## 5. Партнёрские и реферальные данные
+
+// 1. История реферальных вознаграждений.
+func (s *SpotClient) RebateHistory(jsonParams string) (*resty.Response, error) {
 	caseURL := "/rebate/taxQuery"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("RebateHistory", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка RebateHistory", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 2 获取返佣记录明细 Get Rebate Records Detail.
-func RebateDetail(jsonParams string) interface{} {
+// 2. Детали реферальных выплат.
+func (s *SpotClient) RebateDetail(jsonParams string) (*resty.Response, error) {
 	caseURL := "/rebate/detail"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("RebateDetail", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка RebateDetail", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 3 获取自返记录明细 Get Self Rebate Records Detail.
-func SelfRecordsDetail(jsonParams string) interface{} {
+// 3. Детали собственных выплат.
+func (s *SpotClient) SelfRecordsDetail(jsonParams string) (*resty.Response, error) {
 	caseURL := "/rebate/detail/kickback"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("SelfRecordsDetail", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка SelfRecordsDetail", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 4 获取邀请人 Query ReferCode.
-func ReferCode(jsonParams string) interface{} {
+// 4. Получить код приглашения.
+func (s *SpotClient) ReferCode(jsonParams string) (*resty.Response, error) {
 	caseURL := "/rebate/referCode"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("ReferCode", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка ReferCode", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 5 获取代理邀请返佣记录 （代理账户）Get Affiliate Commission Record (affiliate only).
-func AffiliateCommission(jsonParams string) interface{} {
+// 5. Комиссии аффилиата.
+func (s *SpotClient) AffiliateCommission(jsonParams string) (*resty.Response, error) {
 	caseURL := "/rebate/affiliate/commission"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("AffiliateCommission", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка AffiliateCommission", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 6 获取代理提现记录 （代理账户）Get Affiliate Withdraw Record (affiliate only).
-func AffiliateWithdraw(jsonParams string) interface{} {
+// 6. История выводов аффилиата.
+func (s *SpotClient) AffiliateWithdraw(jsonParams string) (*resty.Response, error) {
 	caseURL := "/rebate/affiliate/withdraw"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("AffiliateWithdraw", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка AffiliateWithdraw", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 7 获取代理返佣明细 （代理账户）Get Affiliate Commission Detail Record (affiliate only).
-func AffiliateCommissionDetail(jsonParams string) interface{} {
+// 7. Детали комиссий аффилиата.
+func (s *SpotClient) AffiliateCommissionDetail(jsonParams string) (*resty.Response, error) {
 	caseURL := "/rebate/affiliate/commission/detail"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("AffiliateCommissionDetail", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка AffiliateCommissionDetail", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 8 查询直客页面数据 （代理账户）Get Affiliate Referral Data（affiliate only）.
-func AffiliateReferral(jsonParams string) interface{} {
+// 8. Сводка реферальных данных аффилиата.
+func (s *SpotClient) AffiliateReferral(jsonParams string) (*resty.Response, error) {
 	caseURL := "/rebate/affiliate/referral"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("AffiliateReferral", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка AffiliateReferral", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 9 查询子代理页面数据 （代理账户）Get Subaffiliates Data (affiliate only).
-func Subaffiliates(jsonParams string) interface{} {
+// 9. Суб‑аффилиаты.
+func (s *SpotClient) Subaffiliates(jsonParams string) (*resty.Response, error) {
 	caseURL := "/rebate/affiliate/subaffiliates"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("Subaffiliates", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка Subaffiliates", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
