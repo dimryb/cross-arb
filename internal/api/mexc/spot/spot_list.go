@@ -308,123 +308,188 @@ func (s *SpotClient) QueryUniTransfer(jsonParams string) (*resty.Response, error
 	return resp, nil
 }
 
-// ## 现货账户和交易接口 Spot Account and Trade
+// ## Трейдинг (Spot Account & Trade)
 
-// ### 1 用户API交易对 User API default symbol.
-func SelfSymbols(jsonParams string) interface{} {
+// SelfSymbols возвращает список разрешённых торговых пар пользователя.
+func (s *SpotClient) SelfSymbols(jsonParams string) (*resty.Response, error) {
 	caseURL := "/selfSymbols"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("SelfSymbols", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка SelfSymbols", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 2 测试下单 Test New Order.
-func TestOrder(jsonParams string) interface{} {
+// TestOrder выполняет тестовый ордер (без размещения в книге).
+func (s *SpotClient) TestOrder(jsonParams string) (*resty.Response, error) {
 	caseURL := "/order/test"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivatePost(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("TestOrder", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivatePost(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка TestOrder", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 3 下单 New Order.
-func PlaceOrder(jsonParams string) interface{} {
-	caseURL := "/order" //nolint:goconst
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivatePost(requestURL, jsonParams)
-	return response
+// PlaceOrder размещает новый ордер.
+func (s *SpotClient) PlaceOrder(jsonParams string) (*resty.Response, error) {
+	caseURL := "/order"
+	url := s.BaseURL + caseURL
+	s.log.Debug("PlaceOrder", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivatePost(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка PlaceOrder", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 4 批量下单 Batch Orders.
-func BatchOrder(jsonParams string) interface{} {
+// BatchOrder размещает пакет ордеров.
+func (s *SpotClient) BatchOrder(jsonParams string) (*resty.Response, error) {
 	caseURL := "/batchOrders"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivatePost(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("BatchOrder", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivatePost(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка BatchOrder", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 5 撤销订单 Cancel Order.
-func CancelOrder(jsonParams string) interface{} {
+// CancelOrder отменяет один ордер.
+func (s *SpotClient) CancelOrder(jsonParams string) (*resty.Response, error) {
 	caseURL := "/order"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateDelete(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("CancelOrder", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateDelete(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка CancelOrder", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 6 撤销单一交易对所有订单 Cancel all Open Orders on a Symbol.
-func CancelAllOrders(jsonParams string) interface{} {
+// CancelAllOrders отменяет все ордера по символу.
+func (s *SpotClient) CancelAllOrders(jsonParams string) (*resty.Response, error) {
 	caseURL := "/openOrders"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateDelete(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("CancelAllOrders", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateDelete(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка CancelAllOrders", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 7 查询订单 Query Order.
-func QueryOrder(jsonParams string) interface{} {
+// QueryOrder возвращает информацию об ордере.
+func (s *SpotClient) QueryOrder(jsonParams string) (*resty.Response, error) {
 	caseURL := "/order"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("QueryOrder", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка QueryOrder", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 8 当前挂单 Current Open Orders.
-func OpenOrder(jsonParams string) interface{} {
+// OpenOrder возвращает текущие открытые ордера.
+func (s *SpotClient) OpenOrder(jsonParams string) (*resty.Response, error) {
 	caseURL := "/openOrders"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("OpenOrder", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка OpenOrder", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 9 查询所有订单 All Orders.
-func AllOrders(jsonParams string) interface{} {
+// AllOrders возвращает историю всех ордеров.
+func (s *SpotClient) AllOrders(jsonParams string) (*resty.Response, error) {
 	caseURL := "/allOrders"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("AllOrders", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка AllOrders", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 10 账户信息 Account Information.
-func SpotAccountInfo(jsonParams string) interface{} {
+// SpotAccountInfo возвращает информацию об аккаунте.
+func (s *SpotClient) SpotAccountInfo(jsonParams string) (*resty.Response, error) {
 	caseURL := "/account"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("SpotAccountInfo", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка SpotAccountInfo", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 11 账户成交历史 Account Trade List.
-func SpotmyTrade(jsonParams string) interface{} {
+// SpotMyTrade возвращает историю сделок.
+func (s *SpotClient) SpotMyTrade(jsonParams string) (*resty.Response, error) {
 	caseURL := "/myTrades"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("SpotMyTrade", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка SpotMyTrade", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 12 开启MX抵扣 Enable MX Deduct.
-func MxDeduct(jsonParams string) interface{} {
+// MxDeduct включает использование MX для оплаты комиссий.
+func (s *SpotClient) MxDeduct(jsonParams string) (*resty.Response, error) {
 	caseURL := "/mxDeduct/enable"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivatePost(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("MxDeduct", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivatePost(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка MxDeduct", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 13 查看MX抵扣状态 Query MX Deduct Status.
-func QueryMxDeduct(jsonParams string) interface{} {
+// QueryMxDeduct возвращает статус MX‑дедукции.
+func (s *SpotClient) QueryMxDeduct(jsonParams string) (*resty.Response, error) {
 	caseURL := "/mxDeduct/enable"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("QueryMxDeduct", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка QueryMxDeduct", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
 // ## 钱包接口 Wallet Endpoints
