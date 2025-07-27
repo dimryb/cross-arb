@@ -208,69 +208,104 @@ func (s *SpotClient) BookTicker(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// ## 母子账户接口 Sub-Account Endpoints
+// Суб‑аккаунты (Sub‑Account Endpoints).
 
-// ### 1 创建子账户 Create a Sub-account(For Master Account).
-func CreateSub(jsonParams string) interface{} {
+// CreateSub создаёт виртуальный суб‑аккаунт.
+func (s *SpotClient) CreateSub(jsonParams string) (*resty.Response, error) {
 	caseURL := "/sub-account/virtualSubAccount"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivatePost(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("CreateSub", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivatePost(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка CreateSub", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 2 查看子账户列表 Query Sub-account List (For Master Account).
-func QuerySub(jsonParams string) interface{} {
+// QuerySub возвращает список суб‑аккаунтов.
+func (s *SpotClient) QuerySub(jsonParams string) (*resty.Response, error) {
 	caseURL := "/sub-account/list"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("QuerySub", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка QuerySub", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 3 创建子账户的APIkey Create an APIKey for a sub-account (For Master Account).
-func CreateSubApikey(jsonParams string) interface{} {
-	caseURL := "/sub-account/apiKey" //nolint:goconst
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivatePost(requestURL, jsonParams)
-	return response
-}
-
-// ### 4 查询子账户的APIKey Query the APIKey of a sub-account (For Master Account).
-func QuerySubApikey(jsonParams string) interface{} {
+// CreateSubApikey создаёт API‑ключ для суб‑аккаунта.
+func (s *SpotClient) CreateSubApikey(jsonParams string) (*resty.Response, error) {
 	caseURL := "/sub-account/apiKey"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("CreateSubApikey", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivatePost(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка CreateSubApikey", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 5 删除子账户的APIKey Delete the APIKey of a sub-account (For Master Account).
-func DeleteSubApikey(jsonParams string) interface{} {
+// QuerySubApikey возвращает API‑ключи суб‑аккаунта.
+func (s *SpotClient) QuerySubApikey(jsonParams string) (*resty.Response, error) {
 	caseURL := "/sub-account/apiKey"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateDelete(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("QuerySubApikey", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка QuerySubApikey", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 6 母子用户万向划转 Universal Transfer (For Master Account).
-func UniTransfer(jsonParams string) interface{} {
-	caseURL := "/capital/sub-account/universalTransfer"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivatePost(requestURL, jsonParams)
-	return response
+// DeleteSubApikey удаляет API‑ключ суб‑аккаунта.
+func (s *SpotClient) DeleteSubApikey(jsonParams string) (*resty.Response, error) {
+	caseURL := "/sub-account/apiKey"
+	url := s.BaseURL + caseURL
+	s.log.Debug("DeleteSubApikey", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateDelete(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка DeleteSubApikey", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 7 查询母子万向划转历史 Query Universal Transfer History (For Master Account).
-func QueryUniTransfer(jsonParams string) interface{} {
+// UniTransfer выполняет межаккаунтный перевод.
+func (s *SpotClient) UniTransfer(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/sub-account/universalTransfer"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("UniTransfer", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivatePost(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка UniTransfer", "error", err)
+		return nil, err
+	}
+	return resp, nil
+}
+
+// QueryUniTransfer возвращает историю универсальных переводов.
+func (s *SpotClient) QueryUniTransfer(jsonParams string) (*resty.Response, error) {
+	caseURL := "/capital/sub-account/universalTransfer"
+	url := s.BaseURL + caseURL
+	s.log.Debug("QueryUniTransfer", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка QueryUniTransfer", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
 // ## 现货账户和交易接口 Spot Account and Trade
