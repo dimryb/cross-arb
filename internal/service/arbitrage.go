@@ -8,6 +8,7 @@ import (
 	"time"
 
 	spotlist "github.com/dimryb/cross-arb/internal/api/mexc/spot"
+	"github.com/dimryb/cross-arb/internal/api/mexc/utils"
 	"github.com/dimryb/cross-arb/internal/config"
 	i "github.com/dimryb/cross-arb/internal/interface"
 )
@@ -54,7 +55,8 @@ func (m *Arbitrage) Run() error {
 	if !ok || !mexcCfg.Enabled {
 		return fmt.Errorf("mexc exchange not configured")
 	}
-	spot := spotlist.NewSpotClient(m.log, mexcCfg.BaseURL)
+	client := utils.NewClient(mexcCfg.APIKey, mexcCfg.SecretKey, m.log)
+	spot := spotlist.NewSpotClient(m.log, mexcCfg.BaseURL, client)
 
 	wg.Add(1)
 	go func() {
@@ -115,10 +117,13 @@ func getTicker(sc *spotlist.SpotClient, results []Result, index int, symbol stri
 
 func bookTicker(sc *spotlist.SpotClient, symbol string) (BookTicker, error) {
 	params := fmt.Sprintf(`{"symbol":"%s"}`, symbol)
-	resp := sc.BookTicker(params)
+	resp, err := sc.BookTicker(params)
+	if err != nil {
+		return BookTicker{}, fmt.Errorf("BookTicker request failed: %w", err)
+	}
 
 	var tickerData BookTicker
-	err := json.Unmarshal(resp.Body(), &tickerData)
+	err = json.Unmarshal(resp.Body(), &tickerData)
 	if err != nil {
 		return BookTicker{}, fmt.Errorf("failed to parse JSON: %w", err)
 	}
