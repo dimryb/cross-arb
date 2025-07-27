@@ -9,11 +9,20 @@ import (
 
 type (
 	CrossArbConfig struct {
-		Log Log `yaml:"log"`
+		Log       Log                 `yaml:"log"`
+		Exchanges map[string]Exchange `yaml:"exchanges"`
+		Symbols   []string            `yaml:"symbols"`
 	}
 
 	Log struct {
 		Level string `yaml:"level" env:"LOG_LEVEL"`
+	}
+
+	Exchange struct {
+		APIKey    string `yaml:"apiKey" env:"API_KEY"`
+		SecretKey string `yaml:"secretKey" env:"SECRET_KEY"`
+		BaseURL   string `yaml:"baseUrl"`
+		Enabled   bool   `yaml:"enabled"`
 	}
 )
 
