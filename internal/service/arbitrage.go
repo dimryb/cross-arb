@@ -70,31 +70,11 @@ func (m *Arbitrage) Run() error {
 				wgSymbols := &sync.WaitGroup{}
 				for ind, symbol := range m.cfg.Symbols {
 					wgSymbols.Add(1)
-					go func(index int, sym string) {
+					go func() {
 						defer wgSymbols.Done()
-
-						params := fmt.Sprintf(`{"symbol":"%s"}`, sym)
-						resp := spot.BookTicker(params)
-
-						var tickerData BookTicker
-						err := json.Unmarshal(resp.Body(), &tickerData)
-						if err != nil {
-							results[index] = Result{
-								Symbol: sym,
-								Data:   BookTicker{},
-								Error:  fmt.Errorf("failed to parse JSON: %w", err),
-							}
-							return
-						}
-
-						results[index] = Result{
-							Symbol: sym,
-							Data:   tickerData,
-							Error:  nil, // TODO: можно улучшить: если BookTicker возвращает err
-						}
-					}(ind, symbol)
+						getTicker(spot, results, ind, symbol)
+					}()
 				}
-
 				wgSymbols.Wait()
 
 				fmt.Printf("=== Обновление цен (%s) ===\n", time.Now().Format("15:04:05.000"))
@@ -115,4 +95,26 @@ func (m *Arbitrage) Run() error {
 	wg.Wait()
 
 	return nil
+}
+
+func getTicker(sc *spotlist.SpotClient, results []Result, index int, sym string) {
+	params := fmt.Sprintf(`{"symbol":"%s"}`, sym)
+	resp := sc.BookTicker(params)
+
+	var tickerData BookTicker
+	err := json.Unmarshal(resp.Body(), &tickerData)
+	if err != nil {
+		results[index] = Result{
+			Symbol: sym,
+			Data:   BookTicker{},
+			Error:  fmt.Errorf("failed to parse JSON: %w", err),
+		}
+		return
+	}
+
+	results[index] = Result{
+		Symbol: sym,
+		Data:   tickerData,
+		Error:  nil, // TODO: можно улучшить: если BookTicker возвращает err
+	}
 }
