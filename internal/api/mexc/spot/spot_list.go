@@ -207,7 +207,7 @@ func (s *SpotClient) BookTicker(jsonParams string) (*resty.Response, error) {
 
 // ## 1. Суб‑аккаунты (Sub‑Account Endpoints)
 
-// 1. Создать суб‑аккаунт.
+// CreateSub 1. Создать суб‑аккаунт (Create a Sub-account).
 func (s *SpotClient) CreateSub(jsonParams string) (*resty.Response, error) {
 	caseURL := "/sub-account/virtualSubAccount"
 	url := s.BaseURL + caseURL
@@ -221,7 +221,7 @@ func (s *SpotClient) CreateSub(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// 2. Получить список суб‑аккаунтов.
+// QuerySub 2. Получить список суб‑аккаунтов (Query Sub-account List).
 func (s *SpotClient) QuerySub(jsonParams string) (*resty.Response, error) {
 	caseURL := "/sub-account/list"
 	url := s.BaseURL + caseURL
@@ -235,9 +235,9 @@ func (s *SpotClient) QuerySub(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// 3. Создать API‑ключ для суб‑аккаунта.
+// CreateSubApikey 3. Создать API‑ключ для суб‑аккаунта (Create an APIKey for a sub-account).
 func (s *SpotClient) CreateSubApikey(jsonParams string) (*resty.Response, error) {
-	caseURL := "/sub-account/apiKey"
+	caseURL := "/sub-account/apiKey" //nolint:goconst
 	url := s.BaseURL + caseURL
 	s.log.Debug("CreateSubApikey", "url", url, "params", jsonParams)
 
@@ -249,7 +249,7 @@ func (s *SpotClient) CreateSubApikey(jsonParams string) (*resty.Response, error)
 	return resp, nil
 }
 
-// 4. Получить API‑ключи суб‑аккаунта.
+// QuerySubApikey 4. Получить API‑ключи суб‑аккаунта (APIKey Query the APIKey of a sub-account).
 func (s *SpotClient) QuerySubApikey(jsonParams string) (*resty.Response, error) {
 	caseURL := "/sub-account/apiKey"
 	url := s.BaseURL + caseURL
@@ -263,7 +263,7 @@ func (s *SpotClient) QuerySubApikey(jsonParams string) (*resty.Response, error) 
 	return resp, nil
 }
 
-// 5. Удалить API‑ключ суб‑аккаунта.
+// DeleteSubApikey 5. Удалить API‑ключ суб‑аккаунта (APIKey Delete the APIKey of a sub-account).
 func (s *SpotClient) DeleteSubApikey(jsonParams string) (*resty.Response, error) {
 	caseURL := "/sub-account/apiKey"
 	url := s.BaseURL + caseURL
@@ -277,7 +277,7 @@ func (s *SpotClient) DeleteSubApikey(jsonParams string) (*resty.Response, error)
 	return resp, nil
 }
 
-// 6. Универсальный перевод между аккаунтами.
+// UniTransfer 6. Универсальный перевод между аккаунтами (Universal Transfer).
 func (s *SpotClient) UniTransfer(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/sub-account/universalTransfer"
 	url := s.BaseURL + caseURL
@@ -291,7 +291,7 @@ func (s *SpotClient) UniTransfer(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// 7. История универсальных переводов.
+// QueryUniTransfer 7. История универсальных переводов (Query Universal Transfer History).
 func (s *SpotClient) QueryUniTransfer(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/sub-account/universalTransfer"
 	url := s.BaseURL + caseURL
@@ -307,7 +307,7 @@ func (s *SpotClient) QueryUniTransfer(jsonParams string) (*resty.Response, error
 
 // ## 2. Торговля (Spot Account & Trade)
 
-// 1. Список разрешённых символов пользователя.
+// SelfSymbols 1. Список разрешённых символов пользователя (User API default symbol).
 func (s *SpotClient) SelfSymbols(jsonParams string) (*resty.Response, error) {
 	caseURL := "/selfSymbols"
 	url := s.BaseURL + caseURL
@@ -321,7 +321,7 @@ func (s *SpotClient) SelfSymbols(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// 2. Тестовый ордер.
+// TestOrder 2. Тестовый ордер (Test New Order).
 func (s *SpotClient) TestOrder(jsonParams string) (*resty.Response, error) {
 	caseURL := "/order/test"
 	url := s.BaseURL + caseURL
@@ -335,9 +335,9 @@ func (s *SpotClient) TestOrder(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// 3. Разместить ордер.
+// PlaceOrder 3. Разместить ордер (New Order).
 func (s *SpotClient) PlaceOrder(jsonParams string) (*resty.Response, error) {
-	caseURL := "/order"
+	caseURL := "/order" //nolint:goconst
 	url := s.BaseURL + caseURL
 	s.log.Debug("PlaceOrder", "url", url, "params", jsonParams)
 
@@ -349,7 +349,7 @@ func (s *SpotClient) PlaceOrder(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// 4. Пакетное размещение ордеров.
+// BatchOrder 4. Пакетное размещение ордеров (Batch Orders).
 func (s *SpotClient) BatchOrder(jsonParams string) (*resty.Response, error) {
 	caseURL := "/batchOrders"
 	url := s.BaseURL + caseURL
@@ -363,7 +363,7 @@ func (s *SpotClient) BatchOrder(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// 5. Отменить ордер.
+// CancelOrder 5. Отменить ордер (Cancel Order).
 func (s *SpotClient) CancelOrder(jsonParams string) (*resty.Response, error) {
 	caseURL := "/order"
 	url := s.BaseURL + caseURL
@@ -377,7 +377,7 @@ func (s *SpotClient) CancelOrder(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// 6. Отменить все ордера по символу.
+// CancelAllOrders 6. Отменить все ордера по символу (Cancel all Open Orders on a Symbol).
 func (s *SpotClient) CancelAllOrders(jsonParams string) (*resty.Response, error) {
 	caseURL := "/openOrders"
 	url := s.BaseURL + caseURL
@@ -391,7 +391,7 @@ func (s *SpotClient) CancelAllOrders(jsonParams string) (*resty.Response, error)
 	return resp, nil
 }
 
-// 7. Информация об ордере.
+// QueryOrder 7. Информация об ордере (Query Order).
 func (s *SpotClient) QueryOrder(jsonParams string) (*resty.Response, error) {
 	caseURL := "/order"
 	url := s.BaseURL + caseURL
@@ -405,7 +405,7 @@ func (s *SpotClient) QueryOrder(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// 8. Открытые ордера.
+// OpenOrder 8. Открытые ордера (Current Open Orders).
 func (s *SpotClient) OpenOrder(jsonParams string) (*resty.Response, error) {
 	caseURL := "/openOrders"
 	url := s.BaseURL + caseURL
@@ -419,7 +419,7 @@ func (s *SpotClient) OpenOrder(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// 9. Все ордера.
+// AllOrders 9. Все ордера (All Orders).
 func (s *SpotClient) AllOrders(jsonParams string) (*resty.Response, error) {
 	caseURL := "/allOrders"
 	url := s.BaseURL + caseURL
@@ -433,7 +433,7 @@ func (s *SpotClient) AllOrders(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// 10. Информация об аккаунте.
+// SpotAccountInfo 10. Информация об аккаунте (Account Information).
 func (s *SpotClient) SpotAccountInfo(jsonParams string) (*resty.Response, error) {
 	caseURL := "/account"
 	url := s.BaseURL + caseURL
@@ -447,7 +447,7 @@ func (s *SpotClient) SpotAccountInfo(jsonParams string) (*resty.Response, error)
 	return resp, nil
 }
 
-// 11. История сделок.
+// SpotMyTrade 11. История сделок (Account Trade List).
 func (s *SpotClient) SpotMyTrade(jsonParams string) (*resty.Response, error) {
 	caseURL := "/myTrades"
 	url := s.BaseURL + caseURL
@@ -461,7 +461,7 @@ func (s *SpotClient) SpotMyTrade(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// 12. Включить MX‑дедукцию.
+// MxDeduct 12. Включить MX‑дедукцию (Enable MX Deduct).
 func (s *SpotClient) MxDeduct(jsonParams string) (*resty.Response, error) {
 	caseURL := "/mxDeduct/enable"
 	url := s.BaseURL + caseURL
@@ -475,7 +475,7 @@ func (s *SpotClient) MxDeduct(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// 13. Статус MX‑дедукции.
+// QueryMxDeduct 13. Статус MX‑дедукции (Query MX Deduct Status).
 func (s *SpotClient) QueryMxDeduct(jsonParams string) (*resty.Response, error) {
 	caseURL := "/mxDeduct/enable"
 	url := s.BaseURL + caseURL
@@ -491,7 +491,7 @@ func (s *SpotClient) QueryMxDeduct(jsonParams string) (*resty.Response, error) {
 
 // ## 3. Кошелёк (Wallet Endpoints)
 
-// 1. Информация о валюте.
+// QueryCurrencyInfo 1. Информация о валюте (Query the currency information).
 func (s *SpotClient) QueryCurrencyInfo(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/config/getall"
 	url := s.BaseURL + caseURL
@@ -505,7 +505,7 @@ func (s *SpotClient) QueryCurrencyInfo(jsonParams string) (*resty.Response, erro
 	return resp, nil
 }
 
-// 2. Вывод средств.
+// Withdraw 2. Вывод средств (Withdraw).
 func (s *SpotClient) Withdraw(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/withdraw/apply"
 	url := s.BaseURL + caseURL
@@ -519,7 +519,7 @@ func (s *SpotClient) Withdraw(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// 3. Отменить вывод.
+// CancelWithdraw 3. Отменить вывод (Cancel withdraw).
 func (s *SpotClient) CancelWithdraw(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/withdraw"
 	url := s.BaseURL + caseURL
@@ -533,7 +533,7 @@ func (s *SpotClient) CancelWithdraw(jsonParams string) (*resty.Response, error) 
 	return resp, nil
 }
 
-// 4. История депозитов.
+// DepositHistory 4. История депозитов (Deposit History).
 func (s *SpotClient) DepositHistory(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/deposit/hisrec"
 	url := s.BaseURL + caseURL
@@ -547,7 +547,7 @@ func (s *SpotClient) DepositHistory(jsonParams string) (*resty.Response, error) 
 	return resp, nil
 }
 
-// 5. История выводов.
+// WithdrawHistory 5. История выводов (Withdraw History).
 func (s *SpotClient) WithdrawHistory(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/withdraw/historyl"
 	url := s.BaseURL + caseURL
@@ -561,7 +561,7 @@ func (s *SpotClient) WithdrawHistory(jsonParams string) (*resty.Response, error)
 	return resp, nil
 }
 
-// 6. Сгенерировать адрес депозита.
+// GenDepositAddress 6. Сгенерировать адрес депозита (Generate deposit address).
 func (s *SpotClient) GenDepositAddress(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/deposit/address"
 	url := s.BaseURL + caseURL
@@ -575,7 +575,7 @@ func (s *SpotClient) GenDepositAddress(jsonParams string) (*resty.Response, erro
 	return resp, nil
 }
 
-// 7. Получить адрес депозита.
+// DepositAddress 7. Получить адрес депозита (Deposit Address).
 func (s *SpotClient) DepositAddress(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/deposit/address"
 	url := s.BaseURL + caseURL
@@ -589,7 +589,7 @@ func (s *SpotClient) DepositAddress(jsonParams string) (*resty.Response, error) 
 	return resp, nil
 }
 
-// 8. Получить адрес вывода.
+// WithdrawAddress 8. Получить адрес вывода (Withdraw Address).
 func (s *SpotClient) WithdrawAddress(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/withdraw/address"
 	url := s.BaseURL + caseURL
@@ -603,7 +603,7 @@ func (s *SpotClient) WithdrawAddress(jsonParams string) (*resty.Response, error)
 	return resp, nil
 }
 
-// 9. Универсальный перевод.
+// Transfer 9. Универсальный перевод (User Universal Transfer).
 func (s *SpotClient) Transfer(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/transfer"
 	url := s.BaseURL + caseURL
@@ -617,7 +617,7 @@ func (s *SpotClient) Transfer(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// 10. История переводов.
+// TransferHistory 10. История переводов (Query User Universal Transfer History).
 func (s *SpotClient) TransferHistory(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/transfer"
 	url := s.BaseURL + caseURL
@@ -631,7 +631,7 @@ func (s *SpotClient) TransferHistory(jsonParams string) (*resty.Response, error)
 	return resp, nil
 }
 
-// 11. История перевода по tranId.
+// TransferHistoryByID 11. История перевода по tranId (Query User Universal Transfer History （by tranId）).
 func (s *SpotClient) TransferHistoryByID(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/transfer/tranId"
 	url := s.BaseURL + caseURL
@@ -645,7 +645,7 @@ func (s *SpotClient) TransferHistoryByID(jsonParams string) (*resty.Response, er
 	return resp, nil
 }
 
-// 12. Список активов для конвертации.
+// ConvertList 12. Список активов для конвертации (Get Assets That Can Be Converted Into MX).
 func (s *SpotClient) ConvertList(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/convert/list"
 	url := s.BaseURL + caseURL
@@ -659,7 +659,7 @@ func (s *SpotClient) ConvertList(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// 13. Конвертация мелких активов.
+// Convert 13. Конвертация мелких активов (Dust Transfer).
 func (s *SpotClient) Convert(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/convert"
 	url := s.BaseURL + caseURL
@@ -673,7 +673,7 @@ func (s *SpotClient) Convert(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// 14. История конвертаций.
+// ConvertHistory 14. История конвертаций (DustLog).
 func (s *SpotClient) ConvertHistory(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/convert"
 	url := s.BaseURL + caseURL
@@ -687,7 +687,7 @@ func (s *SpotClient) ConvertHistory(jsonParams string) (*resty.Response, error) 
 	return resp, nil
 }
 
-// 15. Информация об ETF.
+// ETFInfo 15. Информация об ETF (Get ETF info).
 func (s *SpotClient) ETFInfo(jsonParams string) (*resty.Response, error) {
 	caseURL := "/etf/info"
 	url := s.BaseURL + caseURL
@@ -701,7 +701,7 @@ func (s *SpotClient) ETFInfo(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// 16. Внутренний перевод.
+// InternalTransfer 16. Внутренний перевод (Internal Transfer).
 func (s *SpotClient) InternalTransfer(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/transfer/internal"
 	url := s.BaseURL + caseURL
@@ -715,7 +715,7 @@ func (s *SpotClient) InternalTransfer(jsonParams string) (*resty.Response, error
 	return resp, nil
 }
 
-// 17. История внутренних переводов.
+// InternalTransferHistory 17. История внутренних переводов (Internal Transfer History).
 func (s *SpotClient) InternalTransferHistory(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/transfer/internal"
 	url := s.BaseURL + caseURL
@@ -731,9 +731,9 @@ func (s *SpotClient) InternalTransferHistory(jsonParams string) (*resty.Response
 
 // ## 4. WS ListenKey
 
-// 1. Создать ListenKey.
+// CreateListenKey 1. Создать ListenKey (Listen Key  Create a ListenKey).
 func (s *SpotClient) CreateListenKey(jsonParams string) (*resty.Response, error) {
-	caseURL := "/userDataStream"
+	caseURL := "/userDataStream" //nolint:goconst
 	url := s.BaseURL + caseURL
 	s.log.Debug("CreateListenKey", "url", url, "params", jsonParams)
 
@@ -745,7 +745,7 @@ func (s *SpotClient) CreateListenKey(jsonParams string) (*resty.Response, error)
 	return resp, nil
 }
 
-// 2. Продлить ListenKey.
+// KeepListenKey 2. Продлить ListenKey (Keep-alive a ListenKey).
 func (s *SpotClient) KeepListenKey(jsonParams string) (*resty.Response, error) {
 	caseURL := "/userDataStream"
 	url := s.BaseURL + caseURL
@@ -759,7 +759,7 @@ func (s *SpotClient) KeepListenKey(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// 3. Закрыть ListenKey.
+// CloseListenKey 3. Закрыть ListenKey ().
 func (s *SpotClient) CloseListenKey(jsonParams string) (*resty.Response, error) {
 	caseURL := "/userDataStream"
 	url := s.BaseURL + caseURL
@@ -775,7 +775,7 @@ func (s *SpotClient) CloseListenKey(jsonParams string) (*resty.Response, error) 
 
 // ## 5. Партнёрские и реферальные данные
 
-// 1. История реферальных вознаграждений.
+// RebateHistory 1. История реферальных вознаграждений (Get Rebate History Records).
 func (s *SpotClient) RebateHistory(jsonParams string) (*resty.Response, error) {
 	caseURL := "/rebate/taxQuery"
 	url := s.BaseURL + caseURL
@@ -789,7 +789,7 @@ func (s *SpotClient) RebateHistory(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// 2. Детали реферальных выплат.
+// RebateDetail 2. Детали реферальных выплат (Get Rebate Records Detail).
 func (s *SpotClient) RebateDetail(jsonParams string) (*resty.Response, error) {
 	caseURL := "/rebate/detail"
 	url := s.BaseURL + caseURL
@@ -803,7 +803,7 @@ func (s *SpotClient) RebateDetail(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// 3. Детали собственных выплат.
+// SelfRecordsDetail 3. Детали собственных выплат (Get Self Rebate Records Detail).
 func (s *SpotClient) SelfRecordsDetail(jsonParams string) (*resty.Response, error) {
 	caseURL := "/rebate/detail/kickback"
 	url := s.BaseURL + caseURL
@@ -817,7 +817,7 @@ func (s *SpotClient) SelfRecordsDetail(jsonParams string) (*resty.Response, erro
 	return resp, nil
 }
 
-// 4. Получить код приглашения.
+// ReferCode 4. Получить код приглашения (Query ReferCode).
 func (s *SpotClient) ReferCode(jsonParams string) (*resty.Response, error) {
 	caseURL := "/rebate/referCode"
 	url := s.BaseURL + caseURL
@@ -831,7 +831,7 @@ func (s *SpotClient) ReferCode(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// 5. Комиссии аффилиата.
+// AffiliateCommission 5. Комиссии аффилиата (Get Affiliate Commission Record (affiliate only)).
 func (s *SpotClient) AffiliateCommission(jsonParams string) (*resty.Response, error) {
 	caseURL := "/rebate/affiliate/commission"
 	url := s.BaseURL + caseURL
@@ -845,7 +845,7 @@ func (s *SpotClient) AffiliateCommission(jsonParams string) (*resty.Response, er
 	return resp, nil
 }
 
-// 6. История выводов аффилиата.
+// AffiliateWithdraw 6. История выводов аффилиата (Get Affiliate Withdraw Record (affiliate only)).
 func (s *SpotClient) AffiliateWithdraw(jsonParams string) (*resty.Response, error) {
 	caseURL := "/rebate/affiliate/withdraw"
 	url := s.BaseURL + caseURL
@@ -859,7 +859,7 @@ func (s *SpotClient) AffiliateWithdraw(jsonParams string) (*resty.Response, erro
 	return resp, nil
 }
 
-// 7. Детали комиссий аффилиата.
+// AffiliateCommissionDetail 7. Детали комиссий аффилиата (Get Affiliate Commission Detail Record (affiliate only)).
 func (s *SpotClient) AffiliateCommissionDetail(jsonParams string) (*resty.Response, error) {
 	caseURL := "/rebate/affiliate/commission/detail"
 	url := s.BaseURL + caseURL
@@ -873,7 +873,7 @@ func (s *SpotClient) AffiliateCommissionDetail(jsonParams string) (*resty.Respon
 	return resp, nil
 }
 
-// 8. Сводка реферальных данных аффилиата.
+// AffiliateReferral 8. Сводка реферальных данных аффилиата (Get Affiliate Referral Data（affiliate only）).
 func (s *SpotClient) AffiliateReferral(jsonParams string) (*resty.Response, error) {
 	caseURL := "/rebate/affiliate/referral"
 	url := s.BaseURL + caseURL
@@ -887,7 +887,7 @@ func (s *SpotClient) AffiliateReferral(jsonParams string) (*resty.Response, erro
 	return resp, nil
 }
 
-// 9. Суб‑аффилиаты.
+// Subaffiliates 9. Суб‑аффилиаты (Get Subaffiliates Data (affiliate only)).
 func (s *SpotClient) Subaffiliates(jsonParams string) (*resty.Response, error) {
 	caseURL := "/rebate/affiliate/subaffiliates"
 	url := s.BaseURL + caseURL
