@@ -1,0 +1,219 @@
+package jupiter
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/url"
+	"strconv"
+	"time"
+
+	i "github.com/dimryb/cross-arb/internal/interface"
+)
+
+type Client struct {
+	baseURL    *url.URL
+	httpClient *http.Client
+	logger     i.Logger
+}
+
+// NewJupiterClient создает новый клиент для Jupiter Swap API.
+// Подробнее: https://dev.jup.ag/docs/api/swap-api/quote
+func NewJupiterClient(logger i.Logger, baseURL string) (*Client, error) {
+	parsedURL, err := url.Parse(baseURL)
+	if err != nil {
+		return nil, fmt.Errorf("invalid base URL: %w", err)
+	}
+
+	return &Client{
+		baseURL:    parsedURL,
+		httpClient: &http.Client{Timeout: 30 * time.Second},
+		logger:     logger,
+	}, nil
+}
+
+// QuoteOptions содержит опциональные параметры для запроса котировки.
+type QuoteOptions struct {
+	SlippageBps                *int  `json:"slippageBps,omitempty"`
+	RestrictIntermediateTokens *bool `json:"restrictIntermediateTokens,omitempty"`
+	OnlyDirectRoutes           *bool `json:"onlyDirectRoutes,omitempty"`
+	AsLegacyTransaction        *bool `json:"asLegacyTransaction,omitempty"`
+	PlatformFeeBps             *int  `json:"platformFeeBps,omitempty"`
+	MaxAccounts                *int  `json:"maxAccounts,omitempty"`
+}
+
+// DefaultQuoteOptions возвращает опции по умолчанию.
+func DefaultQuoteOptions() *QuoteOptions {
+	slippage := 50
+	return &QuoteOptions{
+		SlippageBps: &slippage,
+	}
+}
+
+// Quote получает котировку для обмена токенов.
+func (c *Client) Quote(
+	ctx context.Context,
+	inputMint, outputMint string,
+	amount int64,
+	opts *QuoteOptions,
+) (*QuoteResponse, error) {
+	start := time.Now()
+
+	inputSymbol := getTokenSymbol(inputMint)
+	outputSymbol := getTokenSymbol(outputMint)
+
+	c.logger.Debug("Начало запроса котировки",
+		"от_токена", inputSymbol,
+		"к_токену", outputSymbol,
+		"сумма", amount,
+	)
+
+	// Валидация входных параметров
+	if inputMint == "" {
+		c.logger.Error("Ошибка запроса котировки: пустой inputMint")
+		return nil, fmt.Errorf("inputMint cannot be empty")
+	}
+	if outputMint == "" {
+		c.logger.Error("Ошибка запроса котировки: пустой outputMint")
+		return nil, fmt.Errorf("outputMint cannot be empty")
+	}
+	if amount <= 0 {
+		c.logger.Error("Ошибка запроса котировки: некорректная сумма", "сумма", amount)
+		return nil, fmt.Errorf("amount must be positive, got %d", amount)
+	}
+
+	if opts == nil {
+		opts = DefaultQuoteOptions()
+	}
+
+	requestURL := c.buildQuoteURL(inputMint, outputMint, amount, opts)
+	c.logger.Debug("Построен URL запроса", "url", requestURL)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, requestURL, nil)
+	if err != nil {
+		c.logger.Error("Ошибка создания HTTP-запроса", "ошибка", err)
+		return nil, fmt.Errorf("failed to create quote request: %w", err)
+	}
+
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("User-Agent", "jupiter-go-client/1.0")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		c.logger.Error("Ошибка выполнения HTTP-запроса", "ошибка", err, "время_мс", time.Since(start).Milliseconds())
+		return nil, fmt.Errorf("failed to execute quote request: %w", err)
+	}
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			c.logger.Error("Ошибка закрытия тела ответа", "ошибка", closeErr)
+		}
+	}()
+
+	c.logger.Debug("Получен ответ от Jupiter API",
+		"статус_код", resp.StatusCode,
+		"время_мс", time.Since(start).Milliseconds(),
+	)
+
+	quoteResponse, err := c.handleQuoteResponse(resp)
+	if err != nil {
+		c.logger.Error("Ошибка обработки ответа", "ошибка", err, "время_мс", time.Since(start).Milliseconds())
+		return nil, err
+	}
+
+	c.logger.Info("Котировка успешно получена",
+		"обмен", fmt.Sprintf("%s → %s", inputSymbol, outputSymbol),
+		"входная_сумма", amount,
+		"выходная_сумма", quoteResponse.OutAmount,
+		"время_мс", time.Since(start).Milliseconds(),
+	)
+
+	return quoteResponse, nil
+}
+
+// buildQuoteURL строит URL для запроса котировки.
+func (c *Client) buildQuoteURL(inputMint, outputMint string, amount int64, opts *QuoteOptions) string {
+	requestURL := *c.baseURL
+	requestURL.Path += "/quote"
+
+	q := url.Values{}
+	q.Add("inputMint", inputMint)
+	q.Add("outputMint", outputMint)
+	q.Add("amount", strconv.FormatInt(amount, 10))
+
+	if opts.SlippageBps != nil {
+		q.Add("slippageBps", strconv.Itoa(*opts.SlippageBps))
+	}
+	if opts.RestrictIntermediateTokens != nil {
+		q.Add("restrictIntermediateTokens", strconv.FormatBool(*opts.RestrictIntermediateTokens))
+	}
+	if opts.OnlyDirectRoutes != nil {
+		q.Add("onlyDirectRoutes", strconv.FormatBool(*opts.OnlyDirectRoutes))
+	}
+	if opts.AsLegacyTransaction != nil {
+		q.Add("asLegacyTransaction", strconv.FormatBool(*opts.AsLegacyTransaction))
+	}
+	if opts.PlatformFeeBps != nil {
+		q.Add("platformFeeBps", strconv.Itoa(*opts.PlatformFeeBps))
+	}
+	if opts.MaxAccounts != nil {
+		q.Add("maxAccounts", strconv.Itoa(*opts.MaxAccounts))
+	}
+
+	requestURL.RawQuery = q.Encode()
+	return requestURL.String()
+}
+
+// handleQuoteResponse обрабатывает ответ от API.
+func (c *Client) handleQuoteResponse(resp *http.Response) (*QuoteResponse, error) {
+	decoder := json.NewDecoder(resp.Body)
+
+	if resp.StatusCode != http.StatusOK {
+		c.logger.Warn("Получен некорректный статус от Jupiter API",
+			"статус_код", resp.StatusCode,
+			"статус", resp.Status,
+		)
+
+		var errorResp struct {
+			Error   string `json:"error"`
+			Message string `json:"message"`
+		}
+
+		// Пытаемся декодировать ошибку
+		if err := decoder.Decode(&errorResp); err == nil && errorResp.Error != "" {
+			c.logger.Error("Jupiter API вернул структурированную ошибку",
+				"статус_код", resp.StatusCode,
+				"api_ошибка", errorResp.Error,
+				"api_сообщение", errorResp.Message,
+			)
+			return nil, fmt.Errorf("API error (status %d): %s - %s", resp.StatusCode, errorResp.Error, errorResp.Message)
+		}
+
+		c.logger.Error("Jupiter API вернул неструктурированную ошибку", "статус_код", resp.StatusCode)
+		return nil, fmt.Errorf("API request failed with status %d", resp.StatusCode)
+	}
+
+	var quoteResponse QuoteResponse
+	if err := decoder.Decode(&quoteResponse); err != nil {
+		c.logger.Error("Ошибка декодирования JSON-ответа от Jupiter API", "ошибка", err)
+		return nil, fmt.Errorf("failed to decode quote response: %w", err)
+	}
+
+	return &quoteResponse, nil
+}
+
+// getTokenSymbol возвращает читаемое название токена по mint-адресу (используется для логирования).
+func getTokenSymbol(mint string) string {
+	tokens := map[string]string{
+		"So11111111111111111111111111111111111111112":  "SOL",
+		"Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB": "USDT",
+	}
+	if symbol, exists := tokens[mint]; exists {
+		return symbol
+	}
+	// Возвращаем последние 8 символов для неизвестных токенов
+	if len(mint) > 8 {
+		return "..." + mint[len(mint)-8:]
+	}
+	return mint
+}
