@@ -8,6 +8,10 @@ exchanges:
     baseUrl: "https://api.mexc.com/api/v3"
     enabled: true
 
+  jupiter:
+    baseUrl: "https://lite-api.jup.ag/swap/v1"
+    enabled: true
+
 symbols:
   - SOLUSDT
   - BTCUSDT
