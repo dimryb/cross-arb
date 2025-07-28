@@ -1,9 +1,6 @@
 package spotlist
 
 import (
-	"fmt"
-
-	"github.com/dimryb/cross-arb/internal/api/mexc/config"
 	"github.com/dimryb/cross-arb/internal/api/mexc/utils"
 	i "github.com/dimryb/cross-arb/internal/interface"
 	"github.com/go-resty/resty/v2"
@@ -13,13 +10,15 @@ import (
 type SpotClient struct {
 	log     i.Logger
 	BaseURL string
+	client  *utils.Client
 }
 
 // NewSpotClient создаёт новый клиент для Spot API.
-func NewSpotClient(log i.Logger, baseURL string) *SpotClient {
+func NewSpotClient(log i.Logger, baseURL string, client *utils.Client) *SpotClient {
 	return &SpotClient{
 		log:     log,
 		BaseURL: baseURL,
+		client:  client,
 	}
 }
 
@@ -27,548 +26,877 @@ func NewSpotClient(log i.Logger, baseURL string) *SpotClient {
 // ## Эндпоинты для получения рыночных данных (Market Data Endpoints)
 
 // Ping 1. Проверка подключения к серверу (Test Connectivity).
-func (s *SpotClient) Ping(jsonParams string) *resty.Response {
+func (s *SpotClient) Ping(jsonParams string) (*resty.Response, error) {
 	caseURL := "/ping"
 	requestURL := s.BaseURL + caseURL
 	s.log.Debug("Ping request to MEXC", "url", requestURL, "params", jsonParams)
-	return utils.PublicGet(requestURL, jsonParams)
+
+	resp, err := s.client.PublicGet(requestURL, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка в Ping", "error", err)
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 // Time 2. Получить серверное время (Check Server Time).
-func (s *SpotClient) Time(jsonParams string) *resty.Response {
+func (s *SpotClient) Time(jsonParams string) (*resty.Response, error) {
 	caseURL := "/time"
 	requestURL := s.BaseURL + caseURL
 	s.log.Debug("Time request to MEXC", "url", requestURL, "params", jsonParams)
-	return utils.PublicGet(requestURL, jsonParams)
+
+	resp, err := s.client.PublicGet(requestURL, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка в Time", "error", err)
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 // APISymbol 3. Список торговых пар по умолчанию (API Default Symbol).
-func (s *SpotClient) APISymbol(jsonParams string) *resty.Response {
+func (s *SpotClient) APISymbol(jsonParams string) (*resty.Response, error) {
 	caseURL := "/defaultSymbols"
 	requestURL := s.BaseURL + caseURL
 	s.log.Debug("API symbol request to MEXC", "url", requestURL, "params", jsonParams)
-	return utils.PublicGet(requestURL, jsonParams)
+
+	resp, err := s.client.PublicGet(requestURL, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка в APISymbol", "error", err)
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 // ExchangeInfo 4. Информация о торгах (Exchange Information).
-func (s *SpotClient) ExchangeInfo(jsonParams string) *resty.Response {
+func (s *SpotClient) ExchangeInfo(jsonParams string) (*resty.Response, error) {
 	caseURL := "/exchangeInfo"
 	requestURL := s.BaseURL + caseURL
 	s.log.Debug("Exchange info request to MEXC", "url", requestURL, "params", jsonParams)
-	return utils.PublicGet(requestURL, jsonParams)
+
+	resp, err := s.client.PublicGet(requestURL, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка в ExchangeInfo", "error", err)
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 // Depth 5. Глубина стакана (Depth).
-func (s *SpotClient) Depth(jsonParams string) *resty.Response {
+func (s *SpotClient) Depth(jsonParams string) (*resty.Response, error) {
 	caseURL := "/depth"
 	requestURL := s.BaseURL + caseURL
 	s.log.Debug("Order book depth request to MEXC", "url", requestURL, "params", jsonParams)
-	return utils.PublicGet(requestURL, jsonParams)
+
+	resp, err := s.client.PublicGet(requestURL, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка в Depth", "error", err)
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 // Trades 6. Список последних сделок (Recent Trades List).
-func (s *SpotClient) Trades(jsonParams string) *resty.Response {
+func (s *SpotClient) Trades(jsonParams string) (*resty.Response, error) {
 	caseURL := "/trades"
 	requestURL := s.BaseURL + caseURL
 	s.log.Debug("Recent trades request to MEXC", "url", requestURL, "params", jsonParams)
-	return utils.PublicGet(requestURL, jsonParams)
+
+	resp, err := s.client.PublicGet(requestURL, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка в Trades", "error", err)
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 // AggTrades 7. Агрегированный список сделок (Aggregate Trades List).
-func (s *SpotClient) AggTrades(jsonParams string) *resty.Response {
+func (s *SpotClient) AggTrades(jsonParams string) (*resty.Response, error) {
 	caseURL := "/aggTrades"
 	requestURL := s.BaseURL + caseURL
 	s.log.Debug("Aggregate trades request to MEXC", "url", requestURL, "params", jsonParams)
-	return utils.PublicGet(requestURL, jsonParams)
+
+	resp, err := s.client.PublicGet(requestURL, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка в AggTrades", "error", err)
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 // Kline 8. Данные свечей (K-line Data).
-func (s *SpotClient) Kline(jsonParams string) *resty.Response {
+func (s *SpotClient) Kline(jsonParams string) (*resty.Response, error) {
 	caseURL := "/klines"
 	requestURL := s.BaseURL + caseURL
 	s.log.Debug("K-line data request to MEXC", "url", requestURL, "params", jsonParams)
-	return utils.PublicGet(requestURL, jsonParams)
+
+	resp, err := s.client.PublicGet(requestURL, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка в Kline", "error", err)
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 // AvgPrice 9. Средняя цена за период (Current Average Price).
-func (s *SpotClient) AvgPrice(jsonParams string) *resty.Response {
+func (s *SpotClient) AvgPrice(jsonParams string) (*resty.Response, error) {
 	caseURL := "/avgPrice"
 	requestURL := s.BaseURL + caseURL
 	s.log.Debug("Average price request to MEXC", "url", requestURL, "params", jsonParams)
-	return utils.PublicGet(requestURL, jsonParams)
+
+	resp, err := s.client.PublicGet(requestURL, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка в AvgPrice", "error", err)
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 // Ticker24hr 10. Статистика изменения цены за 24 часа (24hr Ticker Price Change Statistics).
-func (s *SpotClient) Ticker24hr(jsonParams string) *resty.Response {
+func (s *SpotClient) Ticker24hr(jsonParams string) (*resty.Response, error) {
 	caseURL := "/ticker/24hr"
 	requestURL := s.BaseURL + caseURL
 	s.log.Debug("24hr ticker stats request to MEXC", "url", requestURL, "params", jsonParams)
-	return utils.PublicGet(requestURL, jsonParams)
+
+	resp, err := s.client.PublicGet(requestURL, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка в Ticker24hr", "error", err)
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 // Price 11. Текущая цена символа (Symbol Price Ticker).
-func (s *SpotClient) Price(jsonParams string) *resty.Response {
+func (s *SpotClient) Price(jsonParams string) (*resty.Response, error) {
 	caseURL := "/ticker/price"
 	requestURL := s.BaseURL + caseURL
 	s.log.Debug("Symbol price request to MEXC", "url", requestURL, "params", jsonParams)
-	return utils.PublicGet(requestURL, jsonParams)
+
+	resp, err := s.client.PublicGet(requestURL, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка в Price", "error", err)
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 // BookTicker 12. Лучшие цены в стакане (Symbol Order Book Ticker).
-func (s *SpotClient) BookTicker(jsonParams string) *resty.Response {
+func (s *SpotClient) BookTicker(jsonParams string) (*resty.Response, error) {
 	caseURL := "/ticker/bookTicker"
 	requestURL := s.BaseURL + caseURL
 	s.log.Debug("Order book ticker request to MEXC", "url", requestURL, "params", jsonParams)
-	return utils.PublicGet(requestURL, jsonParams)
+
+	resp, err := s.client.PublicGet(requestURL, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка в BookTicker", "error", err)
+		return nil, err
+	}
+
+	return resp, nil
 }
 
-// ## 母子账户接口 Sub-Account Endpoints
+// ## 1. Суб‑аккаунты (Sub‑Account Endpoints)
 
-// ### 1 创建子账户 Create a Sub-account(For Master Account).
-func CreateSub(jsonParams string) interface{} {
+// CreateSub 1. Создать суб‑аккаунт (Create a Sub-account).
+func (s *SpotClient) CreateSub(jsonParams string) (*resty.Response, error) {
 	caseURL := "/sub-account/virtualSubAccount"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivatePost(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("CreateSub", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivatePost(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка CreateSub", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 2 查看子账户列表 Query Sub-account List (For Master Account).
-func QuerySub(jsonParams string) interface{} {
+// QuerySub 2. Получить список суб‑аккаунтов (Query Sub-account List).
+func (s *SpotClient) QuerySub(jsonParams string) (*resty.Response, error) {
 	caseURL := "/sub-account/list"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("QuerySub", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка QuerySub", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 3 创建子账户的APIkey Create an APIKey for a sub-account (For Master Account).
-func CreateSubApikey(jsonParams string) interface{} {
+// CreateSubApikey 3. Создать API‑ключ для суб‑аккаунта (Create an APIKey for a sub-account).
+func (s *SpotClient) CreateSubApikey(jsonParams string) (*resty.Response, error) {
 	caseURL := "/sub-account/apiKey" //nolint:goconst
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivatePost(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("CreateSubApikey", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivatePost(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка CreateSubApikey", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 4 查询子账户的APIKey Query the APIKey of a sub-account (For Master Account).
-func QuerySubApikey(jsonParams string) interface{} {
+// QuerySubApikey 4. Получить API‑ключи суб‑аккаунта (APIKey Query the APIKey of a sub-account).
+func (s *SpotClient) QuerySubApikey(jsonParams string) (*resty.Response, error) {
 	caseURL := "/sub-account/apiKey"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("QuerySubApikey", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка QuerySubApikey", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 5 删除子账户的APIKey Delete the APIKey of a sub-account (For Master Account).
-func DeleteSubApikey(jsonParams string) interface{} {
+// DeleteSubApikey 5. Удалить API‑ключ суб‑аккаунта (APIKey Delete the APIKey of a sub-account).
+func (s *SpotClient) DeleteSubApikey(jsonParams string) (*resty.Response, error) {
 	caseURL := "/sub-account/apiKey"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateDelete(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("DeleteSubApikey", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateDelete(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка DeleteSubApikey", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 6 母子用户万向划转 Universal Transfer (For Master Account).
-func UniTransfer(jsonParams string) interface{} {
+// UniTransfer 6. Универсальный перевод между аккаунтами (Universal Transfer).
+func (s *SpotClient) UniTransfer(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/sub-account/universalTransfer"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivatePost(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("UniTransfer", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivatePost(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка UniTransfer", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 7 查询母子万向划转历史 Query Universal Transfer History (For Master Account).
-func QueryUniTransfer(jsonParams string) interface{} {
+// QueryUniTransfer 7. История универсальных переводов (Query Universal Transfer History).
+func (s *SpotClient) QueryUniTransfer(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/sub-account/universalTransfer"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("QueryUniTransfer", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка QueryUniTransfer", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ## 现货账户和交易接口 Spot Account and Trade
+// ## 2. Торговля (Spot Account & Trade)
 
-// ### 1 用户API交易对 User API default symbol.
-func SelfSymbols(jsonParams string) interface{} {
+// SelfSymbols 1. Список разрешённых символов пользователя (User API default symbol).
+func (s *SpotClient) SelfSymbols(jsonParams string) (*resty.Response, error) {
 	caseURL := "/selfSymbols"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("SelfSymbols", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка SelfSymbols", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 2 测试下单 Test New Order.
-func TestOrder(jsonParams string) interface{} {
+// TestOrder 2. Тестовый ордер (Test New Order).
+func (s *SpotClient) TestOrder(jsonParams string) (*resty.Response, error) {
 	caseURL := "/order/test"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivatePost(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("TestOrder", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivatePost(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка TestOrder", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 3 下单 New Order.
-func PlaceOrder(jsonParams string) interface{} {
+// PlaceOrder 3. Разместить ордер (New Order).
+func (s *SpotClient) PlaceOrder(jsonParams string) (*resty.Response, error) {
 	caseURL := "/order" //nolint:goconst
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivatePost(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("PlaceOrder", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivatePost(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка PlaceOrder", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 4 批量下单 Batch Orders.
-func BatchOrder(jsonParams string) interface{} {
+// BatchOrder 4. Пакетное размещение ордеров (Batch Orders).
+func (s *SpotClient) BatchOrder(jsonParams string) (*resty.Response, error) {
 	caseURL := "/batchOrders"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivatePost(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("BatchOrder", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivatePost(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка BatchOrder", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 5 撤销订单 Cancel Order.
-func CancelOrder(jsonParams string) interface{} {
+// CancelOrder 5. Отменить ордер (Cancel Order).
+func (s *SpotClient) CancelOrder(jsonParams string) (*resty.Response, error) {
 	caseURL := "/order"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateDelete(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("CancelOrder", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateDelete(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка CancelOrder", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 6 撤销单一交易对所有订单 Cancel all Open Orders on a Symbol.
-func CancelAllOrders(jsonParams string) interface{} {
+// CancelAllOrders 6. Отменить все ордера по символу (Cancel all Open Orders on a Symbol).
+func (s *SpotClient) CancelAllOrders(jsonParams string) (*resty.Response, error) {
 	caseURL := "/openOrders"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateDelete(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("CancelAllOrders", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateDelete(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка CancelAllOrders", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 7 查询订单 Query Order.
-func QueryOrder(jsonParams string) interface{} {
+// QueryOrder 7. Информация об ордере (Query Order).
+func (s *SpotClient) QueryOrder(jsonParams string) (*resty.Response, error) {
 	caseURL := "/order"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("QueryOrder", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка QueryOrder", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 8 当前挂单 Current Open Orders.
-func OpenOrder(jsonParams string) interface{} {
+// OpenOrder 8. Открытые ордера (Current Open Orders).
+func (s *SpotClient) OpenOrder(jsonParams string) (*resty.Response, error) {
 	caseURL := "/openOrders"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("OpenOrder", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка OpenOrder", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 9 查询所有订单 All Orders.
-func AllOrders(jsonParams string) interface{} {
+// AllOrders 9. Все ордера (All Orders).
+func (s *SpotClient) AllOrders(jsonParams string) (*resty.Response, error) {
 	caseURL := "/allOrders"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("AllOrders", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка AllOrders", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 10 账户信息 Account Information.
-func SpotAccountInfo(jsonParams string) interface{} {
+// SpotAccountInfo 10. Информация об аккаунте (Account Information).
+func (s *SpotClient) SpotAccountInfo(jsonParams string) (*resty.Response, error) {
 	caseURL := "/account"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("SpotAccountInfo", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка SpotAccountInfo", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 11 账户成交历史 Account Trade List.
-func SpotmyTrade(jsonParams string) interface{} {
+// SpotMyTrade 11. История сделок (Account Trade List).
+func (s *SpotClient) SpotMyTrade(jsonParams string) (*resty.Response, error) {
 	caseURL := "/myTrades"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("SpotMyTrade", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка SpotMyTrade", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 12 开启MX抵扣 Enable MX Deduct.
-func MxDeduct(jsonParams string) interface{} {
+// MxDeduct 12. Включить MX‑дедукцию (Enable MX Deduct).
+func (s *SpotClient) MxDeduct(jsonParams string) (*resty.Response, error) {
 	caseURL := "/mxDeduct/enable"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivatePost(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("MxDeduct", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivatePost(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка MxDeduct", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 13 查看MX抵扣状态 Query MX Deduct Status.
-func QueryMxDeduct(jsonParams string) interface{} {
+// QueryMxDeduct 13. Статус MX‑дедукции (Query MX Deduct Status).
+func (s *SpotClient) QueryMxDeduct(jsonParams string) (*resty.Response, error) {
 	caseURL := "/mxDeduct/enable"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("QueryMxDeduct", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка QueryMxDeduct", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ## 钱包接口 Wallet Endpoints
+// ## 3. Кошелёк (Wallet Endpoints)
 
-// ### 1 查询币种信息 Query the currency information.
-func QueryCurrencyInfo(jsonParams string) interface{} {
+// QueryCurrencyInfo 1. Информация о валюте (Query the currency information).
+func (s *SpotClient) QueryCurrencyInfo(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/config/getall"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("QueryCurrencyInfo", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка QueryCurrencyInfo", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 2 提币 Withdraw.
-func Withdraw(jsonParams string) interface{} {
+// Withdraw 2. Вывод средств (Withdraw).
+func (s *SpotClient) Withdraw(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/withdraw/apply"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivatePost(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("Withdraw", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivatePost(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка Withdraw", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 3 取消提币 Cancel withdraw.
-func CancelWithdraw(jsonParams string) interface{} {
+// CancelWithdraw 3. Отменить вывод (Cancel withdraw).
+func (s *SpotClient) CancelWithdraw(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/withdraw"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateDelete(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("CancelWithdraw", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateDelete(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка CancelWithdraw", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 4 获取充值历史 Deposit History.
-func DepositHistory(jsonParams string) interface{} {
+// DepositHistory 4. История депозитов (Deposit History).
+func (s *SpotClient) DepositHistory(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/deposit/hisrec"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("DepositHistory", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка DepositHistory", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 5 获取提币历史 Withdraw History.
-func WithdrawHistory(jsonParams string) interface{} {
+// WithdrawHistory 5. История выводов (Withdraw History).
+func (s *SpotClient) WithdrawHistory(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/withdraw/historyl"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("WithdrawHistory", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка WithdrawHistory", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 6 生成充值地址 Generate deposit address.
-func GenDepositAddress(jsonParams string) interface{} {
+// GenDepositAddress 6. Сгенерировать адрес депозита (Generate deposit address).
+func (s *SpotClient) GenDepositAddress(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/deposit/address"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivatePost(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("GenDepositAddress", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivatePost(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка GenDepositAddress", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 7 获取充值地址 Deposit Address.
-func DepositAddress(jsonParams string) interface{} {
+// DepositAddress 7. Получить адрес депозита (Deposit Address).
+func (s *SpotClient) DepositAddress(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/deposit/address"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("DepositAddress", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка DepositAddress", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 8 获取提币地址 Withdraw Address.
-func WithdrawAddress(jsonParams string) interface{} {
+// WithdrawAddress 8. Получить адрес вывода (Withdraw Address).
+func (s *SpotClient) WithdrawAddress(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/withdraw/address"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("WithdrawAddress", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка WithdrawAddress", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 9 用户万向划转 User Universal Transfer.
-func Transfer(jsonParams string) interface{} {
+// Transfer 9. Универсальный перевод (User Universal Transfer).
+func (s *SpotClient) Transfer(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/transfer"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivatePost(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("Transfer", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivatePost(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка Transfer", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 10 查询用户万向划转历史 Query User Universal Transfer History.
-func TransferHistory(jsonParams string) interface{} {
+// TransferHistory 10. История переводов (Query User Universal Transfer History).
+func (s *SpotClient) TransferHistory(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/transfer"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("TransferHistory", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка TransferHistory", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 11 查询用户万向划转历史（根据tranId） Query User Universal Transfer History （by tranId）.
-func TransferHistoryByID(jsonParams string) interface{} {
+// TransferHistoryByID 11. История перевода по tranId (Query User Universal Transfer History （by tranId）).
+func (s *SpotClient) TransferHistoryByID(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/transfer/tranId"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("TransferHistoryByID", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка TransferHistoryByID", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 12 获取小额资产可兑换列表 Get Assets That Can Be Converted Into MX.
-func ConvertList(jsonParams string) interface{} {
+// ConvertList 12. Список активов для конвертации (Get Assets That Can Be Converted Into MX).
+func (s *SpotClient) ConvertList(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/convert/list"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("ConvertList", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка ConvertList", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 13 小额资产兑换 Dust Transfer.
-func Convert(jsonParams string) interface{} {
+// Convert 13. Конвертация мелких активов (Dust Transfer).
+func (s *SpotClient) Convert(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/convert"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivatePost(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("Convert", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivatePost(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка Convert", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 14 查询小额资产兑换历史 DustLog.
-func ConvertHistory(jsonParams string) interface{} {
+// ConvertHistory 14. История конвертаций (DustLog).
+func (s *SpotClient) ConvertHistory(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/convert"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("ConvertHistory", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка ConvertHistory", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 15 获取ETF基础信息 Get ETF info.
-func ETFInfo(jsonParams string) interface{} {
+// ETFInfo 15. Информация об ETF (Get ETF info).
+func (s *SpotClient) ETFInfo(jsonParams string) (*resty.Response, error) {
 	caseURL := "/etf/info"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("ETFInfo", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка ETFInfo", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 16 用户站内转账 Internal Transfer.
-func InternalTransfer(jsonParams string) interface{} {
+// InternalTransfer 16. Внутренний перевод (Internal Transfer).
+func (s *SpotClient) InternalTransfer(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/transfer/internal"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivatePost(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("InternalTransfer", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivatePost(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка InternalTransfer", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 17 用户站内转账历史 Internal Transfer History.
-func InternalTransferHistory(jsonParams string) interface{} {
+// InternalTransferHistory 17. История внутренних переводов (Internal Transfer History).
+func (s *SpotClient) InternalTransferHistory(jsonParams string) (*resty.Response, error) {
 	caseURL := "/capital/transfer/internal"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("InternalTransferHistory", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка InternalTransferHistory", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ## WS ListenKey
+// ## 4. WS ListenKey
 
-// ### 1 生成 Listen Key  Create a ListenKey.
-func CreateListenKey(jsonParams string) interface{} {
+// CreateListenKey 1. Создать ListenKey (Listen Key  Create a ListenKey).
+func (s *SpotClient) CreateListenKey(jsonParams string) (*resty.Response, error) {
 	caseURL := "/userDataStream" //nolint:goconst
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivatePost(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("CreateListenKey", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivatePost(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка CreateListenKey", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 2 延长 Listen Key 有效期  Keep-alive a ListenKey.
-func KeepListenKey(jsonParams string) interface{} {
+// KeepListenKey 2. Продлить ListenKey (Keep-alive a ListenKey).
+func (s *SpotClient) KeepListenKey(jsonParams string) (*resty.Response, error) {
 	caseURL := "/userDataStream"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivatePut(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("KeepListenKey", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivatePut(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка KeepListenKey", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 3 关闭 Listen Key  Close a ListenKey.
-func CloseListenKey(jsonParams string) interface{} {
+// CloseListenKey 3. Закрыть ListenKey ().
+func (s *SpotClient) CloseListenKey(jsonParams string) (*resty.Response, error) {
 	caseURL := "/userDataStream"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateDelete(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("CloseListenKey", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateDelete(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка CloseListenKey", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ## 邀请返佣接口
+// ## 5. Партнёрские и реферальные данные
 
-// ### 1 获取邀请返佣记录 Get Rebate History Records.
-func RebateHistory(jsonParams string) interface{} {
+// RebateHistory 1. История реферальных вознаграждений (Get Rebate History Records).
+func (s *SpotClient) RebateHistory(jsonParams string) (*resty.Response, error) {
 	caseURL := "/rebate/taxQuery"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("RebateHistory", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка RebateHistory", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 2 获取返佣记录明细 Get Rebate Records Detail.
-func RebateDetail(jsonParams string) interface{} {
+// RebateDetail 2. Детали реферальных выплат (Get Rebate Records Detail).
+func (s *SpotClient) RebateDetail(jsonParams string) (*resty.Response, error) {
 	caseURL := "/rebate/detail"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("RebateDetail", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка RebateDetail", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 3 获取自返记录明细 Get Self Rebate Records Detail.
-func SelfRecordsDetail(jsonParams string) interface{} {
+// SelfRecordsDetail 3. Детали собственных выплат (Get Self Rebate Records Detail).
+func (s *SpotClient) SelfRecordsDetail(jsonParams string) (*resty.Response, error) {
 	caseURL := "/rebate/detail/kickback"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("SelfRecordsDetail", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка SelfRecordsDetail", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 4 获取邀请人 Query ReferCode.
-func ReferCode(jsonParams string) interface{} {
+// ReferCode 4. Получить код приглашения (Query ReferCode).
+func (s *SpotClient) ReferCode(jsonParams string) (*resty.Response, error) {
 	caseURL := "/rebate/referCode"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("ReferCode", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка ReferCode", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 5 获取代理邀请返佣记录 （代理账户）Get Affiliate Commission Record (affiliate only).
-func AffiliateCommission(jsonParams string) interface{} {
+// AffiliateCommission 5. Комиссии аффилиата (Get Affiliate Commission Record (affiliate only)).
+func (s *SpotClient) AffiliateCommission(jsonParams string) (*resty.Response, error) {
 	caseURL := "/rebate/affiliate/commission"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("AffiliateCommission", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка AffiliateCommission", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 6 获取代理提现记录 （代理账户）Get Affiliate Withdraw Record (affiliate only).
-func AffiliateWithdraw(jsonParams string) interface{} {
+// AffiliateWithdraw 6. История выводов аффилиата (Get Affiliate Withdraw Record (affiliate only)).
+func (s *SpotClient) AffiliateWithdraw(jsonParams string) (*resty.Response, error) {
 	caseURL := "/rebate/affiliate/withdraw"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("AffiliateWithdraw", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка AffiliateWithdraw", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 7 获取代理返佣明细 （代理账户）Get Affiliate Commission Detail Record (affiliate only).
-func AffiliateCommissionDetail(jsonParams string) interface{} {
+// AffiliateCommissionDetail 7. Детали комиссий аффилиата (Get Affiliate Commission Detail Record (affiliate only)).
+func (s *SpotClient) AffiliateCommissionDetail(jsonParams string) (*resty.Response, error) {
 	caseURL := "/rebate/affiliate/commission/detail"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("AffiliateCommissionDetail", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка AffiliateCommissionDetail", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 8 查询直客页面数据 （代理账户）Get Affiliate Referral Data（affiliate only）.
-func AffiliateReferral(jsonParams string) interface{} {
+// AffiliateReferral 8. Сводка реферальных данных аффилиата (Get Affiliate Referral Data（affiliate only）).
+func (s *SpotClient) AffiliateReferral(jsonParams string) (*resty.Response, error) {
 	caseURL := "/rebate/affiliate/referral"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("AffiliateReferral", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка AffiliateReferral", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
 
-// ### 9 查询子代理页面数据 （代理账户）Get Subaffiliates Data (affiliate only).
-func Subaffiliates(jsonParams string) interface{} {
+// Subaffiliates 9. Суб‑аффилиаты (Get Subaffiliates Data (affiliate only)).
+func (s *SpotClient) Subaffiliates(jsonParams string) (*resty.Response, error) {
 	caseURL := "/rebate/affiliate/subaffiliates"
-	requestURL := config.BASE_URL + caseURL
-	fmt.Println("requestURL:", requestURL)
-	response := utils.PrivateGet(requestURL, jsonParams)
-	return response
+	url := s.BaseURL + caseURL
+	s.log.Debug("Subaffiliates", "url", url, "params", jsonParams)
+
+	resp, err := s.client.PrivateGet(url, jsonParams)
+	if err != nil {
+		s.log.Error("Ошибка Subaffiliates", "error", err)
+		return nil, err
+	}
+	return resp, nil
 }
