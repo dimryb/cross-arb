@@ -60,12 +60,9 @@ func (c *Client) Quote(
 ) (*QuoteResponse, error) {
 	start := time.Now()
 
-	inputSymbol := getTokenSymbol(inputMint)
-	outputSymbol := getTokenSymbol(outputMint)
-
 	c.logger.Debug("Начало запроса котировки",
-		"от_токена", inputSymbol,
-		"к_токену", outputSymbol,
+		"от_токена", inputMint,
+		"к_токену", outputMint,
 		"сумма", amount,
 	)
 
@@ -122,7 +119,7 @@ func (c *Client) Quote(
 	}
 
 	c.logger.Info("Котировка успешно получена",
-		"обмен", fmt.Sprintf("%s → %s", inputSymbol, outputSymbol),
+		"обмен", fmt.Sprintf("%s → %s", inputMint, outputMint),
 		"входная_сумма", amount,
 		"выходная_сумма", quoteResponse.OutAmount,
 		"время_мс", time.Since(start).Milliseconds(),
@@ -200,20 +197,4 @@ func (c *Client) handleQuoteResponse(resp *http.Response) (*QuoteResponse, error
 	}
 
 	return &quoteResponse, nil
-}
-
-// getTokenSymbol возвращает читаемое название токена по mint-адресу (используется для логирования).
-func getTokenSymbol(mint string) string {
-	tokens := map[string]string{
-		"So11111111111111111111111111111111111111112":  "SOL",
-		"Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB": "USDT",
-	}
-	if symbol, exists := tokens[mint]; exists {
-		return symbol
-	}
-	// Возвращаем последние 8 символов для неизвестных токенов
-	if len(mint) > 8 {
-		return "..." + mint[len(mint)-8:]
-	}
-	return mint
 }

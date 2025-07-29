@@ -67,7 +67,7 @@ func TestClient_Quote_Integration(t *testing.T) {
 		}
 
 		t.Logf("Запрашиваю котировку (кастомные опции) для обмена %d лампортов %s на %s...",
-			amount, getTokenSymbol(inputMint), getTokenSymbol(outputMint))
+			amount, inputMint, outputMint)
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
