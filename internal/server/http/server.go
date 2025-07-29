@@ -1,22 +1,22 @@
-package server
+package http
 
 import (
 	"encoding/json"
 	"net/http"
 	"time"
 
-	"github.com/dimryb/cross-arb/internal/service"
+	"github.com/dimryb/cross-arb/internal/storage"
 )
 
-type HTTPServer struct {
-	store *service.TickerStore
+type Server struct {
+	store *storage.TickerStore
 }
 
-func NewHTTPServer(store *service.TickerStore) *HTTPServer {
-	return &HTTPServer{store: store}
+func NewHTTPServer(store *storage.TickerStore) *Server {
+	return &Server{store: store}
 }
 
-func (s *HTTPServer) Run(addr string) error {
+func (s *Server) Run(addr string) error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/tickers", s.handleTickers)
 
@@ -31,7 +31,7 @@ func (s *HTTPServer) Run(addr string) error {
 	return server.ListenAndServe()
 }
 
-func (s *HTTPServer) handleTickers(w http.ResponseWriter, _ *http.Request) {
+func (s *Server) handleTickers(w http.ResponseWriter, _ *http.Request) {
 	tickers := s.store.GetAll()
 
 	w.Header().Set("Content-Type", "application/json")
