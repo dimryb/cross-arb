@@ -33,20 +33,3 @@ type SwapInfo struct {
 	FeeAmount  string `json:"feeAmount"`
 	FeeMint    string `json:"feeMint"`
 }
-
-// SwapRequest представляет запрос для эндпоинта /swap.
-type SwapRequest struct {
-	UserPublicKey                 string        `json:"userPublicKey"`
-	WrapAndUnwrapSol              bool          `json:"wrapAndUnwrapSol"`
-	UseSharedAccounts             bool          `json:"useSharedAccounts"`
-	FeeAccount                    string        `json:"feeAccount"`
-	ComputeUnitPriceMicroLamports interface{}   `json:"computeUnitPriceMicroLamports"`
-	PrioritizationFeeLamports     interface{}   `json:"prioritizationFeeLamports"`
-	QuoteResponse                 QuoteResponse `json:"quoteResponse"`
-}
-
-// SwapResponse представляет ответ от эндпоинта /swap.
-type SwapResponse struct {
-	SwapTransaction      string `json:"swapTransaction"`
-	LastValidBlockHeight int    `json:"lastValidBlockHeight"`
-}
