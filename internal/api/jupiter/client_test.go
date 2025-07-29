@@ -8,11 +8,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dimryb/cross-arb/internal/api/jupiter/config"
 	"github.com/dimryb/cross-arb/internal/logger"
 )
 
 const (
+	baseRawURL       = "https://lite-api.jup.ag/swap/v1"
 	inputMint        = "So11111111111111111111111111111111111111112"  // SOL
 	outputMint       = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB" // USDT
 	amountToExchange = 100000000                                      // 0.1 SOL в лампортах
@@ -20,7 +20,7 @@ const (
 
 // NewTestClient создает клиент для тестов.
 func NewTestClient(logger *logger.Logger) *Client {
-	baseURL, _ := url.Parse(config.BASE_URL)
+	baseURL, _ := url.Parse(baseRawURL)
 	return &Client{
 		baseURL:    baseURL,
 		httpClient: &http.Client{Timeout: 30 * time.Second},
