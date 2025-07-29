@@ -14,10 +14,11 @@ import (
 )
 
 type Arbitrage struct {
-	ctx context.Context
-	app i.Application
-	log i.Logger
-	cfg *config.CrossArbConfig
+	ctx   context.Context
+	app   i.Application
+	log   i.Logger
+	cfg   *config.CrossArbConfig
+	store *TickerStore
 }
 
 func NewArbitrageService(
@@ -25,12 +26,14 @@ func NewArbitrageService(
 	app i.Application,
 	logger i.Logger,
 	cfg *config.CrossArbConfig,
+	store *TickerStore,
 ) *Arbitrage {
 	return &Arbitrage{
-		ctx: ctx,
-		app: app,
-		log: logger,
-		cfg: cfg,
+		ctx:   ctx,
+		app:   app,
+		log:   logger,
+		cfg:   cfg,
+		store: store,
 	}
 }
 
