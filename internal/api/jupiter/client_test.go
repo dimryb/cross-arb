@@ -13,8 +13,9 @@ import (
 )
 
 const (
-	inputMint  = "So11111111111111111111111111111111111111112"  // SOL
-	outputMint = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB" // USDT
+	inputMint        = "So11111111111111111111111111111111111111112"  // SOL
+	outputMint       = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB" // USDT
+	amountToExchange = 100000000                                      // 0.1 SOL в лампортах
 )
 
 // NewTestClient создает клиент для тестов.
@@ -36,14 +37,13 @@ func TestClient_Quote_Integration(t *testing.T) {
 	testLogger := logger.New("debug")
 	client := NewTestClient(testLogger)
 
-	amount := int64(100000000) // 0.1 SOL
-
 	t.Run("Default options", func(t *testing.T) {
-		t.Logf("Запрашиваю котировку (опции по умолчанию) для обмена %d лампортов %s на %s...", amount, inputMint, outputMint)
+		t.Logf("Запрашиваю котировку (опции по умолчанию) для обмена %d лампортов %s на %s...",
+			amountToExchange, inputMint, outputMint)
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
-		quoteResponse, err := client.Quote(ctx, inputMint, outputMint, amount, nil)
+		quoteResponse, err := client.Quote(ctx, inputMint, outputMint, amountToExchange, nil)
 
 		if err != nil {
 			t.Fatalf("Quote() не удалось выполнить: %v", err)
@@ -67,11 +67,11 @@ func TestClient_Quote_Integration(t *testing.T) {
 		}
 
 		t.Logf("Запрашиваю котировку (кастомные опции) для обмена %d лампортов %s на %s...",
-			amount, inputMint, outputMint)
+			amountToExchange, inputMint, outputMint)
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
-		quoteResponse, err := client.Quote(ctx, inputMint, outputMint, amount, opts)
+		quoteResponse, err := client.Quote(ctx, inputMint, outputMint, amountToExchange, opts)
 		if err != nil {
 			t.Fatalf("Quote() с кастомными опциями не удалось выполнить: %v", err)
 		}
