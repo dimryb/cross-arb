@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 
@@ -84,6 +85,16 @@ func (m *Arbitrage) Run() error {
 
 				fmt.Printf("=== Обновление цен (%s) ===\n", time.Now().Format("15:04:05.000"))
 				for _, r := range results {
+					if r.Error == nil {
+						m.store.Set(TickerData{
+							Symbol:   r.Data.Symbol,
+							Exchange: "mexc",
+							BidPrice: parseFloat(r.Data.BidPrice),
+							BidQty:   parseFloat(r.Data.BidQty),
+							AskPrice: parseFloat(r.Data.AskPrice),
+							AskQty:   parseFloat(r.Data.AskQty),
+						})
+					}
 					fmt.Printf(
 						"  [%s] -> покупка: %s (%s) продажа: %s (%s)\n",
 						r.Data.Symbol,
@@ -131,4 +142,9 @@ func bookTicker(sc *spotlist.SpotClient, symbol string) (BookTicker, error) {
 		return BookTicker{}, fmt.Errorf("failed to parse JSON: %w", err)
 	}
 	return tickerData, nil
+}
+
+func parseFloat(s string) float64 {
+	f, _ := strconv.ParseFloat(s, 64)
+	return f
 }
