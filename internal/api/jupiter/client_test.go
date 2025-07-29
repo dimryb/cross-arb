@@ -44,7 +44,6 @@ func TestClient_Quote_Integration(t *testing.T) {
 		defer cancel()
 
 		quoteResponse, err := client.Quote(ctx, inputMint, outputMint, amountToExchange, nil)
-
 		if err != nil {
 			t.Fatalf("Quote() не удалось выполнить: %v", err)
 		}
