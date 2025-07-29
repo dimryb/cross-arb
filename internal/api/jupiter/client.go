@@ -45,10 +45,7 @@ type QuoteOptions struct {
 
 // DefaultQuoteOptions возвращает опции по умолчанию.
 func DefaultQuoteOptions() *QuoteOptions {
-	slippage := 50
-	return &QuoteOptions{
-		SlippageBps: &slippage,
-	}
+	return &QuoteOptions{}
 }
 
 // Quote получает котировку для обмена токенов.
