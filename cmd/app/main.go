@@ -10,6 +10,7 @@ import (
 	"github.com/dimryb/cross-arb/internal/app"
 	"github.com/dimryb/cross-arb/internal/config"
 	"github.com/dimryb/cross-arb/internal/logger"
+	"github.com/dimryb/cross-arb/internal/server"
 	"github.com/dimryb/cross-arb/internal/service"
 )
 
@@ -38,7 +39,16 @@ func main() {
 
 	logg := logger.New(cfg.Log.Level)
 	application := app.NewApp(logg)
-	arbitrageService := service.NewArbitrageService(ctx, application, logg, cfg)
+	store := service.NewTickerStore()
+
+	go func() {
+		httpServer := server.NewHTTPServer(store)
+		if err := httpServer.Run(":8080"); err != nil {
+			logg.Errorf("HTTP server error: %v", err)
+		}
+	}()
+
+	arbitrageService := service.NewArbitrageService(ctx, application, logg, cfg, store)
 
 	logg.Info("Starting app...")
 	if err = arbitrageService.Run(); err != nil {
