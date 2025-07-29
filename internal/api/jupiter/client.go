@@ -68,16 +68,13 @@ func (c *Client) Quote(
 
 	// Валидация входных параметров
 	if inputMint == "" {
-		c.logger.Error("Ошибка запроса котировки: пустой inputMint")
-		return nil, fmt.Errorf("inputMint cannot be empty")
+		return nil, fmt.Errorf("ошибка валидации: inputMint не может быть пустым")
 	}
 	if outputMint == "" {
-		c.logger.Error("Ошибка запроса котировки: пустой outputMint")
-		return nil, fmt.Errorf("outputMint cannot be empty")
+		return nil, fmt.Errorf("ошибка валидации: outputMint не может быть пустым")
 	}
 	if amount <= 0 {
-		c.logger.Error("Ошибка запроса котировки: некорректная сумма", "сумма", amount)
-		return nil, fmt.Errorf("amount must be positive, got %d", amount)
+		return nil, fmt.Errorf("ошибка валидации: сумма должна быть положительной, получено: %v", amount)
 	}
 
 	if opts == nil {
@@ -89,8 +86,7 @@ func (c *Client) Quote(
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, requestURL, nil)
 	if err != nil {
-		c.logger.Error("Ошибка создания HTTP-запроса", "ошибка", err)
-		return nil, fmt.Errorf("failed to create quote request: %w", err)
+		return nil, fmt.Errorf("не удалось создать http-запрос для котировки: %w", err)
 	}
 
 	req.Header.Set("Accept", "application/json")
@@ -98,12 +94,11 @@ func (c *Client) Quote(
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		c.logger.Error("Ошибка выполнения HTTP-запроса", "ошибка", err, "время_мс", time.Since(start).Milliseconds())
-		return nil, fmt.Errorf("failed to execute quote request: %w", err)
+		return nil, fmt.Errorf("не удалось выполнить http-запрос для котировки: %w", err)
 	}
 	defer func() {
 		if closeErr := resp.Body.Close(); closeErr != nil {
-			c.logger.Error("Ошибка закрытия тела ответа", "ошибка", closeErr)
+			c.logger.Error("Ошибка при закрытии тела ответа", "ошибка", closeErr)
 		}
 	}()
 
@@ -114,8 +109,7 @@ func (c *Client) Quote(
 
 	quoteResponse, err := c.handleQuoteResponse(resp)
 	if err != nil {
-		c.logger.Error("Ошибка обработки ответа", "ошибка", err, "время_мс", time.Since(start).Milliseconds())
-		return nil, err
+		return nil, fmt.Errorf("не удалось обработать ответ с котировкой: %w", err)
 	}
 
 	c.logger.Info("Котировка успешно получена",

@@ -96,10 +96,10 @@ func TestClient_Quote_ValidationErrors(t *testing.T) {
 		amount     int64
 		wantErrMsg string
 	}{
-		{"Empty inputMint", "", outputMint, 1, "inputMint cannot be empty"},
-		{"Empty outputMint", inputMint, "", 1, "outputMint cannot be empty"},
-		{"Zero amount", inputMint, outputMint, 0, "amount must be positive"},
-		{"Negative amount", inputMint, outputMint, -1, "amount must be positive"},
+		{"Empty inputMint", "", outputMint, 1, "inputMint не может быть пустым"},
+		{"Empty outputMint", inputMint, "", 1, "outputMint не может быть пустым"},
+		{"Zero amount", inputMint, outputMint, 0, "сумма должна быть положительной"},
+		{"Negative amount", inputMint, outputMint, -1, "сумма должна быть положительной"},
 	}
 
 	for _, tc := range testCases {
