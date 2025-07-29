@@ -7,8 +7,6 @@ exchanges:
     secretKey: ""
     baseUrl: "https://api.mexc.com/api/v3"
     enabled: true
-  jupiter:
-    baseUrl: "https://lite-api.jup.ag/swap/v1"
 
   jupiter:
     baseUrl: "https://lite-api.jup.ag/swap/v1"
