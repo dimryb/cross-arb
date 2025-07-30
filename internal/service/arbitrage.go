@@ -12,6 +12,7 @@ import (
 	"github.com/dimryb/cross-arb/internal/api/mexc/utils"
 	"github.com/dimryb/cross-arb/internal/config"
 	i "github.com/dimryb/cross-arb/internal/interface"
+	"github.com/dimryb/cross-arb/internal/storage"
 )
 
 type Arbitrage struct {
@@ -19,7 +20,7 @@ type Arbitrage struct {
 	app   i.Application
 	log   i.Logger
 	cfg   *config.CrossArbConfig
-	store *TickerStore
+	store *storage.TickerStore
 }
 
 func NewArbitrageService(
@@ -27,7 +28,7 @@ func NewArbitrageService(
 	app i.Application,
 	logger i.Logger,
 	cfg *config.CrossArbConfig,
-	store *TickerStore,
+	store *storage.TickerStore,
 ) *Arbitrage {
 	return &Arbitrage{
 		ctx:   ctx,
@@ -86,7 +87,7 @@ func (m *Arbitrage) Run() error {
 				fmt.Printf("=== Обновление цен (%s) ===\n", time.Now().Format("15:04:05.000"))
 				for _, r := range results {
 					if r.Error == nil {
-						m.store.Set(TickerData{
+						m.store.Set(storage.TickerData{
 							Symbol:   r.Data.Symbol,
 							Exchange: "mexc",
 							BidPrice: parseFloat(r.Data.BidPrice),
