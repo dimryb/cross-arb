@@ -86,16 +86,7 @@ func (m *Arbitrage) Run() error {
 
 				fmt.Printf("=== Обновление цен (%s) ===\n", time.Now().Format("15:04:05.000"))
 				for _, r := range results {
-					if r.Error == nil {
-						m.store.Set(storage.TickerData{
-							Symbol:   r.Data.Symbol,
-							Exchange: "mexc",
-							BidPrice: parseFloat(r.Data.BidPrice),
-							BidQty:   parseFloat(r.Data.BidQty),
-							AskPrice: parseFloat(r.Data.AskPrice),
-							AskQty:   parseFloat(r.Data.AskQty),
-						})
-					}
+					m.updateStore("mexc", r)
 					fmt.Printf(
 						"  [%s] -> покупка: %s (%s) продажа: %s (%s)\n",
 						r.Data.Symbol,
@@ -112,6 +103,19 @@ func (m *Arbitrage) Run() error {
 	wg.Wait()
 
 	return nil
+}
+
+func (m *Arbitrage) updateStore(exchange string, r Result) {
+	if r.Error == nil {
+		m.store.Set(storage.TickerData{
+			Symbol:   r.Data.Symbol,
+			Exchange: exchange,
+			BidPrice: parseFloat(r.Data.BidPrice),
+			BidQty:   parseFloat(r.Data.BidQty),
+			AskPrice: parseFloat(r.Data.AskPrice),
+			AskQty:   parseFloat(r.Data.AskQty),
+		})
+	}
 }
 
 func getTicker(sc *spotlist.SpotClient, results []Result, index int, symbol string) {
