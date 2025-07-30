@@ -47,3 +47,52 @@ type SwapInfo struct {
 	FeeAmount  string `json:"feeAmount"`
 	FeeMint    string `json:"feeMint"`
 }
+
+// SwapRequest представляет тело запроса для эндпоинта /swap.
+// Создает транзакцию для обмена на основе котировки.
+type SwapRequest struct {
+	QuoteResponse                 QuoteResponse              `json:"quoteResponse"`
+	UserPublicKey                 string                     `json:"userPublicKey"`
+	Payer                         *string                    `json:"payer,omitempty"`
+	WrapAndUnwrapSol              *bool                      `json:"wrapAndUnwrapSol,omitempty"`
+	UseSharedAccounts             *bool                      `json:"useSharedAccounts,omitempty"`
+	FeeAccount                    *string                    `json:"feeAccount,omitempty"`
+	TrackingAccount               *string                    `json:"trackingAccount,omitempty"`
+	PrioritizationFeeLamports     *PrioritizationFeeLamports `json:"prioritizationFeeLamports,omitempty"`
+	AsLegacyTransaction           *bool                      `json:"asLegacyTransaction,omitempty"`
+	DestinationTokenAccount       *string                    `json:"destinationTokenAccount,omitempty"`
+	DynamicComputeUnitLimit       *bool                      `json:"dynamicComputeUnitLimit,omitempty"`
+	SkipUserAccountsRPCCalls      *bool                      `json:"skipUserAccountsRpcCalls,omitempty"`
+	DynamicSlippage               *bool                      `json:"dynamicSlippage,omitempty"`
+	ComputeUnitPriceMicroLamports *uint64                    `json:"computeUnitPriceMicroLamports,omitempty"`
+	BlockhashSlotsToExpiry        *int                       `json:"blockhashSlotsToExpiry,omitempty"`
+}
+
+// PrioritizationFeeLamports определяет структурированную комиссию для приоритизации транзакции.
+// Предоставляет более гибкие возможности по сравнению с ComputeUnitPriceMicroLamports.
+type PrioritizationFeeLamports struct {
+	*PriorityLevelWithMaxLamports `json:"priorityLevelWithMaxLamports,omitempty"`
+	JitoTipLamports               *uint64 `json:"jitoTipLamports,omitempty"`
+}
+
+// PriorityLevelWithMaxLamports задает автоматический уровень приоритета с максимальным порогом стоимости.
+type PriorityLevelWithMaxLamports struct {
+	PriorityLevel PriorityLevel `json:"priorityLevel"`
+	MaxLamports   uint64        `json:"maxLamports"`
+}
+
+// PriorityLevel определяет предустановленные уровни приоритета транзакции.
+type PriorityLevel string
+
+const (
+	PriorityLevelMedium   PriorityLevel = "medium"
+	PriorityLevelHigh     PriorityLevel = "high"
+	PriorityLevelVeryHigh PriorityLevel = "veryHigh"
+)
+
+// SwapResponse представляет ответ от эндпоинта /swap.
+type SwapResponse struct {
+	SwapTransaction           string `json:"swapTransaction"`
+	LastValidBlockHeight      uint64 `json:"lastValidBlockHeight"`
+	PrioritizationFeeLamports uint64 `json:"prioritizationFeeLamports"`
+}
