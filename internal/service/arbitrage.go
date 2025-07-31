@@ -13,7 +13,7 @@ import (
 	"github.com/dimryb/cross-arb/internal/api/mexc/utils"
 	"github.com/dimryb/cross-arb/internal/config"
 	i "github.com/dimryb/cross-arb/internal/interface"
-	"github.com/dimryb/cross-arb/internal/storage"
+	"github.com/dimryb/cross-arb/internal/types"
 )
 
 const (
@@ -26,22 +26,19 @@ type Arbitrage struct {
 	app   i.Application
 	log   i.Logger
 	cfg   *config.CrossArbConfig
-	store *storage.TickerStore
+	store i.TickerStore
 }
 
 func NewArbitrageService(
-	ctx context.Context,
 	app i.Application,
-	logger i.Logger,
 	cfg *config.CrossArbConfig,
-	store *storage.TickerStore,
 ) *Arbitrage {
 	return &Arbitrage{
-		ctx:   ctx,
+		ctx:   app.Context(),
 		app:   app,
-		log:   logger,
+		log:   app.Logger(),
 		cfg:   cfg,
-		store: store,
+		store: app.TickerStore(),
 	}
 }
 
@@ -116,7 +113,7 @@ func (m *Arbitrage) updateAllStores(exchange string, results []Result) {
 
 func (m *Arbitrage) updateStore(exchange string, r Result) {
 	if r.Error == nil {
-		m.store.Set(storage.TickerData{
+		m.store.Set(types.TickerData{
 			Symbol:   r.Data.Symbol,
 			Exchange: exchange,
 			BidPrice: parseFloat(r.Data.BidPrice),

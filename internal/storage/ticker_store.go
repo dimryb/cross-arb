@@ -2,31 +2,13 @@ package storage
 
 import (
 	"sync"
+
+	"github.com/dimryb/cross-arb/internal/types"
 )
-
-// TickerData — данные одного тикера.
-type TickerData struct {
-	Symbol   string  `json:"symbol" proto:"symbol"`
-	Exchange string  `json:"exchange" proto:"exchange"`
-	BidPrice float64 `json:"bidPrice" proto:"bid_price"`
-	BidQty   float64 `json:"bidQty" proto:"bid_qty"`
-	AskPrice float64 `json:"askPrice" proto:"ask_price"`
-	AskQty   float64 `json:"askQty" proto:"ask_qty"`
-}
-
-// Equal Сравнение двух тикеров (для оптимизации уведомлений).
-func (t TickerData) Equal(other TickerData) bool {
-	return t.Symbol == other.Symbol &&
-		t.Exchange == other.Exchange &&
-		t.BidPrice == other.BidPrice &&
-		t.BidQty == other.BidQty &&
-		t.AskPrice == other.AskPrice &&
-		t.AskQty == other.AskQty
-}
 
 // TickerEvent — событие обновления тикера.
 type TickerEvent struct {
-	Ticker TickerData
+	Ticker types.TickerData
 }
 
 // TickerSubscriber — канал для получения событий.
@@ -35,21 +17,21 @@ type TickerSubscriber chan TickerEvent
 // TickerStore — потокобезопасное хранилище тикеров с поддержкой подписок.
 type TickerStore struct {
 	mu          sync.RWMutex
-	tickers     map[string]TickerData
+	tickers     map[string]types.TickerData
 	subscribers []TickerSubscriber // Активные подписчики
 }
 
 // NewTickerStore — создаёт новое хранилище.
 func NewTickerStore() *TickerStore {
 	return &TickerStore{
-		tickers:     make(map[string]TickerData),
+		tickers:     make(map[string]types.TickerData),
 		subscribers: make([]TickerSubscriber, 0),
 	}
 }
 
 // Set — добавляет или обновляет тикер.
 // Если данные изменились — уведомляет подписчиков.
-func (s *TickerStore) Set(t TickerData) {
+func (s *TickerStore) Set(t types.TickerData) {
 	key := t.Symbol + "-" + t.Exchange
 
 	s.mu.Lock()
@@ -63,11 +45,11 @@ func (s *TickerStore) Set(t TickerData) {
 }
 
 // GetAll — возвращает копию всех тикеров (используется HTTP).
-func (s *TickerStore) GetAll() []TickerData {
+func (s *TickerStore) GetAll() []types.TickerData {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	all := make([]TickerData, 0, len(s.tickers))
+	all := make([]types.TickerData, 0, len(s.tickers))
 	for _, v := range s.tickers {
 		all = append(all, v)
 	}
@@ -85,7 +67,7 @@ func (s *TickerStore) AddSubscriber() TickerSubscriber {
 }
 
 // notifySubscribers — отправляет событие всем подписчикам.
-func (s *TickerStore) notifySubscribers(ticker TickerData) {
+func (s *TickerStore) notifySubscribers(ticker types.TickerData) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 

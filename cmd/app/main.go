@@ -39,9 +39,9 @@ func main() {
 	defer cancel()
 
 	logg := logger.New(cfg.Log.Level)
-	application := app.NewApp(logg)
 	store := storage.NewTickerStore()
-	arbitrageService := service.NewArbitrageService(ctx, application, logg, cfg, store)
+	application := app.NewApp(ctx, logg, store)
+	arbitrageService := service.NewArbitrageService(application, cfg)
 
 	go func() {
 		httpServer := http.NewHTTPServer(store)
