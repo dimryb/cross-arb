@@ -1,31 +1,25 @@
 package storage
 
 import (
+	"context"
 	"sync"
 
+	i "github.com/dimryb/cross-arb/internal/interface"
 	"github.com/dimryb/cross-arb/internal/types"
 )
-
-// TickerEvent — событие обновления тикера.
-type TickerEvent struct {
-	Ticker types.TickerData
-}
-
-// TickerSubscriber — канал для получения событий.
-type TickerSubscriber chan TickerEvent
 
 // TickerStore — потокобезопасное хранилище тикеров с поддержкой подписок.
 type TickerStore struct {
 	mu          sync.RWMutex
 	tickers     map[string]types.TickerData
-	subscribers []TickerSubscriber // Активные подписчики
+	subscribers []chan types.TickerEvent // Каналы для рассылки
 }
 
 // NewTickerStore — создаёт новое хранилище.
 func NewTickerStore() *TickerStore {
 	return &TickerStore{
 		tickers:     make(map[string]types.TickerData),
-		subscribers: make([]TickerSubscriber, 0),
+		subscribers: make([]chan types.TickerEvent, 0),
 	}
 }
 
@@ -57,28 +51,52 @@ func (s *TickerStore) GetAll() []types.TickerData {
 }
 
 // AddSubscriber — регистрирует нового подписчика.
-// Возвращает канал, из которого он будет читать события.
-func (s *TickerStore) AddSubscriber() TickerSubscriber {
-	ch := make(TickerSubscriber, 10) // буфер на 10 событий
+// Возвращает обёртку i.TickerSubscriber для безопасного чтения и управления.
+func (s *TickerStore) AddSubscriber() i.TickerSubscriber {
+	ch := make(chan types.TickerEvent, 10)
+	ctx, cancel := context.WithCancel(context.Background())
+	sub := newSubscriber(ctx, ch, cancel)
+
 	s.mu.Lock()
 	s.subscribers = append(s.subscribers, ch)
 	s.mu.Unlock()
-	return ch
+
+	go func() {
+		<-ctx.Done()
+		s.removeSubscriber(ch)
+	}()
+
+	return sub
 }
 
-// notifySubscribers — отправляет событие всем подписчикам.
+// notifySubscribers — отправляет событие всем активным подписчикам (каналам).
 func (s *TickerStore) notifySubscribers(ticker types.TickerData) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	event := TickerEvent{Ticker: ticker}
+	event := types.TickerEvent{Ticker: ticker}
 	for _, ch := range s.subscribers {
 		select {
 		case ch <- event:
-			// успешно отправлено
+			// Успешно отправлено
 		default:
-			// канал переполнен — клиент слишком медленный
-			// можно игнорировать или закрыть (по политике)
+			// Клиент слишком медленный, пропускаем (или можно закрыть в продвинутой версии)
+		}
+	}
+}
+
+// Вызывается при завершении контекста подписки.
+func (s *TickerStore) removeSubscriber(ch chan types.TickerEvent) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	for ind, subscriberChan := range s.subscribers {
+		if subscriberChan == ch {
+			// Удаляем из слайса
+			s.subscribers = append(s.subscribers[:ind], s.subscribers[ind+1:]...)
+			// Закрываем канал
+			close(ch)
+			return
 		}
 	}
 }
