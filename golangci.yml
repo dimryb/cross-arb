@@ -16,6 +16,10 @@ linters-settings:
           - github.com/ilyakaznacheev/cleanenv
           - github.com/dimryb/cross-arb
           - github.com/go-resty/resty/v2
+          - google.golang.org/grpc
+          - google.golang.org/grpc/reflection
+          - google.golang.org/grpc/codes
+          - google.golang.org/grpc/status
       Test:
         files:
           - $test
