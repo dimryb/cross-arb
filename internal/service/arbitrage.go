@@ -85,6 +85,7 @@ func (m *Arbitrage) Run() error {
 				wgSymbols.Wait()
 
 				m.updateAllStores(exchange, results)
+				printTickersReport(results)
 			}
 		}
 	}()
@@ -115,7 +116,14 @@ func (m *Arbitrage) updateStore(exchange string, r Result) {
 	}
 }
 
-func printTicker(t *BookTicker) {
+func printTickersReport(results []Result) {
+	fmt.Printf("=== Обновление цен (%s) ===\n", time.Now().Format("15:04:05.000"))
+	for _, r := range results {
+		printTicker(r.Data)
+	}
+}
+
+func printTicker(t BookTicker) {
 	fmt.Printf(
 		"  [%s] -> покупка: %s (%s) | продажа: %s (%s)\n",
 		t.Symbol,
