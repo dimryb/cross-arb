@@ -5,6 +5,7 @@ import (
 	"net"
 
 	i "github.com/dimryb/cross-arb/internal/interface"
+	"github.com/dimryb/cross-arb/internal/server/grpc/interceptors"
 	"github.com/dimryb/cross-arb/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -34,9 +35,8 @@ func (s *Server) Run() error {
 		return fmt.Errorf("failed to listen: %w", err)
 	}
 
-	// TODO: добавить интерцепторы (логирование, метрики и т.п.)
 	grpcServer := grpc.NewServer(
-	// grpc.UnaryInterceptor(...),
+		grpc.UnaryInterceptor(interceptors.UnaryLoggerInterceptor(s.log)),
 	)
 
 	// Регистрируем сервис
