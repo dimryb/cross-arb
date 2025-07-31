@@ -4,6 +4,7 @@ go 1.24.4
 
 require (
 	github.com/go-resty/resty/v2 v2.16.5
+	github.com/golang/mock v1.6.0
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	google.golang.org/grpc v1.74.2
 	google.golang.org/protobuf v1.36.6

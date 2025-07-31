@@ -43,9 +43,12 @@ generate:
 		--go-grpc_out=proto --go-grpc_opt=paths=source_relative \
 		proto/*.proto
 
+generate-mocks:
+	go generate ./...
+
 # Установи grpcurl
 # go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
 grpc-subscribe:
 	grpcurl -plaintext localhost:9090 ticker.TickerService/Subscribe
 
-.PHONY: build run version test install-lint-deps lint generate grpc-subscribe
+.PHONY: build run version test install-lint-deps lint generate generate-mocks grpc-subscribe
