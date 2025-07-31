@@ -19,3 +19,8 @@ func (t TickerData) Equal(other TickerData) bool {
 		t.AskPrice == other.AskPrice &&
 		t.AskQty == other.AskQty
 }
+
+// TickerEvent — событие обновления тикера.
+type TickerEvent struct {
+	Ticker TickerData
+}
