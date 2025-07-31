@@ -15,6 +15,10 @@ import (
 	"github.com/dimryb/cross-arb/internal/storage"
 )
 
+const (
+	exchange = "mexc"
+)
+
 type Arbitrage struct {
 	ctx   context.Context
 	app   i.Application
@@ -56,7 +60,7 @@ type BookTicker struct {
 func (m *Arbitrage) Run() error {
 	wg := &sync.WaitGroup{}
 
-	mexcCfg, ok := m.cfg.Exchanges["mexc"]
+	mexcCfg, ok := m.cfg.Exchanges[exchange]
 	if !ok || !mexcCfg.Enabled {
 		return fmt.Errorf("mexc exchange not configured")
 	}
@@ -84,25 +88,8 @@ func (m *Arbitrage) Run() error {
 				}
 				wgSymbols.Wait()
 
-				fmt.Printf("=== Обновление цен (%s) ===\n", time.Now().Format("15:04:05.000"))
-				for _, r := range results {
-					if r.Error == nil {
-						m.store.Set(storage.TickerData{
-							Symbol:   r.Data.Symbol,
-							Exchange: "mexc",
-							BidPrice: parseFloat(r.Data.BidPrice),
-							BidQty:   parseFloat(r.Data.BidQty),
-							AskPrice: parseFloat(r.Data.AskPrice),
-							AskQty:   parseFloat(r.Data.AskQty),
-						})
-					}
-					fmt.Printf(
-						"  [%s] -> покупка: %s (%s) продажа: %s (%s)\n",
-						r.Data.Symbol,
-						r.Data.BidPrice, r.Data.BidQty,
-						r.Data.AskPrice, r.Data.AskQty,
-					)
-				}
+				m.updateAllStores(exchange, results)
+				printTickersReport(results)
 			}
 		}
 	}()
@@ -112,6 +99,41 @@ func (m *Arbitrage) Run() error {
 	wg.Wait()
 
 	return nil
+}
+
+func (m *Arbitrage) updateAllStores(exchange string, results []Result) {
+	for _, r := range results {
+		m.updateStore(exchange, r)
+	}
+}
+
+func (m *Arbitrage) updateStore(exchange string, r Result) {
+	if r.Error == nil {
+		m.store.Set(storage.TickerData{
+			Symbol:   r.Data.Symbol,
+			Exchange: exchange,
+			BidPrice: parseFloat(r.Data.BidPrice),
+			BidQty:   parseFloat(r.Data.BidQty),
+			AskPrice: parseFloat(r.Data.AskPrice),
+			AskQty:   parseFloat(r.Data.AskQty),
+		})
+	}
+}
+
+func printTickersReport(results []Result) {
+	fmt.Printf("=== Обновление цен (%s) ===\n", time.Now().Format("15:04:05.000"))
+	for _, r := range results {
+		printTicker(r.Data)
+	}
+}
+
+func printTicker(t BookTicker) {
+	fmt.Printf(
+		"  [%s] -> покупка: %s (%s) | продажа: %s (%s)\n",
+		t.Symbol,
+		t.BidPrice, t.BidQty,
+		t.AskPrice, t.AskQty,
+	)
 }
 
 func getTicker(sc *spotlist.SpotClient, results []Result, index int, symbol string) {
