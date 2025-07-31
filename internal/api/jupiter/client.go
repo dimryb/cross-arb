@@ -1,9 +1,11 @@
 package jupiter
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -188,4 +190,78 @@ func (c *Client) handleQuoteResponse(resp *http.Response) (*QuoteResponse, error
 	}
 
 	return &quoteResponse, nil
+}
+
+// Swap создает транзакцию для обмена на основе полученной котировки.
+// Подробнее: https://dev.jup.ag/docs/api/swap-api/swap
+func (c *Client) Swap(ctx context.Context, swapReq *SwapRequest) (*SwapResponse, error) {
+	start := time.Now()
+	c.logger.Debug("Начало запроса на обмен", "пользователь", swapReq.UserPublicKey)
+
+	if swapReq.UserPublicKey == "" {
+		return nil, fmt.Errorf("ошибка валидации: UserPublicKey не может быть пустым")
+	}
+
+	requestURL := *c.baseURL
+	requestURL.Path += "/swap"
+
+	body, err := json.Marshal(swapReq)
+	if err != nil {
+		return nil, fmt.Errorf("не удалось сериализовать тело запроса для обмена: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, requestURL.String(), bytes.NewBuffer(body))
+	if err != nil {
+		return nil, fmt.Errorf("не удалось создать http-запрос для обмена: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("User-Agent", "jupiter-go-client/1.0")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("не удалось выполнить http-запрос для обмена: %w", err)
+	}
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			c.logger.Error("Ошибка при закрытии тела ответа", "ошибка", closeErr)
+		}
+	}()
+
+	c.logger.Debug("Получен ответ от Jupiter Swap API",
+		"статус_код", resp.StatusCode,
+		"время_мс", time.Since(start).Milliseconds(),
+	)
+
+	swapResponse, err := c.handleSwapResponse(resp)
+	if err != nil {
+		return nil, err
+	}
+
+	c.logger.Info("Транзакция для обмена успешно создана",
+		"пользователь", swapReq.UserPublicKey,
+		"время_мс", time.Since(start).Milliseconds(),
+	)
+
+	return swapResponse, nil
+}
+
+// handleSwapResponse обрабатывает HTTP-ответ для /swap.
+func (c *Client) handleSwapResponse(resp *http.Response) (*SwapResponse, error) {
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("ошибка от Jupiter API: статус %d, не удалось прочитать тело ответа: %w",
+				resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("ошибка от Jupiter API: статус %d, тело: %s", resp.StatusCode, string(bodyBytes))
+	}
+
+	var swapResponse SwapResponse
+	if err := json.NewDecoder(resp.Body).Decode(&swapResponse); err != nil {
+		return nil, fmt.Errorf("не удалось десериализовать ответ от /swap: %w", err)
+	}
+
+	return &swapResponse, nil
 }
