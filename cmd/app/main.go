@@ -10,6 +10,7 @@ import (
 	"github.com/dimryb/cross-arb/internal/app"
 	"github.com/dimryb/cross-arb/internal/config"
 	"github.com/dimryb/cross-arb/internal/logger"
+	"github.com/dimryb/cross-arb/internal/server/grpc"
 	"github.com/dimryb/cross-arb/internal/server/http"
 	"github.com/dimryb/cross-arb/internal/service"
 	"github.com/dimryb/cross-arb/internal/storage"
@@ -42,11 +43,20 @@ func main() {
 	store := storage.NewTickerStore()
 	application := app.NewApp(ctx, logg, store)
 	arbitrageService := service.NewArbitrageService(application, cfg)
+	grpcServer := grpc.NewServer(application, grpc.ServerConfig{Port: "9090"}, logg)
 
 	go func() {
 		httpServer := http.NewHTTPServer(store)
 		if err := httpServer.Run(":8080"); err != nil {
 			logg.Errorf("HTTP server error: %v", err)
+			cancel()
+		}
+	}()
+
+	go func() {
+		logg.Info("Starting gRPC server on :9090")
+		if err := grpcServer.Run(); err != nil {
+			logg.Errorf("gRPC server failed: %v", err)
 			cancel()
 		}
 	}()
