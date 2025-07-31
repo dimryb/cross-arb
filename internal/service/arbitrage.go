@@ -15,6 +15,10 @@ import (
 	"github.com/dimryb/cross-arb/internal/storage"
 )
 
+const (
+	exchange = "mexc"
+)
+
 type Arbitrage struct {
 	ctx   context.Context
 	app   i.Application
@@ -56,7 +60,7 @@ type BookTicker struct {
 func (m *Arbitrage) Run() error {
 	wg := &sync.WaitGroup{}
 
-	mexcCfg, ok := m.cfg.Exchanges["mexc"]
+	mexcCfg, ok := m.cfg.Exchanges[exchange]
 	if !ok || !mexcCfg.Enabled {
 		return fmt.Errorf("mexc exchange not configured")
 	}
