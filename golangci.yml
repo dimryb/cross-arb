@@ -27,6 +27,11 @@ linters-settings:
           - $gostd
           - github.com/stretchr/testify
           - github.com/dimryb/cross-arb
+          - github.com/golang/mock/gomock
+          - google.golang.org/grpc/codes
+          - google.golang.org/grpc/metadata
+          - google.golang.org/grpc/status
+          - google.golang.org/protobuf/proto
 
 linters:
   disable-all: true

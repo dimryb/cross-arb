@@ -18,14 +18,17 @@ import (
 )
 
 func TestTickerService_Subscribe_Success(t *testing.T) {
+	// === 1. ARRANGE: Подготовка окружения ===
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	// Моки
+	mockLog := mocks.NewMockLogger(ctrl)
 	mockStore := mocks.NewMockTickerStore(ctrl)
 	mockSub := mocks.NewMockTickerSubscriber(ctrl)
 	mockApp := mocks.NewMockApplication(ctrl)
-	mockLog := mocks.NewMockLogger(ctrl)
 
+	// Тестовые данные
 	testTicker := types.TickerData{
 		Symbol:   "BTC_USDT",
 		Exchange: "mexc",
@@ -35,30 +38,29 @@ func TestTickerService_Subscribe_Success(t *testing.T) {
 		AskQty:   0.4,
 	}
 
+	// Контекст с возможностью отмены
 	appCtx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	t.Log("1. Setting up expectations")
-
+	// Настраиваем ожидания
 	mockApp.EXPECT().Context().Return(appCtx).AnyTimes()
 	mockApp.EXPECT().Logger().Return(mockLog).AnyTimes()
 	mockApp.EXPECT().TickerStore().Return(mockStore).AnyTimes()
 	mockStore.EXPECT().AddSubscriber().Return(mockSub).Times(1)
 
+	// Канал для эмуляции потока событий
 	eventCh := make(chan types.TickerEvent, 1)
 
+	// Мок Recv(): возвращает событие, затем реагирует на отмену
 	mockSub.EXPECT().Recv().DoAndReturn(func() (types.TickerEvent, bool) {
-		t.Log("7,9. Recv() called, waiting for event or context cancel...")
 		select {
 		case event, ok := <-eventCh:
 			if ok {
-				t.Log("8. Recv() got event:", event.Ticker.Symbol)
-			} else {
-				t.Log("5. Recv() channel closed")
+				t.Log("Received ticker event:", event.Ticker.Symbol)
 			}
 			return event, ok
 		case <-appCtx.Done():
-			t.Log("13. Recv() context cancelled, returning (zero, false)")
+			t.Log("Subscriber context cancelled, exiting Recv")
 			var zero types.TickerEvent
 			return zero, false
 		}
@@ -66,40 +68,55 @@ func TestTickerService_Subscribe_Success(t *testing.T) {
 
 	mockSub.EXPECT().Done().Return(appCtx.Done()).AnyTimes()
 	mockSub.EXPECT().Close().Do(func() {
-		t.Log("14. Close() called on subscriber")
+		t.Log("Subscriber.Close() called")
 	}).Times(1)
 
-	t.Log("2. Creating service")
+	// Создаём сервис
 	service := NewTickerService(mockApp)
 
-	// Мок-стрим с каналом для ожидания отправки
+	// Мок gRPC-стрима
 	mockStream := &MockTickerServiceSubscribeServer{
-		SentUpdates: make(chan *proto.TickerUpdate, 1), // буфер на 1 сообщение
+		SentUpdates: make(chan *proto.TickerUpdate, 1),
 		StreamCtx:   context.Background(),
 	}
 
-	t.Log("3. Starting Subscribe in goroutine")
+	// Канал для получения результата Subscribe
 	errChan := make(chan error, 1)
+
+	// === 2. ACT: Запуск и взаимодействие ===
+	t.Log("Starting Subscribe in goroutine")
 	go func() {
-		t.Log("6. Subscribe() started")
 		err := service.Subscribe(nil, mockStream)
-		t.Log("15. Subscribe() returned with error:", err)
 		errChan <- err
 	}()
 
-	t.Log("4. Sending event to eventCh")
+	t.Log("Publishing ticker event")
 	eventCh <- types.TickerEvent{Ticker: testTicker}
 
-	t.Log("5. Waiting for update to be sent via channel...")
+	t.Log("Waiting for gRPC update to be sent...")
 	var update *proto.TickerUpdate
 	select {
 	case update = <-mockStream.SentUpdates:
-		t.Log("10. Event was successfully sent to stream")
+		t.Log("Successfully sent update to client")
 	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout waiting for update to be sent")
+		t.Fatal("Timeout waiting for update to be sent")
 	}
 
-	// Проверка содержимого
+	t.Log("Shutting down by cancelling context")
+	cancel()
+
+	t.Log("Waiting for Subscribe to complete...")
+	var finalErr error
+	select {
+	case finalErr = <-errChan:
+		t.Log("Subscribe() returned:", finalErr)
+	case <-time.After(2 * time.Second):
+		t.Fatal("Timeout waiting for Subscribe to return")
+	}
+
+	// === 3. ASSERT: Проверка результатов ===
+	t.Log("Running assertions...")
+
 	want := &proto.TickerUpdate{
 		Data: &proto.TickerData{
 			Symbol:   testTicker.Symbol,
@@ -112,30 +129,20 @@ func TestTickerService_Subscribe_Success(t *testing.T) {
 	}
 
 	if !protocmp.Equal(update, want) {
-		t.Errorf("mismatched update\ngot:  %v\nwant: %v", update, want)
+		t.Errorf("Update mismatch\ngot:  %v\nwant: %v", update, want)
 	}
 
-	t.Log("11. Canceling context to trigger shutdown")
-	cancel()
-
-	t.Log("12. Waiting for Subscribe to return...")
-	select {
-	case err := <-errChan:
-		t.Log("16. Received error from Subscribe():", err)
-		if err != nil {
-			code := status.Code(err)
-			if code != codes.Canceled && code != codes.OK {
-				t.Errorf("unexpected error: %v", err)
-			}
+	if finalErr != nil {
+		code := status.Code(finalErr)
+		if code != codes.Canceled && code != codes.OK {
+			t.Errorf("Unexpected error: %v", finalErr)
 		}
-	case <-time.After(2 * time.Second):
-		t.Error("timeout waiting for Subscribe to return")
 	}
 }
 
-// Мок gRPC-стрима
+// Мок gRPC-стрима.
 type MockTickerServiceSubscribeServer struct {
-	SentUpdates chan *proto.TickerUpdate // ← теперь канал!
+	SentUpdates chan *proto.TickerUpdate
 	StreamCtx   context.Context
 }
 
@@ -151,7 +158,7 @@ func (m *MockTickerServiceSubscribeServer) SendMsg(msg interface{}) error {
 	return fmt.Errorf("unexpected message type: %T", msg)
 }
 
-func (m *MockTickerServiceSubscribeServer) RecvMsg(msg interface{}) error {
+func (m *MockTickerServiceSubscribeServer) RecvMsg(_ interface{}) error {
 	return io.EOF
 }
 
@@ -159,13 +166,13 @@ func (m *MockTickerServiceSubscribeServer) Context() context.Context {
 	return m.StreamCtx
 }
 
-func (m *MockTickerServiceSubscribeServer) SetHeader(md metadata.MD) error {
+func (m *MockTickerServiceSubscribeServer) SetHeader(_ metadata.MD) error {
 	return nil
 }
 
-func (m *MockTickerServiceSubscribeServer) SendHeader(md metadata.MD) error {
+func (m *MockTickerServiceSubscribeServer) SendHeader(_ metadata.MD) error {
 	return nil
 }
 
-func (m *MockTickerServiceSubscribeServer) SetTrailer(md metadata.MD) {
+func (m *MockTickerServiceSubscribeServer) SetTrailer(_ metadata.MD) {
 }
