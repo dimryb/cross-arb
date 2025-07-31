@@ -84,11 +84,7 @@ func (m *Arbitrage) Run() error {
 				}
 				wgSymbols.Wait()
 
-				fmt.Printf("=== Обновление цен (%s) ===\n", time.Now().Format("15:04:05.000"))
-				for _, r := range results {
-					m.updateStore("mexc", r)
-					printTicker(&r.Data)
-				}
+				m.updateAllStores(exchange, results)
 			}
 		}
 	}()
@@ -98,6 +94,12 @@ func (m *Arbitrage) Run() error {
 	wg.Wait()
 
 	return nil
+}
+
+func (m *Arbitrage) updateAllStores(exchange string, results []Result) {
+	for _, r := range results {
+		m.updateStore(exchange, r)
+	}
 }
 
 func (m *Arbitrage) updateStore(exchange string, r Result) {
