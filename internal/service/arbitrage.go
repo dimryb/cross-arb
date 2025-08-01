@@ -83,7 +83,7 @@ func (m *Arbitrage) Run() error {
 					wgSymbols.Add(1)
 					go func() {
 						defer wgSymbols.Done()
-						getTicker(spot, results, ind, symbol)
+						getMexcTicker(spot, results, ind, symbol)
 					}()
 				}
 				wgSymbols.Wait()
@@ -136,8 +136,8 @@ func printTicker(t BookTicker) {
 	)
 }
 
-func getTicker(sc *spotlist.SpotClient, results []Result, index int, symbol string) {
-	ticker, err := bookTicker(sc, symbol)
+func getMexcTicker(sc *spotlist.SpotClient, results []Result, index int, symbol string) {
+	ticker, err := bookMexcTicker(sc, symbol)
 	if err != nil {
 		results[index] = Result{
 			Symbol: symbol,
@@ -152,7 +152,7 @@ func getTicker(sc *spotlist.SpotClient, results []Result, index int, symbol stri
 	}
 }
 
-func bookTicker(sc *spotlist.SpotClient, symbol string) (BookTicker, error) {
+func bookMexcTicker(sc *spotlist.SpotClient, symbol string) (BookTicker, error) {
 	params := fmt.Sprintf(`{"symbol":"%s"}`, symbol)
 	resp, err := sc.BookTicker(params)
 	if err != nil {
