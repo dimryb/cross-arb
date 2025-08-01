@@ -138,17 +138,22 @@ func printTicker(t BookTicker) {
 
 func getMexcTicker(sc *spotlist.SpotClient, results []Result, index int, symbol string) {
 	ticker, err := bookMexcTicker(sc, symbol)
+	processTickerResult(results, index, symbol, ticker, err)
+}
+
+func processTickerResult(results []Result, index int, symbol string, ticker BookTicker, err error) {
 	if err != nil {
 		results[index] = Result{
 			Symbol: symbol,
 			Data:   BookTicker{},
 			Error:  err,
 		}
-	}
-	results[index] = Result{
-		Symbol: symbol,
-		Data:   ticker,
-		Error:  nil,
+	} else {
+		results[index] = Result{
+			Symbol: symbol,
+			Data:   ticker,
+			Error:  nil,
+		}
 	}
 }
 
