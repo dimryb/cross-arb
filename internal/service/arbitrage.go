@@ -219,26 +219,8 @@ func getJupiterTicker(jc *jupiter.Client, symbol string) (BookTicker, error) {
 		return BookTicker{}, fmt.Errorf("failed to get bid quote: %w", err)
 	}
 
-	// Расчет ASK цены (base → quote)
-	askInAmt := parseFloat(askQuote.InAmount)
-	askOutAmt := parseFloat(askQuote.OutAmount)
-	askPrice := 0.0
-	if askInAmt != 0 {
-		inReal := askInAmt / float64(baseUnit)
-		outReal := askOutAmt / float64(quoteUnit)
-		askPrice = outReal / inReal
-	}
-
-	// Расчет BID цены (quote → base, но нужно инвертировать)
-	bidInAmt := parseFloat(bidQuote.InAmount)
-	bidOutAmt := parseFloat(bidQuote.OutAmount)
-	bidPrice := 0.0
-	if bidOutAmt != 0 {
-		// Инвертируем: сколько quote нужно дать за 1 base
-		inReal := bidInAmt / float64(quoteUnit)  // quote в реальных единицах
-		outReal := bidOutAmt / float64(baseUnit) // base в реальных единицах
-		bidPrice = inReal / outReal              // цена base в quote
-	}
+	askPrice := calculatePrice(askQuote.InAmount, askQuote.OutAmount, baseUnit, quoteUnit, false)
+	bidPrice := calculatePrice(bidQuote.InAmount, bidQuote.OutAmount, quoteUnit, baseUnit, true)
 
 	return BookTicker{
 		Symbol:   symbol,
@@ -247,6 +229,23 @@ func getJupiterTicker(jc *jupiter.Client, symbol string) (BookTicker, error) {
 		AskPrice: fmt.Sprintf("%.6f", askPrice),
 		AskQty:   "0",
 	}, nil
+}
+
+func calculatePrice(inAmount, outAmount string, inUnit, outUnit int64, invert bool) float64 {
+	inAmt := parseFloat(inAmount)
+	outAmt := parseFloat(outAmount)
+
+	if inAmt == 0 || outAmt == 0 {
+		return 0.0
+	}
+
+	inReal := inAmt / float64(inUnit)
+	outReal := outAmt / float64(outUnit)
+
+	if invert {
+		return inReal / outReal
+	}
+	return outReal / inReal
 }
 
 func getMexcTicker(sc *spotlist.SpotClient, results []Result, index int, symbol string) {
