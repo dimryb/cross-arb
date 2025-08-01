@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dimryb/cross-arb/internal/api/jupiter"
 	spotlist "github.com/dimryb/cross-arb/internal/api/mexc/spot"
 	"github.com/dimryb/cross-arb/internal/api/mexc/utils"
 	"github.com/dimryb/cross-arb/internal/config"
@@ -17,6 +18,7 @@ import (
 
 const (
 	mexcExchange = "mexc"
+	jupExchange  = "jupiter"
 )
 
 type Arbitrage struct {
@@ -94,6 +96,11 @@ func (m *Arbitrage) Run() error {
 		}
 	}()
 
+	err := m.runJupiterClient(wg)
+	if err != nil {
+		return err
+	}
+
 	m.log.Infof("Arbitrage service is running...")
 
 	wg.Wait()
@@ -134,6 +141,112 @@ func printTicker(t BookTicker) {
 		t.BidPrice, t.BidQty,
 		t.AskPrice, t.AskQty,
 	)
+}
+
+func (m *Arbitrage) runJupiterClient(wg *sync.WaitGroup) error {
+	jupiterCfg, ok := m.cfg.Exchanges[jupExchange]
+	if !ok || !jupiterCfg.Enabled {
+		return fmt.Errorf("jupiter exchange not configured or disabled")
+	}
+	jupClient, err := jupiter.NewJupiterClient(m.log, jupiterCfg.BaseURL)
+	if err != nil {
+		return fmt.Errorf("failed to init jupiter client: %w", err)
+	}
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		ticker := time.NewTicker(time.Second)
+
+		for {
+			select {
+			case <-m.ctx.Done():
+				return
+			case <-ticker.C:
+				results := make([]Result, len(m.cfg.Symbols))
+				wgSymbols := &sync.WaitGroup{}
+
+				for ind, symbol := range m.cfg.Symbols {
+					wgSymbols.Add(1)
+					go func() {
+						defer wgSymbols.Done()
+						bookTicker, err := getJupiterTicker(jupClient, symbol)
+						processTickerResult(results, ind, symbol, bookTicker, err)
+					}()
+				}
+
+				wgSymbols.Wait()
+
+				m.updateAllStores(jupExchange, results)
+				printTickersReport(results)
+			}
+		}
+	}()
+	return nil
+}
+
+// getJupiterTicker запрашивает котировку Jupiter и преобразует её в BookTicker.
+func getJupiterTicker(jc *jupiter.Client, symbol string) (BookTicker, error) {
+	inMint, outMint, err := jupiter.ConvertSpotToMints(symbol)
+	if err != nil {
+		return BookTicker{}, fmt.Errorf("unsupported symbol format %q", symbol)
+	}
+
+	base, quote, err := jupiter.ParseSpotSymbol(symbol)
+	if err != nil {
+		return BookTicker{}, err
+	}
+
+	// Получаем единичные количества для нормализации
+	baseUnit, err := jupiter.UnitAmount(base)
+	if err != nil {
+		return BookTicker{}, fmt.Errorf("failed to get unit amount for %s: %w", base, err)
+	}
+	quoteUnit, err := jupiter.UnitAmount(quote)
+	if err != nil {
+		return BookTicker{}, fmt.Errorf("failed to get unit amount for %s: %w", quote, err)
+	}
+
+	// Запрос 1: base → quote (ASK - цена продажи базового актива)
+	askQuote, err := jc.Quote(context.Background(), inMint, outMint, baseUnit, jupiter.DefaultQuoteOptions())
+	if err != nil {
+		return BookTicker{}, fmt.Errorf("failed to get ask quote: %w", err)
+	}
+
+	// Запрос 2: quote → base (BID - сколько базового актива получим за единицу котировочного)
+	bidQuote, err := jc.Quote(context.Background(), outMint, inMint, quoteUnit, jupiter.DefaultQuoteOptions())
+	if err != nil {
+		return BookTicker{}, fmt.Errorf("failed to get bid quote: %w", err)
+	}
+
+	// Расчет ASK цены (base → quote)
+	askInAmt := parseFloat(askQuote.InAmount)
+	askOutAmt := parseFloat(askQuote.OutAmount)
+	askPrice := 0.0
+	if askInAmt != 0 {
+		inReal := askInAmt / float64(baseUnit)
+		outReal := askOutAmt / float64(quoteUnit)
+		askPrice = outReal / inReal
+	}
+
+	// Расчет BID цены (quote → base, но нужно инвертировать)
+	bidInAmt := parseFloat(bidQuote.InAmount)
+	bidOutAmt := parseFloat(bidQuote.OutAmount)
+	bidPrice := 0.0
+	if bidOutAmt != 0 {
+		// Инвертируем: сколько quote нужно дать за 1 base
+		inReal := bidInAmt / float64(quoteUnit)  // quote в реальных единицах
+		outReal := bidOutAmt / float64(baseUnit) // base в реальных единицах
+		bidPrice = inReal / outReal              // цена base в quote
+	}
+
+	return BookTicker{
+		Symbol:   symbol,
+		BidPrice: fmt.Sprintf("%.6f", bidPrice),
+		BidQty:   "0",
+		AskPrice: fmt.Sprintf("%.6f", askPrice),
+		AskQty:   "0",
+	}, nil
 }
 
 func getMexcTicker(sc *spotlist.SpotClient, results []Result, index int, symbol string) {
