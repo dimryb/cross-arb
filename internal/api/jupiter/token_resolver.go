@@ -12,7 +12,7 @@ import (
 )
 
 // tokenListURL эндпоинт для запроса токенов для Jupiter.
-const tokenListURL = "https://tokens.jup.ag/tokens?tags=verified,community,strict"
+const tokenListURL = "https://tokens.jup.ag/tokens?tags=verified,community,strict" // #nosec G101
 
 type TokenEntry struct {
 	Symbol  string `json:"symbol"`
