@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	exchange = "mexc"
+	mexcExchange = "mexc"
 )
 
 type Arbitrage struct {
@@ -60,7 +60,7 @@ type BookTicker struct {
 func (m *Arbitrage) Run() error {
 	wg := &sync.WaitGroup{}
 
-	mexcCfg, ok := m.cfg.Exchanges[exchange]
+	mexcCfg, ok := m.cfg.Exchanges[mexcExchange]
 	if !ok || !mexcCfg.Enabled {
 		return fmt.Errorf("mexc exchange not configured")
 	}
@@ -88,7 +88,7 @@ func (m *Arbitrage) Run() error {
 				}
 				wgSymbols.Wait()
 
-				m.updateAllStores(exchange, results)
+				m.updateAllStores(mexcExchange, results)
 				printTickersReport(results)
 			}
 		}
