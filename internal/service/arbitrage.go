@@ -268,6 +268,22 @@ func bookMexcTicker(sc *spotlist.SpotClient, symbol string) (types.BookTicker, e
 	return tickerData, nil
 }
 
+func processOrderResult(results []OrderBookResult, index int, symbol string, book OrderBook, err error) {
+	if err != nil {
+		results[index] = OrderBookResult{
+			Symbol: symbol,
+			Data:   OrderBook{},
+			Error:  err,
+		}
+	} else {
+		results[index] = OrderBookResult{
+			Symbol: symbol,
+			Data:   book,
+			Error:  nil,
+		}
+	}
+}
+
 func bookMexcOrder(sc *spotlist.SpotClient, symbol string) (OrderBook, error) {
 	params := fmt.Sprintf(`{"symbol":"%s"}`, symbol)
 	resp, err := sc.Depth(params)
