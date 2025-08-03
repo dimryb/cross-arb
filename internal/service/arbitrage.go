@@ -268,6 +268,11 @@ func bookMexcTicker(sc *spotlist.SpotClient, symbol string) (types.BookTicker, e
 	return tickerData, nil
 }
 
+func getMexcOrder(sc *spotlist.SpotClient, results []OrderBookResult, index int, symbol string) {
+	book, err := bookMexcOrder(sc, symbol)
+	processOrderResult(results, index, symbol, book, err)
+}
+
 func processOrderResult(results []OrderBookResult, index int, symbol string, book OrderBook, err error) {
 	if err != nil {
 		results[index] = OrderBookResult{
