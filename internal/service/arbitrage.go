@@ -268,6 +268,47 @@ func bookMexcTicker(sc *spotlist.SpotClient, symbol string) (types.BookTicker, e
 	return tickerData, nil
 }
 
+func bookMexcOrder(sc *spotlist.SpotClient, symbol string) (OrderBook, error) {
+	params := fmt.Sprintf(`{"symbol":"%s"}`, symbol)
+	resp, err := sc.Depth(params)
+	if err != nil {
+		return OrderBook{}, fmt.Errorf("MEXC Depth request failed: %w", err)
+	}
+
+	var raw struct {
+		Bids [][]string `json:"bids"`
+		Asks [][]string `json:"asks"`
+	}
+	err = json.Unmarshal(resp.Body(), &raw)
+	if err != nil {
+		return OrderBook{}, fmt.Errorf("failed to parse MEXC Depth JSON: %w", err)
+	}
+
+	var bids, asks []Order
+	for _, item := range raw.Bids {
+		if len(item) != 2 {
+			continue
+		}
+		price := parseFloat(item[0])
+		qty := parseFloat(item[1])
+		if price > 0 && qty > 0 {
+			bids = append(bids, Order{Price: price, Quantity: qty})
+		}
+	}
+	for _, item := range raw.Asks {
+		if len(item) != 2 {
+			continue
+		}
+		price := parseFloat(item[0])
+		qty := parseFloat(item[1])
+		if price > 0 && qty > 0 {
+			asks = append(asks, Order{Price: price, Quantity: qty})
+		}
+	}
+
+	return OrderBook{Bids: bids, Asks: asks}, nil
+}
+
 func parseFloat(s string) float64 {
 	f, _ := strconv.ParseFloat(s, 64)
 	return f
