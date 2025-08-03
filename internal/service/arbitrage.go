@@ -268,6 +268,13 @@ func bookMexcTicker(sc *spotlist.SpotClient, symbol string) (types.BookTicker, e
 	return tickerData, nil
 }
 
+func extractBaseAsset(symbol string) string {
+	if len(symbol) > 4 && symbol[len(symbol)-4:] == "USDT" {
+		return symbol[:len(symbol)-4]
+	}
+	return symbol
+}
+
 func printOrderBookReport(results []OrderBookResult) {
 	fmt.Printf("=== Стакан (обновлено: %s) ===\n", time.Now().Format("15:04:05.000"))
 	for _, r := range results {
