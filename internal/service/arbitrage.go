@@ -268,6 +268,28 @@ func bookMexcTicker(sc *spotlist.SpotClient, symbol string) (types.BookTicker, e
 	return tickerData, nil
 }
 
+func printOrderBookReport(results []OrderBookResult) {
+	fmt.Printf("=== Стакан (обновлено: %s) ===\n", time.Now().Format("15:04:05.000"))
+	for _, r := range results {
+		if r.Error != nil {
+			fmt.Printf("  [%s] Error: %v\n", r.Symbol, r.Error)
+			continue
+		}
+
+		baseAsset := extractBaseAsset(r.Symbol)
+
+		fmt.Printf("[%s] ASK (Можно купить):\n", baseAsset)
+		for _, ask := range r.Data.Asks {
+			fmt.Printf("Купить по цене: %f %s | Количество: %f %s\n", ask.Price, "USTD", ask.Quantity, baseAsset)
+		}
+
+		fmt.Printf("[%s] BID (Можно Продать):\n", baseAsset)
+		for _, bid := range r.Data.Bids {
+			fmt.Printf("Продать по цене: %f %s | Количество: %f %s\n", bid.Price, "USDT", bid.Quantity, baseAsset)
+		}
+	}
+}
+
 func getMexcOrder(sc *spotlist.SpotClient, results []OrderBookResult, index int, symbol string) {
 	book, err := bookMexcOrder(sc, symbol)
 	processOrderResult(results, index, symbol, book, err)
