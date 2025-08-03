@@ -268,6 +268,43 @@ func bookMexcTicker(sc *spotlist.SpotClient, symbol string) (types.BookTicker, e
 	return tickerData, nil
 }
 
+func (m *Arbitrage) runMexcOrderBook(wg *sync.WaitGroup) {
+	mexcCfg, ok := m.cfg.Exchanges[mexcExchange]
+	if !ok || !mexcCfg.Enabled {
+		m.log.Warnf("MEXC exchange not enabled for order book")
+		return
+	}
+
+	client := utils.NewClient(mexcCfg.APIKey, mexcCfg.SecretKey, m.log)
+	spot := spotlist.NewSpotClient(m.log, mexcCfg.BaseURL, client)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		ticker := time.NewTicker(500 * time.Millisecond)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-m.ctx.Done():
+				return
+			case <-ticker.C:
+				results := make([]OrderBookResult, len(m.cfg.Symbols))
+				wgSymbols := &sync.WaitGroup{}
+				for ind, symbol := range m.cfg.Symbols {
+					wgSymbols.Add(1)
+					go func(index int, sym string) {
+						defer wgSymbols.Done()
+						getMexcOrder(spot, results, index, sym)
+					}(ind, symbol)
+				}
+				wgSymbols.Wait()
+				printOrderBookReport(results)
+			}
+		}
+	}()
+}
+
 func extractBaseAsset(symbol string) string {
 	if len(symbol) > 4 && symbol[len(symbol)-4:] == "USDT" {
 		return symbol[:len(symbol)-4]
