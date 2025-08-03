@@ -96,6 +96,8 @@ func (m *Arbitrage) Run() error {
 		}
 	}()
 
+	m.runMexcOrderBook(wg)
+
 	err := m.runJupiterClient(wg)
 	if err != nil {
 		return err
