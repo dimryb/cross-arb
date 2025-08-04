@@ -13,7 +13,8 @@ import (
 	"github.com/dimryb/cross-arb/internal/api/mexc/utils"
 	"github.com/dimryb/cross-arb/internal/config"
 	i "github.com/dimryb/cross-arb/internal/interface"
-	"github.com/dimryb/cross-arb/internal/storage"
+	"github.com/dimryb/cross-arb/internal/report"
+	"github.com/dimryb/cross-arb/internal/types"
 )
 
 const (
@@ -26,37 +27,20 @@ type Arbitrage struct {
 	app   i.Application
 	log   i.Logger
 	cfg   *config.CrossArbConfig
-	store *storage.TickerStore
+	store i.TickerStore
 }
 
 func NewArbitrageService(
-	ctx context.Context,
 	app i.Application,
-	logger i.Logger,
 	cfg *config.CrossArbConfig,
-	store *storage.TickerStore,
 ) *Arbitrage {
 	return &Arbitrage{
-		ctx:   ctx,
+		ctx:   app.Context(),
 		app:   app,
-		log:   logger,
+		log:   app.Logger(),
 		cfg:   cfg,
-		store: store,
+		store: app.TickerStore(),
 	}
-}
-
-type Result struct {
-	Symbol string
-	Data   BookTicker
-	Error  error
-}
-
-type BookTicker struct {
-	Symbol   string `json:"symbol"`
-	BidPrice string `json:"bidPrice"`
-	BidQty   string `json:"bidQty"`
-	AskPrice string `json:"askPrice"`
-	AskQty   string `json:"askQty"`
 }
 
 func (m *Arbitrage) Run() error {
@@ -79,7 +63,7 @@ func (m *Arbitrage) Run() error {
 			case <-m.ctx.Done():
 				return
 			case <-ticker.C:
-				results := make([]Result, len(m.cfg.Symbols))
+				results := make([]types.Result, len(m.cfg.Symbols))
 				wgSymbols := &sync.WaitGroup{}
 				for ind, symbol := range m.cfg.Symbols {
 					wgSymbols.Add(1)
@@ -91,7 +75,7 @@ func (m *Arbitrage) Run() error {
 				wgSymbols.Wait()
 
 				m.updateAllStores(mexcExchange, results)
-				printTickersReport(results)
+				report.PrintTickersReport(results)
 			}
 		}
 	}()
@@ -108,15 +92,15 @@ func (m *Arbitrage) Run() error {
 	return nil
 }
 
-func (m *Arbitrage) updateAllStores(exchange string, results []Result) {
+func (m *Arbitrage) updateAllStores(exchange string, results []types.Result) {
 	for _, r := range results {
 		m.updateStore(exchange, r)
 	}
 }
 
-func (m *Arbitrage) updateStore(exchange string, r Result) {
+func (m *Arbitrage) updateStore(exchange string, r types.Result) {
 	if r.Error == nil {
-		m.store.Set(storage.TickerData{
+		m.store.Set(types.TickerData{
 			Symbol:   r.Data.Symbol,
 			Exchange: exchange,
 			BidPrice: parseFloat(r.Data.BidPrice),
@@ -125,22 +109,6 @@ func (m *Arbitrage) updateStore(exchange string, r Result) {
 			AskQty:   parseFloat(r.Data.AskQty),
 		})
 	}
-}
-
-func printTickersReport(results []Result) {
-	fmt.Printf("=== Обновление цен (%s) ===\n", time.Now().Format("15:04:05.000"))
-	for _, r := range results {
-		printTicker(r.Data)
-	}
-}
-
-func printTicker(t BookTicker) {
-	fmt.Printf(
-		"  [%s] -> покупка: %s (%s) | продажа: %s (%s)\n",
-		t.Symbol,
-		t.BidPrice, t.BidQty,
-		t.AskPrice, t.AskQty,
-	)
 }
 
 func (m *Arbitrage) runJupiterClient(wg *sync.WaitGroup) error {
@@ -163,7 +131,7 @@ func (m *Arbitrage) runJupiterClient(wg *sync.WaitGroup) error {
 			case <-m.ctx.Done():
 				return
 			case <-ticker.C:
-				results := make([]Result, len(m.cfg.Symbols))
+				results := make([]types.Result, len(m.cfg.Symbols))
 				wgSymbols := &sync.WaitGroup{}
 
 				for ind, symbol := range m.cfg.Symbols {
@@ -178,7 +146,7 @@ func (m *Arbitrage) runJupiterClient(wg *sync.WaitGroup) error {
 				wgSymbols.Wait()
 
 				m.updateAllStores(jupExchange, results)
-				printTickersReport(results)
+				report.PrintTickersReport(results)
 			}
 		}
 	}()
@@ -186,43 +154,43 @@ func (m *Arbitrage) runJupiterClient(wg *sync.WaitGroup) error {
 }
 
 // getJupiterTicker запрашивает котировку Jupiter и преобразует её в BookTicker.
-func getJupiterTicker(jc *jupiter.Client, symbol string) (BookTicker, error) {
+func getJupiterTicker(jc *jupiter.Client, symbol string) (types.BookTicker, error) {
 	inMint, outMint, err := jupiter.ConvertSpotToMints(symbol)
 	if err != nil {
-		return BookTicker{}, fmt.Errorf("unsupported symbol format %q", symbol)
+		return types.BookTicker{}, fmt.Errorf("unsupported symbol format %q", symbol)
 	}
 
 	base, quote, err := jupiter.ParseSpotSymbol(symbol)
 	if err != nil {
-		return BookTicker{}, err
+		return types.BookTicker{}, err
 	}
 
 	// Получаем единичные количества для нормализации
 	baseUnit, err := jupiter.UnitAmount(base)
 	if err != nil {
-		return BookTicker{}, fmt.Errorf("failed to get unit amount for %s: %w", base, err)
+		return types.BookTicker{}, fmt.Errorf("failed to get unit amount for %s: %w", base, err)
 	}
 	quoteUnit, err := jupiter.UnitAmount(quote)
 	if err != nil {
-		return BookTicker{}, fmt.Errorf("failed to get unit amount for %s: %w", quote, err)
+		return types.BookTicker{}, fmt.Errorf("failed to get unit amount for %s: %w", quote, err)
 	}
 
 	// Запрос 1: base → quote (ASK - цена продажи базового актива)
 	askQuote, err := jc.Quote(context.Background(), inMint, outMint, baseUnit, jupiter.DefaultQuoteOptions())
 	if err != nil {
-		return BookTicker{}, fmt.Errorf("failed to get ask quote: %w", err)
+		return types.BookTicker{}, fmt.Errorf("failed to get ask quote: %w", err)
 	}
 
 	// Запрос 2: quote → base (BID - сколько базового актива получим за единицу котировочного)
 	bidQuote, err := jc.Quote(context.Background(), outMint, inMint, quoteUnit, jupiter.DefaultQuoteOptions())
 	if err != nil {
-		return BookTicker{}, fmt.Errorf("failed to get bid quote: %w", err)
+		return types.BookTicker{}, fmt.Errorf("failed to get bid quote: %w", err)
 	}
 
 	askPrice := calculatePrice(askQuote.InAmount, askQuote.OutAmount, baseUnit, quoteUnit, false)
 	bidPrice := calculatePrice(bidQuote.InAmount, bidQuote.OutAmount, quoteUnit, baseUnit, true)
 
-	return BookTicker{
+	return types.BookTicker{
 		Symbol:   symbol,
 		BidPrice: fmt.Sprintf("%.6f", bidPrice),
 		BidQty:   "0",
@@ -248,20 +216,20 @@ func calculatePrice(inAmount, outAmount string, inUnit, outUnit int64, invert bo
 	return outReal / inReal
 }
 
-func getMexcTicker(sc *spotlist.SpotClient, results []Result, index int, symbol string) {
+func getMexcTicker(sc *spotlist.SpotClient, results []types.Result, index int, symbol string) {
 	ticker, err := bookMexcTicker(sc, symbol)
 	processTickerResult(results, index, symbol, ticker, err)
 }
 
-func processTickerResult(results []Result, index int, symbol string, ticker BookTicker, err error) {
+func processTickerResult(results []types.Result, index int, symbol string, ticker types.BookTicker, err error) {
 	if err != nil {
-		results[index] = Result{
+		results[index] = types.Result{
 			Symbol: symbol,
-			Data:   BookTicker{},
+			Data:   types.BookTicker{},
 			Error:  err,
 		}
 	} else {
-		results[index] = Result{
+		results[index] = types.Result{
 			Symbol: symbol,
 			Data:   ticker,
 			Error:  nil,
@@ -269,17 +237,17 @@ func processTickerResult(results []Result, index int, symbol string, ticker Book
 	}
 }
 
-func bookMexcTicker(sc *spotlist.SpotClient, symbol string) (BookTicker, error) {
+func bookMexcTicker(sc *spotlist.SpotClient, symbol string) (types.BookTicker, error) {
 	params := fmt.Sprintf(`{"symbol":"%s"}`, symbol)
 	resp, err := sc.BookTicker(params)
 	if err != nil {
-		return BookTicker{}, fmt.Errorf("BookTicker request failed: %w", err)
+		return types.BookTicker{}, fmt.Errorf("BookTicker request failed: %w", err)
 	}
 
-	var tickerData BookTicker
+	var tickerData types.BookTicker
 	err = json.Unmarshal(resp.Body(), &tickerData)
 	if err != nil {
-		return BookTicker{}, fmt.Errorf("failed to parse JSON: %w", err)
+		return types.BookTicker{}, fmt.Errorf("failed to parse JSON: %w", err)
 	}
 	return tickerData, nil
 }
