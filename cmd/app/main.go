@@ -50,7 +50,7 @@ func main() {
 	zapLog, _ := zap.NewProduction() // нужен адаптерам/сканеру
 	defer zapLog.Sync()
 
-	mexcAdapter := service.NewMexcAdapter("", "", zapLog, 3*time.Second)
+	mexcAdapter := service.NewMexcAdapter(zapLog, 3*time.Second)
 	jupPairs := map[string][2]string{
 		"SOL/USDT": {
 			"So11111111111111111111111111111111111111112",  // SOL (wSOL)
