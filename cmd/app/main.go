@@ -6,6 +6,7 @@ import (
 	"log"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/dimryb/cross-arb/internal/app"
 	"github.com/dimryb/cross-arb/internal/config"
@@ -14,6 +15,8 @@ import (
 	"github.com/dimryb/cross-arb/internal/server/http"
 	"github.com/dimryb/cross-arb/internal/service"
 	"github.com/dimryb/cross-arb/internal/storage"
+
+	"go.uber.org/zap"
 )
 
 var configPath string
@@ -43,6 +46,40 @@ func main() {
 	store := storage.NewTickerStore()
 	application := app.NewApp(ctx, logg, store)
 	arbitrageService := service.NewArbitrageService(application, cfg)
+
+	zapLog, _ := zap.NewProduction() // нужен адаптерам/сканеру
+	defer zapLog.Sync()
+
+	mexcAdapter := service.NewMexcAdapter("", "", zapLog, 3*time.Second)
+	jupPairs := map[string][2]string{
+		"SOL/USDT": {
+			"So11111111111111111111111111111111111111112",  // SOL (wSOL)
+			"Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", // USDT
+		},
+	}
+
+	jupiterAdapter := service.NewJupiterAdapter(zapLog, jupPairs, 3*time.Second)
+	defer mexcAdapter.Close()
+	defer jupiterAdapter.Close()
+
+	scanner := service.NewScanner(
+		zapLog,
+		service.WithInterval(2*time.Second),
+		service.WithPairs("SOL/USDT"),
+		service.WithAdapters(mexcAdapter, jupiterAdapter),
+	)
+
+	// Подписываемся и логируем возможности
+	for _, pair := range []string{"SOL/USDT"} {
+		ch, _ := scanner.Subscribe(pair, 10)
+		go func(p string, c <-chan service.Opportunity) {
+			for opp := range c {
+				logg.Infof("Арбитраж %s: BUY %s @ %.4f → SELL %s @ %.4f  (%.4f %%)",
+					opp.Pair, opp.BuyOn, opp.BuyPrice, opp.SellOn, opp.SellPrice, opp.SpreadPct)
+			}
+		}(pair, ch)
+	}
+
 	grpcServer := grpc.NewServer(application, grpc.ServerConfig{Port: "9090"}, logg)
 
 	go func() {
