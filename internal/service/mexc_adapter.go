@@ -22,7 +22,8 @@ type MexcAdapter struct {
 
 // NewMexcAdapter возвращает готовый к работе адаптер.
 // clientTimeout — таймаут HTTP-запросов; при 0 берётся 3 сек.
-func NewMexcAdapter(apiKey, apiSecret string, l *zap.Logger, clientTimeout time.Duration) *MexcAdapter {
+func NewMexcAdapter(_, apiSecret string, l *zap.Logger, clientTimeout time.Duration) *MexcAdapter {
+
 	if clientTimeout <= 0 {
 		clientTimeout = 3 * time.Second
 	}

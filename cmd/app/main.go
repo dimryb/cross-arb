@@ -8,6 +8,8 @@ import (
 	"syscall"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/dimryb/cross-arb/internal/app"
 	"github.com/dimryb/cross-arb/internal/config"
 	"github.com/dimryb/cross-arb/internal/logger"
@@ -15,8 +17,6 @@ import (
 	"github.com/dimryb/cross-arb/internal/server/http"
 	"github.com/dimryb/cross-arb/internal/service"
 	"github.com/dimryb/cross-arb/internal/storage"
-
-	"go.uber.org/zap"
 )
 
 var configPath string
@@ -72,7 +72,7 @@ func main() {
 	// Подписываемся и логируем возможности
 	for _, pair := range []string{"SOL/USDT"} {
 		ch, _ := scanner.Subscribe(pair, 10)
-		go func(p string, c <-chan service.Opportunity) {
+		go func(_ string, c <-chan service.Opportunity) {
 			for opp := range c {
 				logg.Infof("Арбитраж %s: BUY %s @ %.4f → SELL %s @ %.4f  (%.4f %%)",
 					opp.Pair, opp.BuyOn, opp.BuyPrice, opp.SellOn, opp.SellPrice, opp.SpreadPct)

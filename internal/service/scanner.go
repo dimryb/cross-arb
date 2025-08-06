@@ -140,9 +140,11 @@ func (s *Scanner) scanOnce(ctx context.Context, now time.Time) error {
 		close(quotesCh)
 		close(errCh)
 
+		// если есть хотя бы одна ошибка — возвращаем первую
 		for err := range errCh {
 			s.logger.Error("не удалось получить котировки",
 				zap.String("pair", pair), zap.Error(err))
+			return err
 		}
 
 		quotes := make([]PricePoint, 0, len(s.adapters))
@@ -150,7 +152,6 @@ func (s *Scanner) scanOnce(ctx context.Context, now time.Time) error {
 			quotes = append(quotes, q)
 		}
 
-		// выводим все котировки для отладки
 		s.logger.Debug("quotes", zap.String("pair", pair), zap.Any("quotes", quotes))
 
 		if len(quotes) < 2 {
@@ -180,7 +181,6 @@ func (s *Scanner) scanOnce(ctx context.Context, now time.Time) error {
 		net := gross - (buy.Ask*buyTaker + sell.Bid*sellTaker)
 
 		if net <= 0 {
-			// показываем непринятый спред
 			s.logger.Debug("spread not profitable",
 				zap.String("pair", pair),
 				zap.Float64("buy_ask", buy.Ask),
@@ -214,6 +214,7 @@ func (s *Scanner) scanOnce(ctx context.Context, now time.Time) error {
 
 		s.publish(opp)
 	}
+
 	return nil
 }
 
