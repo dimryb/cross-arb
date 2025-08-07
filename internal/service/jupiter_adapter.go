@@ -9,14 +9,14 @@ import (
 	"strings"
 	"time"
 
-	"go.uber.org/zap"
+	i "github.com/dimryb/cross-arb/internal/interface"
 )
 
 // JupiterAdapter использует публичный Quote-API агрегатора Jupiter (Solana).
 // Он запрашивает цену обмена base → quote (ask) и quote → base (bid).
 type JupiterAdapter struct {
 	client     *http.Client
-	logger     *zap.Logger
+	logger     i.Logger
 	pairConfig map[string]mintPair // "SOL/USDT" → {baseMint, quoteMint}
 }
 
@@ -28,7 +28,7 @@ type mintPair struct {
 
 // NewJupiterAdapter создаёт адаптер.
 // pairMap: "SOL/USDT": {baseMint, quoteMint}.
-func NewJupiterAdapter(l *zap.Logger, pairMap map[string][2]string, timeout time.Duration) *JupiterAdapter {
+func NewJupiterAdapter(l i.Logger, pairMap map[string][2]string, timeout time.Duration) *JupiterAdapter {
 	if timeout <= 0 {
 		timeout = 3 * time.Second
 	}

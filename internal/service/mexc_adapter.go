@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"go.uber.org/zap"
+	i "github.com/dimryb/cross-arb/internal/interface"
 )
 
 // MexcAdapter реализует доступ к публичному REST-API биржи MEXC.
@@ -17,12 +17,12 @@ import (
 type MexcAdapter struct {
 	client  *http.Client
 	baseURL string
-	logger  *zap.Logger
+	logger  i.Logger
 }
 
 // NewMexcAdapter возвращает готовый к работе адаптер.
 // clientTimeout — таймаут HTTP-запросов; при 0 берётся 3 сек.
-func NewMexcAdapter(l *zap.Logger, clientTimeout time.Duration) *MexcAdapter {
+func NewMexcAdapter(l i.Logger, clientTimeout time.Duration) *MexcAdapter {
 	if clientTimeout <= 0 {
 		clientTimeout = 3 * time.Second
 	}

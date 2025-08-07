@@ -4,16 +4,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"sync"
 	"time"
 
-	"go.uber.org/zap"
+	i "github.com/dimryb/cross-arb/internal/interface"
 )
 
 // Scanner опрашивает набор бирж по списку торговых пар и
 // публикует арбитражные возможности подписчикам.
 type Scanner struct {
-	logger   *zap.Logger
+	logger   i.Logger
 	interval time.Duration
 	pairs    []string
 	adapters []ExchangeAdapter
@@ -59,7 +60,7 @@ func WithAdapters(adapters ...ExchangeAdapter) Option {
 }
 
 // NewScanner создаёт настроенный сканер.
-func NewScanner(l *zap.Logger, opts ...Option) *Scanner {
+func NewScanner(l i.Logger, opts ...Option) *Scanner {
 	s := &Scanner{
 		logger:   l.Named("scanner"),
 		interval: 3 * time.Second,
@@ -67,7 +68,7 @@ func NewScanner(l *zap.Logger, opts ...Option) *Scanner {
 	}
 	for _, o := range opts {
 		if err := o(s); err != nil {
-			l.Fatal("некорректная опция сканера", zap.Error(err))
+			l.Fatal("некорректная опция сканера", slog.Any("err", err))
 		}
 	}
 	if len(s.pairs) == 0 {
@@ -104,7 +105,7 @@ func (s *Scanner) Run(ctx context.Context) error {
 			return ctx.Err()
 		case t := <-ticker.C:
 			if err := s.scanOnce(ctx, t); err != nil {
-				s.logger.Warn("ошибка сканирования", zap.Error(err))
+				s.logger.Warn("ошибка сканирования", slog.Any("err", err))
 			}
 		}
 	}
@@ -143,7 +144,7 @@ func (s *Scanner) scanOnce(ctx context.Context, now time.Time) error {
 		// если есть хотя бы одна ошибка — возвращаем первую
 		for err := range errCh {
 			s.logger.Error("не удалось получить котировки",
-				zap.String("pair", pair), zap.Error(err))
+				slog.String("pair", pair), slog.Any("err", err))
 			return err
 		}
 
@@ -152,7 +153,7 @@ func (s *Scanner) scanOnce(ctx context.Context, now time.Time) error {
 			quotes = append(quotes, q)
 		}
 
-		s.logger.Debug("quotes", zap.String("pair", pair), zap.Any("quotes", quotes))
+		s.logger.Debug("quotes", slog.String("pair", pair), slog.Any("quotes", quotes))
 
 		if len(quotes) < 2 {
 			continue
@@ -182,10 +183,10 @@ func (s *Scanner) scanOnce(ctx context.Context, now time.Time) error {
 
 		if net <= 0 {
 			s.logger.Debug("spread not profitable",
-				zap.String("pair", pair),
-				zap.Float64("buy_ask", buy.Ask),
-				zap.Float64("sell_bid", sell.Bid),
-				zap.Float64("net", net),
+				slog.String("pair", pair),
+				slog.Float64("buy_ask", buy.Ask),
+				slog.Float64("sell_bid", sell.Bid),
+				slog.Float64("net", net),
 			)
 			continue
 		}
@@ -203,13 +204,13 @@ func (s *Scanner) scanOnce(ctx context.Context, now time.Time) error {
 		}
 
 		s.logger.Info("обнаружен арбитраж",
-			zap.String("pair", opp.Pair),
-			zap.String("buy_on", opp.BuyOn),
-			zap.Float64("buy_price", opp.BuyPrice),
-			zap.String("sell_on", opp.SellOn),
-			zap.Float64("sell_price", opp.SellPrice),
-			zap.Float64("net", opp.NetPnl),
-			zap.Float64("spread_pct", opp.SpreadPct),
+			slog.String("pair", opp.Pair),
+			slog.String("buy_on", opp.BuyOn),
+			slog.Float64("buy_price", opp.BuyPrice),
+			slog.String("sell_on", opp.SellOn),
+			slog.Float64("sell_price", opp.SellPrice),
+			slog.Float64("net", opp.NetPnl),
+			slog.Float64("spread_pct", opp.SpreadPct),
 		)
 
 		s.publish(opp)
