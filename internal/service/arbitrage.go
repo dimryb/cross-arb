@@ -13,7 +13,6 @@ import (
 	"github.com/dimryb/cross-arb/internal/api/mexc/utils"
 	"github.com/dimryb/cross-arb/internal/config"
 	i "github.com/dimryb/cross-arb/internal/interface"
-	"github.com/dimryb/cross-arb/internal/report"
 	"github.com/dimryb/cross-arb/internal/types"
 )
 
@@ -75,7 +74,6 @@ func (m *Arbitrage) Run() error {
 				wgSymbols.Wait()
 
 				m.updateAllStores(mexcExchange, results)
-				report.PrintTickersReport(results)
 			}
 		}
 	}()
@@ -148,7 +146,6 @@ func (m *Arbitrage) runJupiterClient(wg *sync.WaitGroup) error {
 				wgSymbols.Wait()
 
 				m.updateAllStores(jupExchange, results)
-				report.PrintTickersReport(results)
 			}
 		}
 	}()
