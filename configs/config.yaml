@@ -7,6 +7,9 @@ exchanges:
     secretKey: ""
     baseUrl: "https://api.mexc.com/api/v3"
     enabled: true
+    orderLimit: 5
+    maxPriceDiff: 0.01
+    minQtyImprovement: 50
 
   jupiter:
     baseUrl: "https://lite-api.jup.ag/swap/v1"
