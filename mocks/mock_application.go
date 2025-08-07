@@ -8,7 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	interface0 "github.com/dimryb/cross-arb/internal/interface"
+	interfaces "github.com/dimryb/cross-arb/internal/interface"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -50,10 +50,10 @@ func (mr *MockApplicationMockRecorder) Context() *gomock.Call {
 }
 
 // Logger mocks base method.
-func (m *MockApplication) Logger() interface0.Logger {
+func (m *MockApplication) Logger() interfaces.Logger {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Logger")
-	ret0, _ := ret[0].(interface0.Logger)
+	ret0, _ := ret[0].(interfaces.Logger)
 	return ret0
 }
 
@@ -64,10 +64,10 @@ func (mr *MockApplicationMockRecorder) Logger() *gomock.Call {
 }
 
 // TickerStore mocks base method.
-func (m *MockApplication) TickerStore() interface0.TickerStore {
+func (m *MockApplication) TickerStore() interfaces.TickerStore {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "TickerStore")
-	ret0, _ := ret[0].(interface0.TickerStore)
+	ret0, _ := ret[0].(interfaces.TickerStore)
 	return ret0
 }
 

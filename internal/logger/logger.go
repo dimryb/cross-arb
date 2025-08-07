@@ -5,20 +5,26 @@ import (
 	"log/slog"
 	"os"
 	"strings"
+
+	i "github.com/dimryb/cross-arb/internal/interface"
 )
 
 type Logger struct {
 	level slog.Level
+	slog  *slog.Logger
+	name  string
 }
 
 func New(level string) *Logger {
 	lvl := parseLevel(level)
 	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: lvl})
-	logger := slog.New(handler)
-	slog.SetDefault(logger)
+	slogLogger := slog.New(handler)
+	slog.SetDefault(slogLogger)
 
 	return &Logger{
 		level: lvl,
+		slog:  slogLogger,
+		name:  "",
 	}
 }
 
@@ -34,6 +40,26 @@ func parseLevel(level string) slog.Level {
 		return slog.LevelError
 	default:
 		return slog.LevelInfo
+	}
+}
+
+func (l *Logger) Named(name string) i.Logger {
+	if name == "" {
+		return l
+	}
+
+	var newName string
+	if l.name == "" {
+		newName = name
+	} else {
+		newName = l.name + "." + name
+	}
+
+	newSlog := l.slog.With(slog.String("logger", newName))
+
+	return &Logger{
+		slog: newSlog,
+		name: newName,
 	}
 }
 

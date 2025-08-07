@@ -21,6 +21,7 @@ linters-settings:
           - google.golang.org/grpc/codes
           - google.golang.org/grpc/status
           - google.golang.org/grpc/credentials/insecure
+          - go.uber.org/zap
       Test:
         files:
           - $test
@@ -33,6 +34,7 @@ linters-settings:
           - google.golang.org/grpc/metadata
           - google.golang.org/grpc/status
           - google.golang.org/protobuf/proto
+          - go.uber.org/zap
 
 linters:
   disable-all: true
