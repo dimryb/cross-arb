@@ -22,6 +22,7 @@ linters-settings:
           - google.golang.org/grpc/status
           - google.golang.org/grpc/credentials/insecure
           - go.uber.org/zap
+          - github.com/gagliardetto/solana-go
       Test:
         files:
           - $test
