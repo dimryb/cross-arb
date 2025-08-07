@@ -111,7 +111,7 @@ func (c *Client) Quote(
 		return nil, fmt.Errorf("не удалось обработать ответ с котировкой: %w", err)
 	}
 
-	c.logger.Info("Котировка успешно получена",
+	c.logger.Debug("Котировка успешно получена",
 		"обмен", fmt.Sprintf("%s → %s", inputMint, outputMint),
 		"входная_сумма", amount,
 		"выходная_сумма", quoteResponse.OutAmount,
