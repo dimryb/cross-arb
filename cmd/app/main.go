@@ -14,6 +14,7 @@ import (
 	"github.com/dimryb/cross-arb/internal/config"
 	i "github.com/dimryb/cross-arb/internal/interface"
 	"github.com/dimryb/cross-arb/internal/logger"
+	"github.com/dimryb/cross-arb/internal/report"
 	"github.com/dimryb/cross-arb/internal/server/grpc"
 	"github.com/dimryb/cross-arb/internal/server/http"
 	"github.com/dimryb/cross-arb/internal/service"
@@ -48,6 +49,7 @@ func main() {
 	store := storage.NewTickerStore()
 	application := app.NewApp(ctx, logg, store)
 	arbitrageService := service.NewArbitrageService(application, cfg)
+	report := report.NewReportService(logg, store)
 
 	mexcAdapter := adapter.NewMexcAdapter(logg, 3*time.Second)
 	jupiterAdapter, err := adapter.NewJupiterAdapterFromConfig(logg, cfg)
@@ -93,6 +95,8 @@ func main() {
 			cancel()
 		}
 	}()
+
+	report.Start()
 
 	logg.Info("Starting app...")
 	if err = arbitrageService.Run(); err != nil {
