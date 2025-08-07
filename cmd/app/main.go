@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"os/signal"
 	"syscall"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/dimryb/cross-arb/internal/app"
 	"github.com/dimryb/cross-arb/internal/config"
+	i "github.com/dimryb/cross-arb/internal/interface"
 	"github.com/dimryb/cross-arb/internal/logger"
 	"github.com/dimryb/cross-arb/internal/server/grpc"
 	"github.com/dimryb/cross-arb/internal/server/http"
@@ -44,25 +46,13 @@ func main() {
 	store := storage.NewTickerStore()
 	application := app.NewApp(ctx, logg, store)
 	arbitrageService := service.NewArbitrageService(application, cfg)
-	mexcAdapter := service.NewMexcAdapter(logg, 3*time.Second)
 
-	jupConfig, ok := cfg.Exchanges[config.JupExchange]
-	if !ok {
-		logg.Fatalf("Exchange %s not found in configuration", config.JupExchange)
+	mexcAdapter := service.NewMexcAdapter(logg, 3*time.Second)
+	jupiterAdapter, err := newJupiterAdapter(logg, cfg)
+	if err != nil {
+		logg.Fatalf("Failed to create Jupiter adapter: %v", err)
 	}
-	pairMap := make(map[string]service.MintPair, len(jupConfig.Pairs))
-	for symbol, pair := range jupConfig.Pairs {
-		pairMap[symbol] = service.MintPair{
-			BaseMint:  pair.Base,
-			QuoteMint: pair.Quote,
-		}
-	}
-	jupiterAdapter := service.NewJupiterAdapter(logg, &service.JupiterAdapterConfig{
-		BaseURL: jupConfig.BaseURLAdapter,
-		Timeout: jupConfig.Timeout,
-		Pairs:   pairMap,
-		Enabled: jupConfig.Enabled,
-	})
+
 	defer mexcAdapter.Close()
 	defer jupiterAdapter.Close()
 
@@ -109,4 +99,34 @@ func main() {
 	} else {
 		logg.Infof("Arbitrage service stopped gracefully")
 	}
+}
+
+func newJupiterAdapter(logg i.Logger, cfg *config.CrossArbConfig) (*service.JupiterAdapter, error) {
+	jupConfig, ok := cfg.Exchanges[config.JupExchange]
+	if !ok {
+		return nil, fmt.Errorf("exchange %s not found in configuration", config.JupExchange)
+	}
+	if !jupConfig.Enabled {
+		return nil, fmt.Errorf("exchange %s is disabled", config.JupExchange)
+	}
+
+	pairMap := make(map[string]service.MintPair, len(jupConfig.Pairs))
+	for symbol, pair := range jupConfig.Pairs {
+		if pair.Base == "" || pair.Quote == "" {
+			return nil, fmt.Errorf("missing mint address for Jupiter pair %q", symbol)
+		}
+		pairMap[symbol] = service.MintPair{
+			BaseMint:  pair.Base,
+			QuoteMint: pair.Quote,
+		}
+	}
+
+	adapter := service.NewJupiterAdapter(logg, &service.JupiterAdapterConfig{
+		BaseURL: jupConfig.BaseURLAdapter,
+		Timeout: jupConfig.Timeout,
+		Pairs:   pairMap,
+		Enabled: true,
+	})
+
+	return adapter, nil
 }
