@@ -13,6 +13,7 @@ import (
 	"github.com/dimryb/cross-arb/internal/api/mexc/utils"
 	"github.com/dimryb/cross-arb/internal/config"
 	i "github.com/dimryb/cross-arb/internal/interface"
+	"github.com/dimryb/cross-arb/internal/report"
 	"github.com/dimryb/cross-arb/internal/types"
 )
 
