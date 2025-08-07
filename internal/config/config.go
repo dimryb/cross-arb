@@ -19,10 +19,13 @@ type (
 	}
 
 	Exchange struct {
-		APIKey    string `yaml:"apiKey" env:"API_KEY"`
-		SecretKey string `yaml:"secretKey" env:"SECRET_KEY"`
-		BaseURL   string `yaml:"baseUrl"`
-		Enabled   bool   `yaml:"enabled"`
+		APIKey            string  `yaml:"apiKey" env:"API_KEY"`
+		SecretKey         string  `yaml:"secretKey" env:"SECRET_KEY"`
+		BaseURL           string  `yaml:"baseUrl"`
+		Enabled           bool    `yaml:"enabled"`
+		OrderLimit        int     `yaml:"orderLimit"`
+		MaxPriceDiff      float64 `yaml:"maxPriceDiff"`
+		MinQtyImprovement float64 `yaml:"minQtyImprovement"`
 	}
 )
 
