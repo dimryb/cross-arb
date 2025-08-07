@@ -86,7 +86,6 @@ func main() {
 	}()
 
 	go func() {
-		logg.Info("Starting gRPC server on :9090")
 		if err := grpcServer.Run(); err != nil {
 			logg.Errorf("gRPC server failed: %v", err)
 			cancel()
