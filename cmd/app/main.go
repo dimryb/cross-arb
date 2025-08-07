@@ -75,10 +75,12 @@ func main() {
 		)
 	}
 
+	// TODO: Вынести параметр порта grpc в конфиг файл
 	grpcServer := grpc.NewServer(application, grpc.ServerConfig{Port: "9090"}, logg)
 
 	go func() {
 		httpServer := http.NewHTTPServer(store)
+		// TODO: Вынести параметр порта http в конфиг файл
 		if err := httpServer.Run(":8080"); err != nil {
 			logg.Errorf("HTTP server error: %v", err)
 			cancel()
