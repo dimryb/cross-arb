@@ -12,34 +12,35 @@ import (
 	i "github.com/dimryb/cross-arb/internal/interface"
 )
 
+// JupiterAdapterConfig конфигурация адаптера.
+type JupiterAdapterConfig struct {
+	BaseURL string
+	Enabled bool
+	Timeout time.Duration
+	Pairs   map[string]MintPair // symbol → [base_mint, quote_mint]
+}
+
 // JupiterAdapter использует публичный Quote-API агрегатора Jupiter (Solana).
 // Он запрашивает цену обмена base → quote (ask) и quote → base (bid).
 type JupiterAdapter struct {
 	client     *http.Client
 	logger     i.Logger
-	pairConfig map[string]mintPair // "SOL/USDT" → {baseMint, quoteMint}
-}
-
-// mintPair хранит адреса SPL-токенов.
-type mintPair struct {
-	BaseMint  string
-	QuoteMint string
+	baseURL    string
+	pairConfig map[string]MintPair // "SOL/USDT" → {baseMint, quoteMint}
 }
 
 // NewJupiterAdapter создаёт адаптер.
 // pairMap: "SOL/USDT": {baseMint, quoteMint}.
-func NewJupiterAdapter(l i.Logger, pairMap map[string][2]string, timeout time.Duration) *JupiterAdapter {
+func NewJupiterAdapter(l i.Logger, cfg *JupiterAdapterConfig) *JupiterAdapter {
+	timeout := cfg.Timeout
 	if timeout <= 0 {
 		timeout = 3 * time.Second
-	}
-	cfg := make(map[string]mintPair, len(pairMap))
-	for p, m := range pairMap {
-		cfg[p] = mintPair{BaseMint: m[0], QuoteMint: m[1]}
 	}
 	return &JupiterAdapter{
 		client:     &http.Client{Timeout: timeout},
 		logger:     l.Named("jupiter"),
-		pairConfig: cfg,
+		baseURL:    cfg.BaseURL,
+		pairConfig: cfg.Pairs,
 	}
 }
 
@@ -67,8 +68,8 @@ func (j *JupiterAdapter) OrderBookTop(ctx context.Context, pair string) (bestBid
 // quote вызывает /v6/quote для объёма 0.01 токена (1e6 минимальных единиц).
 func (j *JupiterAdapter) quote(ctx context.Context, inMint, outMint string) (float64, error) {
 	url := fmt.Sprintf(
-		"https://quote-api.jup.ag/v6/quote?inputMint=%s&outputMint=%s&amount=1000000&slippageBps=1",
-		inMint, outMint,
+		"%s?inputMint=%s&outputMint=%s&amount=1000000&slippageBps=1",
+		j.baseURL, inMint, outMint,
 	)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {

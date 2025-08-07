@@ -46,14 +46,23 @@ func main() {
 	arbitrageService := service.NewArbitrageService(application, cfg)
 	mexcAdapter := service.NewMexcAdapter(logg, 3*time.Second)
 
-	jupPairs := map[string][2]string{
-		"SOL/USDT": {
-			"So11111111111111111111111111111111111111112",  // SOL (wSOL)
-			"Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", // USDT
-		},
+	jupConfig, ok := cfg.Exchanges[config.JupExchange]
+	if !ok {
+		logg.Fatalf("Exchange %s not found in configuration", config.JupExchange)
 	}
-
-	jupiterAdapter := service.NewJupiterAdapter(logg, jupPairs, 3*time.Second)
+	pairMap := make(map[string]service.MintPair, len(jupConfig.Pairs))
+	for symbol, pair := range jupConfig.Pairs {
+		pairMap[symbol] = service.MintPair{
+			BaseMint:  pair.Base,
+			QuoteMint: pair.Quote,
+		}
+	}
+	jupiterAdapter := service.NewJupiterAdapter(logg, &service.JupiterAdapterConfig{
+		BaseURL: jupConfig.BaseURLAdapter,
+		Timeout: jupConfig.Timeout,
+		Pairs:   pairMap,
+		Enabled: jupConfig.Enabled,
+	})
 	defer mexcAdapter.Close()
 	defer jupiterAdapter.Close()
 
