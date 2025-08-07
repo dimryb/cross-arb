@@ -9,11 +9,14 @@ import (
 	"github.com/dimryb/cross-arb/internal/types"
 )
 
+// TickerBySymbolAndExchange — агрегированное хранилище тикеров: symbol → exchange → TickerData.
+type TickerBySymbolAndExchange map[string]map[string]types.TickerData
+
 type Service struct {
 	log      i.Logger
 	store    i.TickerStore
 	sub      i.TickerSubscriber
-	lastData map[string]map[string]types.TickerData // symbol → exchange → ticker
+	lastData TickerBySymbolAndExchange
 	mu       sync.Mutex
 }
 
@@ -21,7 +24,7 @@ func NewReportService(log i.Logger, store i.TickerStore) *Service {
 	return &Service{
 		log:      log,
 		store:    store,
-		lastData: make(map[string]map[string]types.TickerData),
+		lastData: make(TickerBySymbolAndExchange),
 	}
 }
 
