@@ -18,6 +18,7 @@ type (
 		Log       Log                 `yaml:"log"`
 		Exchanges map[string]Exchange `yaml:"exchanges"`
 		Symbols   []string            `yaml:"symbols"`
+		Scanner   ScannerConfig       `yaml:"scanner"`
 	}
 
 	Log struct {
@@ -42,6 +43,12 @@ type (
 	PairConfig struct {
 		Base  string `yaml:"base"`
 		Quote string `yaml:"quote"`
+	}
+
+	ScannerConfig struct {
+		Interval         string   `yaml:"interval"`
+		Pairs            []string `yaml:"pairs"`
+		LogOpportunities bool     `yaml:"logOpportunities"`
 	}
 )
 
