@@ -17,7 +17,7 @@ type Scanner struct {
 	logger   i.Logger
 	interval time.Duration
 	pairs    []string
-	adapters []ExchangeAdapter
+	adapters []i.ExchangeAdapter
 
 	mu   sync.RWMutex
 	subs map[string][]chan Opportunity
@@ -49,12 +49,12 @@ func WithPairs(pairs ...string) Option {
 }
 
 // WithAdapters регистрирует биржевые адаптеры.
-func WithAdapters(adapters ...ExchangeAdapter) Option {
+func WithAdapters(adapters ...i.ExchangeAdapter) Option {
 	return func(s *Scanner) error {
 		if len(adapters) < 2 {
 			return errors.New("для арбитража нужны минимум две биржи")
 		}
-		s.adapters = append([]ExchangeAdapter(nil), adapters...)
+		s.adapters = append([]i.ExchangeAdapter(nil), adapters...)
 		return nil
 	}
 }
@@ -120,7 +120,7 @@ func (s *Scanner) scanOnce(ctx context.Context, now time.Time) error {
 
 		for _, adp := range s.adapters {
 			wg.Add(1)
-			go func(a ExchangeAdapter) {
+			go func(a i.ExchangeAdapter) {
 				defer wg.Done()
 				bid, ask, err := a.OrderBookTop(ctx, pair)
 				if err != nil {
