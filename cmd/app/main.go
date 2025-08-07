@@ -8,8 +8,6 @@ import (
 	"syscall"
 	"time"
 
-	"go.uber.org/zap"
-
 	"github.com/dimryb/cross-arb/internal/app"
 	"github.com/dimryb/cross-arb/internal/config"
 	"github.com/dimryb/cross-arb/internal/logger"
@@ -17,6 +15,7 @@ import (
 	"github.com/dimryb/cross-arb/internal/server/http"
 	"github.com/dimryb/cross-arb/internal/service"
 	"github.com/dimryb/cross-arb/internal/storage"
+	"go.uber.org/zap"
 )
 
 var configPath string
