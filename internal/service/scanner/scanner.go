@@ -1,4 +1,4 @@
-package service
+package scanner
 
 import (
 	"context"

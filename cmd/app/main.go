@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"log"
+	"log/slog"
 	"os/signal"
 	"syscall"
 	"time"
@@ -11,10 +12,12 @@ import (
 	"github.com/dimryb/cross-arb/internal/adapter"
 	"github.com/dimryb/cross-arb/internal/app"
 	"github.com/dimryb/cross-arb/internal/config"
+	i "github.com/dimryb/cross-arb/internal/interface"
 	"github.com/dimryb/cross-arb/internal/logger"
 	"github.com/dimryb/cross-arb/internal/server/grpc"
 	"github.com/dimryb/cross-arb/internal/server/http"
 	"github.com/dimryb/cross-arb/internal/service"
+	scan "github.com/dimryb/cross-arb/internal/service/scanner"
 	"github.com/dimryb/cross-arb/internal/storage"
 )
 
@@ -55,17 +58,26 @@ func main() {
 	defer mexcAdapter.Close()
 	defer jupiterAdapter.Close()
 
-	scanner := service.NewScanner(
-		logg,
-		service.WithInterval(2*time.Second),
-		service.WithPairs("SOL/USDT"),
-		service.WithAdapters(mexcAdapter, jupiterAdapter),
-	)
+	adapters := []i.ExchangeAdapter{mexcAdapter, jupiterAdapter}
+	scanner, err := scan.NewScannerFromConfig(logg, cfg.Scanner, adapters)
+	if err != nil {
+		logg.Error("Failed to create scanner", slog.Any("err", err))
+		cancel()
+		return
+	}
 
 	// Подписываемся и логируем возможности
+	if cfg.Scanner.LogOpportunities {
+		scan.SubscribeAndHandle(
+			scanner,
+			cfg.Scanner.Pairs,
+			scan.LogOpportunities(logg),
+		)
+	}
+
 	for _, pair := range []string{"SOL/USDT"} {
 		ch, _ := scanner.Subscribe(pair, 10)
-		go func(_ string, c <-chan service.Opportunity) {
+		go func(_ string, c <-chan scan.Opportunity) {
 			for opp := range c {
 				logg.Infof("Арбитраж %s: BUY %s @ %.4f → SELL %s @ %.4f  (%.4f %%)",
 					opp.Pair, opp.BuyOn, opp.BuyPrice, opp.SellOn, opp.SellPrice, opp.SpreadPct)
