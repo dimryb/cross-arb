@@ -7,6 +7,7 @@ package mocks
 import (
 	reflect "reflect"
 
+	interfaces "github.com/dimryb/cross-arb/internal/interface"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -167,6 +168,20 @@ func (mr *MockLoggerMockRecorder) Infof(arg0 interface{}, arg1 ...interface{}) *
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0}, arg1...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Infof", reflect.TypeOf((*MockLogger)(nil).Infof), varargs...)
+}
+
+// Named mocks base method.
+func (m *MockLogger) Named(name string) interfaces.Logger {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Named", name)
+	ret0, _ := ret[0].(interfaces.Logger)
+	return ret0
+}
+
+// Named indicates an expected call of Named.
+func (mr *MockLoggerMockRecorder) Named(name interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Named", reflect.TypeOf((*MockLogger)(nil).Named), name)
 }
 
 // Warn mocks base method.

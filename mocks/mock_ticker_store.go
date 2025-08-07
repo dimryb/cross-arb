@@ -7,7 +7,7 @@ package mocks
 import (
 	reflect "reflect"
 
-	interface0 "github.com/dimryb/cross-arb/internal/interface"
+	interfaces "github.com/dimryb/cross-arb/internal/interface"
 	types "github.com/dimryb/cross-arb/internal/types"
 	gomock "github.com/golang/mock/gomock"
 )
@@ -36,10 +36,10 @@ func (m *MockTickerStore) EXPECT() *MockTickerStoreMockRecorder {
 }
 
 // AddSubscriber mocks base method.
-func (m *MockTickerStore) AddSubscriber() interface0.TickerSubscriber {
+func (m *MockTickerStore) AddSubscriber() interfaces.TickerSubscriber {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddSubscriber")
-	ret0, _ := ret[0].(interface0.TickerSubscriber)
+	ret0, _ := ret[0].(interfaces.TickerSubscriber)
 	return ret0
 }
 
