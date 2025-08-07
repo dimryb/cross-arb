@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/dimryb/cross-arb/internal/adapter"
 	"github.com/dimryb/cross-arb/internal/app"
 	"github.com/dimryb/cross-arb/internal/config"
 	i "github.com/dimryb/cross-arb/internal/interface"
@@ -47,7 +48,7 @@ func main() {
 	application := app.NewApp(ctx, logg, store)
 	arbitrageService := service.NewArbitrageService(application, cfg)
 
-	mexcAdapter := service.NewMexcAdapter(logg, 3*time.Second)
+	mexcAdapter := adapter.NewMexcAdapter(logg, 3*time.Second)
 	jupiterAdapter, err := newJupiterAdapter(logg, cfg)
 	if err != nil {
 		logg.Fatalf("Failed to create Jupiter adapter: %v", err)
@@ -101,7 +102,7 @@ func main() {
 	}
 }
 
-func newJupiterAdapter(logg i.Logger, cfg *config.CrossArbConfig) (*service.JupiterAdapter, error) {
+func newJupiterAdapter(logg i.Logger, cfg *config.CrossArbConfig) (*adapter.JupiterAdapter, error) {
 	jupConfig, ok := cfg.Exchanges[config.JupExchange]
 	if !ok {
 		return nil, fmt.Errorf("exchange %s not found in configuration", config.JupExchange)
@@ -110,23 +111,23 @@ func newJupiterAdapter(logg i.Logger, cfg *config.CrossArbConfig) (*service.Jupi
 		return nil, fmt.Errorf("exchange %s is disabled", config.JupExchange)
 	}
 
-	pairMap := make(map[string]service.MintPair, len(jupConfig.Pairs))
+	pairMap := make(map[string]adapter.MintPair, len(jupConfig.Pairs))
 	for symbol, pair := range jupConfig.Pairs {
 		if pair.Base == "" || pair.Quote == "" {
 			return nil, fmt.Errorf("missing mint address for Jupiter pair %q", symbol)
 		}
-		pairMap[symbol] = service.MintPair{
+		pairMap[symbol] = adapter.MintPair{
 			BaseMint:  pair.Base,
 			QuoteMint: pair.Quote,
 		}
 	}
 
-	adapter := service.NewJupiterAdapter(logg, &service.JupiterAdapterConfig{
+	jupiterAdapter := adapter.NewJupiterAdapter(logg, &adapter.JupiterAdapterConfig{
 		BaseURL: jupConfig.BaseURLAdapter,
 		Timeout: jupConfig.Timeout,
 		Pairs:   pairMap,
 		Enabled: true,
 	})
 
-	return adapter, nil
+	return jupiterAdapter, nil
 }

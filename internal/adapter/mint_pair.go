@@ -1,4 +1,4 @@
-package service
+package adapter
 
 // MintPair хранит адреса SPL-токенов.
 type MintPair struct {
