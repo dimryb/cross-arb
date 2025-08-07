@@ -293,7 +293,12 @@ func (m *Arbitrage) runMexcOrderBook(wg *sync.WaitGroup) {
 	}()
 }
 
-func (m *Arbitrage) findBestOrder(results []types.OrderBookResult, exchange string, maxPriceDiff float64, minQtyImprovement float64) {
+func (m *Arbitrage) findBestOrder(
+	results []types.OrderBookResult,
+	exchange string,
+	maxPriceDiff float64,
+	minQtyImprovement float64,
+) {
 	for _, r := range results {
 		if r.Error != nil {
 			fmt.Printf("  [%s] Error: %v\n", r.Symbol, r.Error)
@@ -307,7 +312,7 @@ func (m *Arbitrage) findBestOrder(results []types.OrderBookResult, exchange stri
 		bestBidPrice = topBidPrice
 		bestBidQty = topBidQty
 
-		//Различия в цене для продажи так же учитывается
+		// Различия в цене для продажи так же учитывается
 		for _, bid := range r.Data.Bids {
 			if bid.Price < topBidPrice-maxPriceDiff-1e-8 {
 				break
