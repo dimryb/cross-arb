@@ -1,5 +1,11 @@
 package jupiter
 
+import (
+	"errors"
+
+	"github.com/gagliardetto/solana-go"
+)
+
 // QuoteResponse представляет ответ от эндпоинта /quote.
 type QuoteResponse struct {
 	InputMint            string       `json:"inputMint"`
@@ -154,4 +160,15 @@ type SwapResponse struct {
 	// PrioritizationFeeLamports - итоговая рассчитанная комиссия за приоритет в лампортах.
 	// Включает все настройки приоритизации из запроса.
 	PrioritizationFeeLamports uint64 `json:"prioritizationFeeLamports"`
+}
+
+var (
+	ErrInvalidPrivateKey = errors.New("некорректный приватный ключ")
+	ErrSignatureFailed   = errors.New("не удалось подписать")
+)
+
+// PhantomWallet представляет кошелек Phantom с привязанным приватным ключом.
+// Используется для управления транзакциями и ключами в сети Solana.
+type PhantomWallet struct {
+	privateKey solana.PrivateKey
 }
