@@ -5,8 +5,8 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"time"
 
-	"github.com/dimryb/cross-arb/internal/report"
 	"github.com/dimryb/cross-arb/internal/types"
 	"github.com/dimryb/cross-arb/proto"
 	"google.golang.org/grpc"
@@ -53,6 +53,23 @@ func main() {
 		}
 
 		// Печатаем как одноэлементный отчёт
-		report.PrintTickersReport([]types.Result{result})
+		PrintTickersReport([]types.Result{result})
 	}
+}
+
+func PrintTickersReport(results []types.Result) {
+	fmt.Printf("=== Обновление цен (%s) ===\n", time.Now().Format("15:04:05.000"))
+	for _, r := range results {
+		PrintTicker(r.Data)
+	}
+	fmt.Println()
+}
+
+func PrintTicker(t types.BookTicker) {
+	fmt.Printf(
+		"  [%s] -> покупка: %s (%s) | продажа: %s (%s)\n",
+		t.Symbol,
+		t.BidPrice, t.BidQty,
+		t.AskPrice, t.AskQty,
+	)
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/dimryb/cross-arb/internal/config"
 	i "github.com/dimryb/cross-arb/internal/interface"
 	"github.com/dimryb/cross-arb/internal/logger"
+	"github.com/dimryb/cross-arb/internal/report"
 	"github.com/dimryb/cross-arb/internal/server/grpc"
 	"github.com/dimryb/cross-arb/internal/server/http"
 	"github.com/dimryb/cross-arb/internal/service"
@@ -48,6 +49,7 @@ func main() {
 	store := storage.NewTickerStore()
 	application := app.NewApp(ctx, logg, store)
 	arbitrageService := service.NewArbitrageService(application, cfg)
+	report := report.NewReportService(logg, store)
 
 	mexcAdapter := adapter.NewMexcAdapter(logg, 3*time.Second)
 	jupiterAdapter, err := adapter.NewJupiterAdapterFromConfig(logg, cfg)
@@ -75,10 +77,12 @@ func main() {
 		)
 	}
 
+	// TODO: Вынести параметр порта grpc в конфиг файл
 	grpcServer := grpc.NewServer(application, grpc.ServerConfig{Port: "9090"}, logg)
 
 	go func() {
 		httpServer := http.NewHTTPServer(store)
+		// TODO: Вынести параметр порта http в конфиг файл
 		if err := httpServer.Run(":8080"); err != nil {
 			logg.Errorf("HTTP server error: %v", err)
 			cancel()
@@ -86,12 +90,13 @@ func main() {
 	}()
 
 	go func() {
-		logg.Info("Starting gRPC server on :9090")
 		if err := grpcServer.Run(); err != nil {
 			logg.Errorf("gRPC server failed: %v", err)
 			cancel()
 		}
 	}()
+
+	report.Start()
 
 	logg.Info("Starting app...")
 	if err = arbitrageService.Run(); err != nil {
