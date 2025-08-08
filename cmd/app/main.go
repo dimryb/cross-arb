@@ -4,16 +4,20 @@ import (
 	"context"
 	"flag"
 	"log"
+	"log/slog"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/dimryb/cross-arb/internal/adapter"
 	"github.com/dimryb/cross-arb/internal/app"
 	"github.com/dimryb/cross-arb/internal/config"
+	i "github.com/dimryb/cross-arb/internal/interface"
 	"github.com/dimryb/cross-arb/internal/logger"
 	"github.com/dimryb/cross-arb/internal/server/grpc"
 	"github.com/dimryb/cross-arb/internal/server/http"
 	"github.com/dimryb/cross-arb/internal/service"
+	scan "github.com/dimryb/cross-arb/internal/service/scanner"
 	"github.com/dimryb/cross-arb/internal/storage"
 )
 
@@ -44,35 +48,31 @@ func main() {
 	store := storage.NewTickerStore()
 	application := app.NewApp(ctx, logg, store)
 	arbitrageService := service.NewArbitrageService(application, cfg)
-	mexcAdapter := service.NewMexcAdapter(logg, 3*time.Second)
 
-	jupPairs := map[string][2]string{
-		"SOL/USDT": {
-			"So11111111111111111111111111111111111111112",  // SOL (wSOL)
-			"Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", // USDT
-		},
+	mexcAdapter := adapter.NewMexcAdapter(logg, 3*time.Second)
+	jupiterAdapter, err := adapter.NewJupiterAdapterFromConfig(logg, cfg)
+	if err != nil {
+		logg.Fatalf("Failed to create Jupiter adapter: %v", err)
 	}
 
-	jupiterAdapter := service.NewJupiterAdapter(logg, jupPairs, 3*time.Second)
 	defer mexcAdapter.Close()
 	defer jupiterAdapter.Close()
 
-	scanner := service.NewScanner(
-		logg,
-		service.WithInterval(2*time.Second),
-		service.WithPairs("SOL/USDT"),
-		service.WithAdapters(mexcAdapter, jupiterAdapter),
-	)
+	adapters := []i.ExchangeAdapter{mexcAdapter, jupiterAdapter}
+	scanner, err := scan.NewScannerFromConfig(logg, cfg.Scanner, adapters)
+	if err != nil {
+		logg.Error("Failed to create scanner", slog.Any("err", err))
+		cancel()
+		return
+	}
 
 	// Подписываемся и логируем возможности
-	for _, pair := range []string{"SOL/USDT"} {
-		ch, _ := scanner.Subscribe(pair, 10)
-		go func(_ string, c <-chan service.Opportunity) {
-			for opp := range c {
-				logg.Infof("Арбитраж %s: BUY %s @ %.4f → SELL %s @ %.4f  (%.4f %%)",
-					opp.Pair, opp.BuyOn, opp.BuyPrice, opp.SellOn, opp.SellPrice, opp.SpreadPct)
-			}
-		}(pair, ch)
+	if cfg.Scanner.LogOpportunities {
+		scan.SubscribeAndHandle(
+			scanner,
+			cfg.Scanner.Pairs,
+			scan.LogOpportunities(logg),
+		)
 	}
 
 	grpcServer := grpc.NewServer(application, grpc.ServerConfig{Port: "9090"}, logg)
