@@ -75,16 +75,6 @@ func main() {
 		)
 	}
 
-	for _, pair := range []string{"SOL/USDT"} {
-		ch, _ := scanner.Subscribe(pair, 10)
-		go func(_ string, c <-chan scan.Opportunity) {
-			for opp := range c {
-				logg.Infof("Арбитраж %s: BUY %s @ %.4f → SELL %s @ %.4f  (%.4f %%)",
-					opp.Pair, opp.BuyOn, opp.BuyPrice, opp.SellOn, opp.SellPrice, opp.SpreadPct)
-			}
-		}(pair, ch)
-	}
-
 	grpcServer := grpc.NewServer(application, grpc.ServerConfig{Port: "9090"}, logg)
 
 	go func() {
