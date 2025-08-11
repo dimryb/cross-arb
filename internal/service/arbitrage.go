@@ -75,7 +75,6 @@ func (m *Arbitrage) Run() error {
 				wgSymbols.Wait()
 
 				m.updateAllStores(mexcExchange, results)
-				report.PrintTickersReport(results)
 			}
 		}
 	}()
@@ -148,7 +147,6 @@ func (m *Arbitrage) runJupiterClient(wg *sync.WaitGroup) error {
 				wgSymbols.Wait()
 
 				m.updateAllStores(jupExchange, results)
-				report.PrintTickersReport(results)
 			}
 		}
 	}()
