@@ -1,0 +1,7 @@
+version: 1
+secret:
+  ignored_paths:
+    - internal/usecase/swap/swap_test.go
+  ignored_matches:
+    - name: "Random Phantom key for tests"
+      match: "3QkJFM1ac7BtTGR4d5KG6PAm86qU9"
