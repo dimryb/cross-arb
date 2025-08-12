@@ -13,7 +13,7 @@ exchanges:
 
   jupiter:
     baseUrl: "https://lite-api.jup.ag/swap/v1"
-    baseUrlAdapter: "https://quote-api.jup.ag/v6/quote"
+    baseUrlAdapter: "https://lite-api.jup.ag/swap/v1"
     timeout: 3s
     enabled: true
     pairs:

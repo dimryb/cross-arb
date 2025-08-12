@@ -8,6 +8,7 @@ import (
 )
 
 func PrintOrderBookReport(results []types.OrderBookResult) {
+	return
 	fmt.Printf("=== Стакан (обновлено: %s) ===\n", time.Now().Format("15:04:05.000"))
 	for _, r := range results {
 		if r.Error != nil {

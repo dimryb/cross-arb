@@ -159,10 +159,10 @@ func (c *Client) handleQuoteResponse(resp *http.Response) (*QuoteResponse, error
 	decoder := json.NewDecoder(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
-		c.logger.Warn("Получен некорректный статус от Jupiter API",
-			"статус_код", resp.StatusCode,
-			"статус", resp.Status,
-		)
+		//c.logger.Warn("Получен некорректный статус от Jupiter API",
+		//	"статус_код", resp.StatusCode,
+		//	"статус", resp.Status,
+		//)
 
 		var errorResp struct {
 			Error   string `json:"error"`
@@ -179,7 +179,7 @@ func (c *Client) handleQuoteResponse(resp *http.Response) (*QuoteResponse, error
 			return nil, fmt.Errorf("API error (status %d): %s - %s", resp.StatusCode, errorResp.Error, errorResp.Message)
 		}
 
-		c.logger.Error("Jupiter API вернул неструктурированную ошибку", "статус_код", resp.StatusCode)
+		//c.logger.Error("Jupiter API вернул неструктурированную ошибку", "статус_код", resp.StatusCode)
 		return nil, fmt.Errorf("API request failed with status %d", resp.StatusCode)
 	}
 

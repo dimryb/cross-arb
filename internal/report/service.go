@@ -64,7 +64,7 @@ func (r *Service) run() {
 			r.handleEvent(event)
 
 		case <-ticker.C:
-			r.printReport()
+			//r.printReport()
 		}
 	}
 }

@@ -96,6 +96,7 @@ func (s *Scanner) Subscribe(pair string, buf int) (<-chan Opportunity, error) {
 
 // Run запускает бесконечный цикл сканирования.
 func (s *Scanner) Run(ctx context.Context) error {
+	fmt.Println("scanner run")
 	ticker := time.NewTicker(s.interval)
 	defer ticker.Stop()
 
@@ -113,7 +114,9 @@ func (s *Scanner) Run(ctx context.Context) error {
 
 // scanOnce выполняет один проход по всем биржам для каждой пары.
 func (s *Scanner) scanOnce(ctx context.Context, now time.Time) error {
+	fmt.Println("scanOnce")
 	for _, pair := range s.pairs {
+		fmt.Println("проход по паре:", pair)
 		var wg sync.WaitGroup
 		quotesCh := make(chan PricePoint, len(s.adapters))
 		errCh := make(chan error, len(s.adapters))
@@ -123,6 +126,7 @@ func (s *Scanner) scanOnce(ctx context.Context, now time.Time) error {
 			go func(a i.ExchangeAdapter) {
 				defer wg.Done()
 				bid, ask, err := a.OrderBookTop(ctx, pair)
+				fmt.Println("adp", adp.Name(), "bid", bid, "ask", ask, "err", err)
 				if err != nil {
 					errCh <- fmt.Errorf("%s: %w", a.Name(), err)
 					return

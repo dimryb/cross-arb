@@ -96,6 +96,13 @@ func main() {
 		}
 	}()
 
+	go func() {
+		err = scanner.Run(ctx)
+		if err != nil {
+			return
+		}
+	}()
+
 	report.Start()
 
 	logg.Info("Starting app...")

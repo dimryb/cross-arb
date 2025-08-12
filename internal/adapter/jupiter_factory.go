@@ -28,7 +28,7 @@ func NewJupiterAdapterFromConfig(logg i.Logger, cfg *config.CrossArbConfig) (*Ju
 	}
 
 	jupiterAdapter := NewJupiterAdapter(logg, &JupiterAdapterConfig{
-		BaseURL: jupConfig.BaseURLAdapter,
+		BaseURL: jupConfig.BaseURL,
 		Timeout: jupConfig.Timeout,
 		Pairs:   pairMap,
 		Enabled: true,

@@ -71,6 +71,7 @@ func (j *JupiterAdapter) quote(ctx context.Context, inMint, outMint string) (flo
 		"%s?inputMint=%s&outputMint=%s&amount=1000000&slippageBps=1",
 		j.baseURL, inMint, outMint,
 	)
+	fmt.Println("JupiterAdapter quote URL:", url)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return 0, err
