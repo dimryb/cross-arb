@@ -1,10 +1,22 @@
-package jupiter
+package wallet
 
 import (
 	"crypto/ed25519"
+	"errors"
 	"fmt"
 
 	"github.com/gagliardetto/solana-go"
+)
+
+// PhantomWallet представляет кошелек Phantom с привязанным приватным ключом.
+// Используется для управления транзакциями и ключами в сети Solana.
+type PhantomWallet struct {
+	privateKey solana.PrivateKey
+}
+
+var (
+	ErrInvalidPrivateKey = errors.New("некорректный приватный ключ")
+	ErrSignatureFailed   = errors.New("не удалось подписать")
 )
 
 // PublicKey возвращает публичный ключ кошелька.
