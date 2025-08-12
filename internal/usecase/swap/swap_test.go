@@ -12,6 +12,7 @@ import (
 )
 
 const (
+	// #nosec G101
 	phantomPrivateKey = "3QkJFM1ac7BtTGR4d5KG6PAm86qU9E3P6VyZS7mGWuZq4tHJtQdYw9R3q5o1tbzZs6ryh5gYH1j3ogUfjEUMMrXN"
 	jupiterAPIURL     = "https://lite-api.jup.ag/swap/v1"
 	solanaRPCURL      = "https://api.mainnet-beta.solana.com"
