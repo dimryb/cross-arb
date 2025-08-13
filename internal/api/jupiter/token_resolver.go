@@ -17,15 +17,15 @@ const tokenListURL = "https://tokens.jup.ag/tokens?tags=verified,community,stric
 type TokenEntry struct {
 	Symbol  string `json:"symbol"`
 	Address string `json:"address"`
-
 	// Decimals число знаков после запятой у котируемого токена (USDT = 6).
 	Decimals uint8 `json:"decimals"`
 }
 
 var (
-	tokenOnce sync.Once
-	tokenMap  map[string]TokenEntry
-	tokenErr  error
+	tokenOnce      sync.Once
+	tokenMap       map[string]TokenEntry // SYMBOL -> entry
+	tokenMapByMint map[string]TokenEntry // MINT ADDRESS -> entry
+	tokenErr       error
 )
 
 // UnitAmount возвращает int64, равный 1*10^decimals для заданного тикера.
@@ -37,13 +37,35 @@ func UnitAmount(ticker string) (int64, error) {
 	return int64(math.Pow10(int(dec))), nil
 }
 
-// getDecimals возвращает количество знаков после запятой (decimals) токена.
+// UnitAmount возвращает int64, равный 1*10^decimals для заданного тикера.
+func UnitAmountByMint(mint string) (int64, error) {
+	dec, err := getDecimalsByMint(mint)
+	if err != nil {
+		return 0, err
+	}
+	return int64(math.Pow10(int(dec))), nil
+}
+
+// getDecimalsByMint возвращает decimals по mint-адресу (как в списке Jupiter).
+func getDecimalsByMint(mint string) (uint8, error) {
+	m, err := getTokenMapByMint()
+	if err != nil {
+		return 0, err
+	}
+	key := strings.TrimSpace(mint) // регистр в base58 важен — не меняем
+	entry, ok := m[key]
+	if !ok {
+		return 0, fmt.Errorf("decimals not found for mint %s", mint)
+	}
+	return entry.Decimals, nil
+}
+
+// getDecimals возвращает количество знаков после запятой (decimals) токена по символу.
 func getDecimals(ticker string) (uint8, error) {
 	m, err := getTokenMap()
 	if err != nil {
 		return 0, err
 	}
-
 	entry, ok := m[strings.ToUpper(strings.TrimSpace(ticker))]
 	if !ok {
 		return 0, fmt.Errorf("decimals not found for token %s", ticker)
@@ -51,7 +73,8 @@ func getDecimals(ticker string) (uint8, error) {
 	return entry.Decimals, nil
 }
 
-// getTokenMap загружает (один раз) список токенов Jupiter и строит map[SYMBOL]TokenEntry.
+// getTokenMap загружает (один раз) список токенов Jupiter и строит map[SYMBOL]TokenEntry
+// и map[MINT]TokenEntry.
 func getTokenMap() (map[string]TokenEntry, error) {
 	tokenOnce.Do(func() {
 		client := &http.Client{Timeout: 5 * time.Second}
@@ -80,13 +103,29 @@ func getTokenMap() (map[string]TokenEntry, error) {
 			return
 		}
 
-		tmp := make(map[string]TokenEntry, len(list))
+		bySymbol := make(map[string]TokenEntry, len(list))
+		byMint := make(map[string]TokenEntry, len(list))
 		for _, t := range list {
-			tmp[strings.ToUpper(t.Symbol)] = t
+			bySymbol[strings.ToUpper(t.Symbol)] = t
+			byMint[strings.TrimSpace(t.Address)] = t // адрес оставляем в исходном регистре
 		}
-		tokenMap = tmp
+		tokenMap = bySymbol
+		tokenMapByMint = byMint
 	})
 	return tokenMap, tokenErr
+}
+
+// getTokenMapByMint возвращает карту mint->entry, гарантируя, что список загружен.
+func getTokenMapByMint() (map[string]TokenEntry, error) {
+	if tokenMapByMint != nil || tokenErr != nil {
+		return tokenMapByMint, tokenErr
+	}
+	// Инициализируем через общий загрузчик
+	_, err := getTokenMap()
+	if err != nil {
+		return nil, err
+	}
+	return tokenMapByMint, tokenErr
 }
 
 // ConvertSpotToMints преобразует символ CEX-биржи вида "SOLUSDT" в inputMint/outputMint.
@@ -135,7 +174,6 @@ func getMint(ticker string) (string, error) {
 }
 
 // quoteCurrencies содержит наиболее популярные суффиксы котировочных валют.
-// Упорядочены по длине, чтобы "USDT" не бился как "USD".
 var quoteCurrencies = []string{
 	"USDT",
 	"USDC",
