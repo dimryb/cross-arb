@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"log"
 	"log/slog"
@@ -14,7 +15,7 @@ import (
 	"github.com/dimryb/cross-arb/internal/config"
 	i "github.com/dimryb/cross-arb/internal/interface"
 	"github.com/dimryb/cross-arb/internal/logger"
-	"github.com/dimryb/cross-arb/internal/report"
+	reportpkg "github.com/dimryb/cross-arb/internal/report"
 	"github.com/dimryb/cross-arb/internal/server/grpc"
 	"github.com/dimryb/cross-arb/internal/server/http"
 	"github.com/dimryb/cross-arb/internal/service"
@@ -49,13 +50,37 @@ func main() {
 	store := storage.NewTickerStore()
 	application := app.NewApp(ctx, logg, store)
 	arbitrageService := service.NewArbitrageService(application, cfg)
-	report := report.NewReportService(logg, store)
+	reportSvc := reportpkg.NewReportService(logg, store)
 
+	// --- Adapters ---
 	mexcAdapter := adapter.NewMexcAdapter(logg, 3*time.Second)
-	jupiterAdapter, err := adapter.NewJupiterAdapterFromConfig(logg, cfg)
-	if err != nil {
-		logg.Fatalf("Failed to create Jupiter adapter: %v", err)
+
+	// Jupiter: собираем конфиг напрямую (заменяет фабрику)
+	jupCfg, ok := cfg.Exchanges[config.JupExchange]
+	if !ok {
+		logg.Fatalf("exchange %s not found in configuration", config.JupExchange)
 	}
+	if !jupCfg.Enabled {
+		logg.Fatalf("exchange %s is disabled", config.JupExchange)
+	}
+
+	pairMap := make(map[string]adapter.MintPair, len(jupCfg.Pairs))
+	for symbol, p := range jupCfg.Pairs {
+		if p.Base == "" || p.Quote == "" {
+			logg.Fatalf("missing mint address for Jupiter pair %q", symbol)
+		}
+		pairMap[symbol] = adapter.MintPair{
+			BaseMint:  p.Base,
+			QuoteMint: p.Quote,
+		}
+	}
+
+	jupiterAdapter := adapter.NewJupiterAdapter(logg, &adapter.JupiterAdapterConfig{
+		BaseURL: jupCfg.BaseURL,
+		Enabled: true,
+		Timeout: jupCfg.Timeout,
+		Pairs:   pairMap,
+	})
 
 	defer mexcAdapter.Close()
 	defer jupiterAdapter.Close()
@@ -77,12 +102,11 @@ func main() {
 		)
 	}
 
-	// TODO: Вынести параметр порта grpc в конфиг файл
+	// TODO: вынести порты в конфиг
 	grpcServer := grpc.NewServer(application, grpc.ServerConfig{Port: "9090"}, logg)
 
 	go func() {
 		httpServer := http.NewHTTPServer(store)
-		// TODO: Вынести параметр порта http в конфиг файл
 		if err := httpServer.Run(":8080"); err != nil {
 			logg.Errorf("HTTP server error: %v", err)
 			cancel()
@@ -96,14 +120,15 @@ func main() {
 		}
 	}()
 
+	// Запускаем сканер
 	go func() {
-		err = scanner.Run(ctx)
-		if err != nil {
-			return
+		if err := scanner.Run(ctx); err != nil && !errors.Is(err, context.Canceled) {
+			logg.Errorf("Scanner stopped with error: %v", err)
+			cancel()
 		}
 	}()
 
-	report.Start()
+	reportSvc.Start()
 
 	logg.Info("Starting app...")
 	if err = arbitrageService.Run(); err != nil {
