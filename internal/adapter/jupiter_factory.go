@@ -1,3 +1,4 @@
+// TODO: DELETE
 package adapter
 
 import (

@@ -14,7 +14,7 @@ import (
 type JupiterAdapterConfig struct {
 	BaseURL string
 	Enabled bool
-	Timeout time.Duration
+	Timeout time.Duration       // может использоваться в NewJupiterAdapterFromConfig
 	Pairs   map[string]MintPair // symbol → [base_mint, quote_mint]
 }
 
@@ -30,12 +30,13 @@ type JupiterAdapter struct {
 // NewJupiterAdapter создаёт адаптер.
 // pairMap: "SOL/USDT": {baseMint, quoteMint}.
 func NewJupiterAdapter(l i.Logger, cfg *JupiterAdapterConfig) *JupiterAdapter {
-	timeout := cfg.Timeout
-	if timeout <= 0 {
-		timeout = 3 * time.Second
+	// TODO: handle error
+	client, err := jupiter.NewJupiterClient(l, cfg.BaseURL)
+	if err != nil {
+		// Линтер errcheck: ошибку не игнорируем
+		l.Fatalf("failed to create Jupiter client: %v", err)
 	}
-	//TODO: err do
-	client, _ := jupiter.NewJupiterClient(l, cfg.BaseURL)
+
 	return &JupiterAdapter{
 		client:     client,
 		logger:     l.Named("jupiter"),
@@ -47,8 +48,11 @@ func NewJupiterAdapter(l i.Logger, cfg *JupiterAdapterConfig) *JupiterAdapter {
 // Name удовлетворяет интерфейсу ExchangeAdapter.
 func (j *JupiterAdapter) Name() string { return "jupiter" }
 
-// OrderBookTop для Jupiter: цены в USDT за 1 SOL для пары SOL/USDT.
-func (j *JupiterAdapter) OrderBookTop(ctx context.Context, pair string) (bestBid, bestAsk float64, err error) {
+// OrderBookTop для Jupiter: цены в QUOTE за 1 BASE для пары, например SOL/USDT.
+func (j *JupiterAdapter) OrderBookTop(
+	ctx context.Context,
+	pair string,
+) (bestBid, bestAsk float64, err error) {
 	mints, ok := j.pairConfig[pair]
 	if !ok {
 		return 0, 0, fmt.Errorf("неизвестная пара %s", pair)
@@ -75,23 +79,35 @@ func (j *JupiterAdapter) OrderBookTop(ctx context.Context, pair string) (bestBid
 }
 
 // quote возвращает: "сколько OUT токенов за 1 IN токен".
-func (j *JupiterAdapter) quote(ctx context.Context, inMint, outMint string, opts *jupiter.QuoteOptions) (float64, error) {
+func (j *JupiterAdapter) quote(
+	ctx context.Context,
+	inMint string,
+	outMint string,
+	opts *jupiter.QuoteOptions,
+) (float64, error) {
 	inUnit, err := jupiter.UnitAmountByMint(inMint) // 10^decimals(IN)
 	if err != nil {
 		return 0, err
 	}
+
 	resp, err := j.client.Quote(ctx, inMint, outMint, inUnit, opts)
 	if err != nil {
 		return 0, err
 	}
+	if resp == nil {
+		return 0, fmt.Errorf("empty response from jupiter")
+	}
+
 	outAtoms, err := strconv.ParseFloat(resp.OutAmount, 64)
 	if err != nil {
 		return 0, fmt.Errorf("parse OutAmount: %w", err)
 	}
+
 	outUnit, err := jupiter.UnitAmountByMint(outMint) // 10^decimals(OUT)
 	if err != nil {
 		return 0, err
 	}
+
 	return outAtoms / float64(outUnit), nil
 }
 
