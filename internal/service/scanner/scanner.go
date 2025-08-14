@@ -114,7 +114,7 @@ func (s *Scanner) Run(ctx context.Context) error {
 
 // scanOnce выполняет один проход по всем биржам для каждой пары.
 // scanOnce выполняет один проход по всем биржам для каждой пары.
-func (s *Scanner) scanOnce(ctx context.Context, now time.Time) error {
+func (s *Scanner) scanOnce(ctx context.Context, now time.Time) error { //nolint: unparam
 	for _, pair := range s.pairs {
 		fmt.Printf("проход по паре: %s\n", pair)
 
