@@ -159,10 +159,10 @@ func (c *Client) handleQuoteResponse(resp *http.Response) (*QuoteResponse, error
 	decoder := json.NewDecoder(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
-		c.logger.Warn("Получен некорректный статус от Jupiter API",
-			"статус_код", resp.StatusCode,
-			"статус", resp.Status,
-		)
+		// c.logger.Warn("Получен некорректный статус от Jupiter API",
+		// 	"статус_код", resp.StatusCode,
+		// 	"статус", resp.Status,
+		// )
 
 		var errorResp struct {
 			Error   string `json:"error"`
@@ -176,10 +176,11 @@ func (c *Client) handleQuoteResponse(resp *http.Response) (*QuoteResponse, error
 				"api_ошибка", errorResp.Error,
 				"api_сообщение", errorResp.Message,
 			)
-			return nil, fmt.Errorf("API error (status %d): %s - %s", resp.StatusCode, errorResp.Error, errorResp.Message)
+			return nil, fmt.Errorf("API error (status %d): %s - %s",
+				resp.StatusCode, errorResp.Error, errorResp.Message)
 		}
 
-		c.logger.Error("Jupiter API вернул неструктурированную ошибку", "статус_код", resp.StatusCode)
+		// c.logger.Error("Jupiter API вернул неструктурированную ошибку", "статус_код", resp.StatusCode)
 		return nil, fmt.Errorf("API request failed with status %d", resp.StatusCode)
 	}
 
@@ -252,10 +253,15 @@ func (c *Client) handleSwapResponse(resp *http.Response) (*SwapResponse, error) 
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, err := io.ReadAll(resp.Body)
 		if err != nil {
-			return nil, fmt.Errorf("ошибка от Jupiter API: статус %d, не удалось прочитать тело ответа: %w",
-				resp.StatusCode, err)
+			return nil, fmt.Errorf(
+				"ошибка от Jupiter API: статус %d, не удалось прочитать тело ответа: %w",
+				resp.StatusCode, err,
+			)
 		}
-		return nil, fmt.Errorf("ошибка от Jupiter API: статус %d, тело: %s", resp.StatusCode, string(bodyBytes))
+		return nil, fmt.Errorf(
+			"ошибка от Jupiter API: статус %d, тело: %s",
+			resp.StatusCode, string(bodyBytes),
+		)
 	}
 
 	var swapResponse SwapResponse

@@ -96,6 +96,7 @@ func (s *Scanner) Subscribe(pair string, buf int) (<-chan Opportunity, error) {
 
 // Run запускает бесконечный цикл сканирования.
 func (s *Scanner) Run(ctx context.Context) error {
+	fmt.Println("scanner run")
 	ticker := time.NewTicker(s.interval)
 	defer ticker.Stop()
 
@@ -112,53 +113,63 @@ func (s *Scanner) Run(ctx context.Context) error {
 }
 
 // scanOnce выполняет один проход по всем биржам для каждой пары.
-func (s *Scanner) scanOnce(ctx context.Context, now time.Time) error {
+// scanOnce выполняет один проход по всем биржам для каждой пары.
+func (s *Scanner) scanOnce(ctx context.Context, now time.Time) error { //nolint: unparam
 	for _, pair := range s.pairs {
+		fmt.Printf("проход по паре: %s\n", pair)
+
+		type res struct {
+			name string
+			bid  float64
+			ask  float64
+			err  error
+		}
+
+		results := make(chan res, len(s.adapters))
 		var wg sync.WaitGroup
-		quotesCh := make(chan PricePoint, len(s.adapters))
-		errCh := make(chan error, len(s.adapters))
 
 		for _, adp := range s.adapters {
 			wg.Add(1)
 			go func(a i.ExchangeAdapter) {
 				defer wg.Done()
 				bid, ask, err := a.OrderBookTop(ctx, pair)
-				if err != nil {
-					errCh <- fmt.Errorf("%s: %w", a.Name(), err)
-					return
-				}
-				quotesCh <- PricePoint{
-					Exchange:  a.Name(),
-					Pair:      pair,
-					Bid:       bid,
-					Ask:       ask,
-					Timestamp: now,
-				}
+				results <- res{name: a.Name(), bid: bid, ask: ask, err: err}
 			}(adp)
 		}
 
 		wg.Wait()
-		close(quotesCh)
-		close(errCh)
+		close(results)
 
-		// если есть хотя бы одна ошибка — возвращаем первую
-		for err := range errCh {
-			s.logger.Error("не удалось получить котировки",
-				slog.String("pair", pair), slog.Any("err", err))
-			return err
-		}
-
+		// Логируем все результаты в требуемом формате и собираем котировки без ошибок.
 		quotes := make([]PricePoint, 0, len(s.adapters))
-		for q := range quotesCh {
-			quotes = append(quotes, q)
+		for r := range results {
+			fmt.Printf("adp %s bid %v ask %v err %v\n", r.name, r.bid, r.ask, r.err)
+			if r.err == nil {
+				quotes = append(quotes, PricePoint{
+					Exchange:  r.name,
+					Pair:      pair,
+					Bid:       r.bid,
+					Ask:       r.ask,
+					Timestamp: now,
+				})
+			} else {
+				s.logger.Error("не удалось получить котировки",
+					slog.String("pair", pair),
+					slog.String("adapter", r.name),
+					slog.Any("err", r.err),
+				)
+			}
 		}
 
+		// Для дебага можно оставить и структурированный лог:
 		s.logger.Debug("quotes", slog.String("pair", pair), slog.Any("quotes", quotes))
 
+		// Если меньше двух успешных котировок — нечего считать.
 		if len(quotes) < 2 {
 			continue
 		}
 
+		// Находим лучший bid/ask.
 		bestBidIdx, bestAskIdx := 0, 0
 		for i := 1; i < len(quotes); i++ {
 			if quotes[i].Bid > quotes[bestBidIdx].Bid {
@@ -215,7 +226,6 @@ func (s *Scanner) scanOnce(ctx context.Context, now time.Time) error {
 
 		s.publish(opp)
 	}
-
 	return nil
 }
 

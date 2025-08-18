@@ -64,7 +64,7 @@ func (r *Service) run() {
 			r.handleEvent(event)
 
 		case <-ticker.C:
-			r.printReport()
+			// r.printReport()
 		}
 	}
 }
@@ -83,7 +83,7 @@ func (r *Service) handleEvent(event types.TickerEvent) {
 	r.lastData[symbol][exchange] = ticker
 }
 
-func (r *Service) printReport() {
+func (r *Service) printReport() { //nolint: unused
 	r.mu.Lock()
 	defer r.mu.Unlock()
 

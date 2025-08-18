@@ -338,9 +338,9 @@ func (m *Arbitrage) findBestOrder(
 			}
 		}
 
-		fmt.Printf("---\n[%s] ЛУЧШИЙ ВАРИАНТ ИЗ СТАКАНА:\n", r.Symbol)
-		fmt.Printf("Покупка: %.2f USDT | Количество: %.3f\n", bestAskPrice, bestAskQty)
-		fmt.Printf("Продать: %.2f USDT | Количество: %.3f\n", bestBidPrice, bestBidQty)
+		// fmt.Printf("---\n[%s] ЛУЧШИЙ ВАРИАНТ ИЗ СТАКАНА:\n", r.Symbol)
+		// fmt.Printf("Покупка: %.2f USDT | Количество: %.3f\n", bestAskPrice, bestAskQty)
+		// fmt.Printf("Продать: %.2f USDT | Количество: %.3f\n", bestBidPrice, bestBidQty)
 
 		m.store.Set(types.TickerData{
 			Symbol:   r.Symbol,
