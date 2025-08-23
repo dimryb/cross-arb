@@ -10,11 +10,11 @@ import (
 
 	"github.com/dimryb/cross-arb/internal/adapter"
 	"github.com/dimryb/cross-arb/internal/config"
+	"github.com/dimryb/cross-arb/internal/controller/grpc"
+	"github.com/dimryb/cross-arb/internal/controller/http"
 	i "github.com/dimryb/cross-arb/internal/interface"
 	"github.com/dimryb/cross-arb/internal/logger"
 	"github.com/dimryb/cross-arb/internal/report"
-	"github.com/dimryb/cross-arb/internal/server/grpc"
-	"github.com/dimryb/cross-arb/internal/server/http"
 	"github.com/dimryb/cross-arb/internal/service/scanner"
 	"github.com/dimryb/cross-arb/internal/storage"
 )
@@ -142,7 +142,7 @@ func (a *App) Run() {
 	reportSvc.Start()
 
 	a.log.Info("App started")
-	
+
 	<-a.ctx.Done()
 
 	a.log.Info("Shutting down...")
