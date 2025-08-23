@@ -15,7 +15,6 @@ import (
 	"github.com/dimryb/cross-arb/internal/report"
 	"github.com/dimryb/cross-arb/internal/server/grpc"
 	"github.com/dimryb/cross-arb/internal/server/http"
-	"github.com/dimryb/cross-arb/internal/service"
 	"github.com/dimryb/cross-arb/internal/service/scanner"
 	"github.com/dimryb/cross-arb/internal/storage"
 )
@@ -54,7 +53,6 @@ func (a *App) Run() {
 
 	a.log = logger.New(a.cfg.Log.Level)
 	a.store = storage.NewTickerStore()
-	arbitrageService := service.NewArbitrageService(a.ctx, a, a.log, a.cfg, a.store)
 	reportSvc := report.NewReportService(a.log, a.store)
 
 	// --- Adapters ---
@@ -143,11 +141,14 @@ func (a *App) Run() {
 
 	reportSvc.Start()
 
-	a.log.Info("Starting app...")
-	if err = arbitrageService.Run(); err != nil {
-		a.log.Errorf("Arbitrage service stopped with error: %v", err)
-		a.cancel()
-	} else {
-		a.log.Infof("Arbitrage service stopped gracefully")
-	}
+	a.log.Info("App started")
+	
+	<-a.ctx.Done()
+
+	a.log.Info("Shutting down...")
+
+	// Останавливаем фоновые сервисы
+	reportSvc.Stop()
+
+	a.log.Info("App stopped gracefully")
 }
