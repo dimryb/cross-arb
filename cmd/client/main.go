@@ -7,6 +7,7 @@ import (
 	"log"
 	"time"
 
+	grpcAdapter "github.com/dimryb/cross-arb/internal/adapter/grpc"
 	"github.com/dimryb/cross-arb/internal/entity"
 	"github.com/dimryb/cross-arb/proto"
 	"google.golang.org/grpc"
@@ -46,7 +47,7 @@ func main() {
 		}
 
 		// Конвертируем proto → BookTicker → Result
-		book := entity.ToBookTicker(update.GetData())
+		book := grpcAdapter.ToBookTicker(update.GetData())
 		result := entity.Result{
 			Symbol: book.Symbol,
 			Data:   book,
