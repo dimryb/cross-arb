@@ -31,15 +31,18 @@ type Arbitrage struct {
 }
 
 func NewArbitrageService(
+	ctx context.Context,
 	app i.Application,
+	logger i.Logger,
 	cfg *config.CrossArbConfig,
+	store i.TickerStore,
 ) *Arbitrage {
 	return &Arbitrage{
-		ctx:   app.Context(),
+		ctx:   ctx,
 		app:   app,
-		log:   app.Logger(),
+		log:   logger,
 		cfg:   cfg,
-		store: app.TickerStore(),
+		store: store,
 	}
 }
 

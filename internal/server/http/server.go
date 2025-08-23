@@ -5,14 +5,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dimryb/cross-arb/internal/storage"
+	i "github.com/dimryb/cross-arb/internal/interface"
 )
 
 type Server struct {
-	store *storage.TickerStore
+	store i.TickerStore
 }
 
-func NewHTTPServer(store *storage.TickerStore) *Server {
+func NewHTTPServer(store i.TickerStore) *Server {
 	return &Server{store: store}
 }
 
