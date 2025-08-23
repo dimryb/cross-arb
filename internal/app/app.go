@@ -8,7 +8,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/dimryb/cross-arb/internal/adapter"
+	"github.com/dimryb/cross-arb/internal/adapter/jupiter"
+	"github.com/dimryb/cross-arb/internal/adapter/mexc"
 	"github.com/dimryb/cross-arb/internal/config"
 	"github.com/dimryb/cross-arb/internal/controller/grpc"
 	"github.com/dimryb/cross-arb/internal/controller/http"
@@ -56,7 +57,7 @@ func (a *App) Run() {
 	reportSvc := report.NewReportService(a.log, a.store)
 
 	// --- Adapters ---
-	mexcAdapter := adapter.NewMexcAdapter(a.log, 3*time.Second)
+	mexcAdapter := mexc.NewAdapter(a.log, 3*time.Second)
 
 	// Jupiter: собираем конфиг напрямую (заменяет фабрику)
 	jupCfg, ok := a.cfg.Exchanges[config.JupExchange]
@@ -67,18 +68,18 @@ func (a *App) Run() {
 		a.log.Fatalf("exchange %s is disabled", config.JupExchange)
 	}
 
-	pairMap := make(map[string]adapter.MintPair, len(jupCfg.Pairs))
+	pairMap := make(map[string]jupiter.MintPair, len(jupCfg.Pairs))
 	for symbol, p := range jupCfg.Pairs {
 		if p.Base == "" || p.Quote == "" {
 			a.log.Fatalf("missing mint address for Jupiter pair %q", symbol)
 		}
-		pairMap[symbol] = adapter.MintPair{
+		pairMap[symbol] = jupiter.MintPair{
 			BaseMint:  p.Base,
 			QuoteMint: p.Quote,
 		}
 	}
 
-	jupiterAdapter := adapter.NewJupiterAdapter(a.log, &adapter.JupiterAdapterConfig{
+	jupiterAdapter := jupiter.NewAdapter(a.log, &jupiter.AdapterConfig{
 		BaseURL: jupCfg.BaseURL,
 		Enabled: true,
 		Timeout: jupCfg.Timeout,

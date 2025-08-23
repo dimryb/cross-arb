@@ -1,4 +1,4 @@
-package adapter
+package jupiter
 
 import (
 	"context"
@@ -10,26 +10,26 @@ import (
 	i "github.com/dimryb/cross-arb/internal/interface"
 )
 
-// JupiterAdapterConfig конфигурация адаптера.
-type JupiterAdapterConfig struct {
+// AdapterConfig конфигурация адаптера.
+type AdapterConfig struct {
 	BaseURL string
 	Enabled bool
-	Timeout time.Duration       // может использоваться в NewJupiterAdapterFromConfig
+	Timeout time.Duration       // Может использоваться в NewJupiterAdapterFromConfig
 	Pairs   map[string]MintPair // symbol → [base_mint, quote_mint]
 }
 
-// JupiterAdapter использует публичный Quote-API агрегатора Jupiter (Solana).
+// Adapter JupiterAdapter использует публичный Quote-API агрегатора Jupiter (Solana).
 // Он запрашивает цену обмена base → quote (ask) и quote → base (bid).
-type JupiterAdapter struct {
+type Adapter struct {
 	client     *jupiter.Client
 	logger     i.Logger
 	baseURL    string
 	pairConfig map[string]MintPair // "SOL/USDT" → {baseMint, quoteMint}
 }
 
-// NewJupiterAdapter создаёт адаптер.
+// NewAdapter создаёт адаптер.
 // pairMap: "SOL/USDT": {baseMint, quoteMint}.
-func NewJupiterAdapter(l i.Logger, cfg *JupiterAdapterConfig) *JupiterAdapter {
+func NewAdapter(l i.Logger, cfg *AdapterConfig) *Adapter {
 	// TODO: handle error
 	client, err := jupiter.NewJupiterClient(l, cfg.BaseURL)
 	if err != nil {
@@ -37,7 +37,7 @@ func NewJupiterAdapter(l i.Logger, cfg *JupiterAdapterConfig) *JupiterAdapter {
 		l.Fatalf("failed to create Jupiter client: %v", err)
 	}
 
-	return &JupiterAdapter{
+	return &Adapter{
 		client:     client,
 		logger:     l.Named("jupiter"),
 		baseURL:    cfg.BaseURL,
@@ -46,10 +46,10 @@ func NewJupiterAdapter(l i.Logger, cfg *JupiterAdapterConfig) *JupiterAdapter {
 }
 
 // Name удовлетворяет интерфейсу ExchangeAdapter.
-func (j *JupiterAdapter) Name() string { return "jupiter" }
+func (j *Adapter) Name() string { return "jupiter" }
 
 // OrderBookTop для Jupiter: цены в QUOTE за 1 BASE для пары, например SOL/USDT.
-func (j *JupiterAdapter) OrderBookTop(
+func (j *Adapter) OrderBookTop(
 	ctx context.Context,
 	pair string,
 ) (bestBid, bestAsk float64, err error) {
@@ -79,7 +79,7 @@ func (j *JupiterAdapter) OrderBookTop(
 }
 
 // quote возвращает: "сколько OUT токенов за 1 IN токен".
-func (j *JupiterAdapter) quote(
+func (j *Adapter) quote(
 	ctx context.Context,
 	inMint string,
 	outMint string,
@@ -111,8 +111,8 @@ func (j *JupiterAdapter) quote(
 	return outAtoms / float64(outUnit), nil
 }
 
-// TradingFee: Jupiter комиссия 0 (только сеть).
-func (j *JupiterAdapter) TradingFee(string) (maker, taker float64) { return 0, 0 }
+// TradingFee Jupiter комиссия 0 (только сеть).
+func (j *Adapter) TradingFee(string) (maker, taker float64) { return 0, 0 }
 
-// Close: дополнительных ресурсов нет.
-func (j *JupiterAdapter) Close() error { return nil }
+// Close дополнительных ресурсов нет.
+func (j *Adapter) Close() error { return nil }
