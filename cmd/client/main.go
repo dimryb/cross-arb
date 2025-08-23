@@ -7,7 +7,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/dimryb/cross-arb/internal/types"
+	"github.com/dimryb/cross-arb/internal/entity"
 	"github.com/dimryb/cross-arb/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -46,18 +46,18 @@ func main() {
 		}
 
 		// Конвертируем proto → BookTicker → Result
-		book := types.ToBookTicker(update.GetData())
-		result := types.Result{
+		book := entity.ToBookTicker(update.GetData())
+		result := entity.Result{
 			Symbol: book.Symbol,
 			Data:   book,
 		}
 
 		// Печатаем как одноэлементный отчёт
-		PrintTickersReport([]types.Result{result})
+		PrintTickersReport([]entity.Result{result})
 	}
 }
 
-func PrintTickersReport(results []types.Result) {
+func PrintTickersReport(results []entity.Result) {
 	fmt.Printf("=== Обновление цен (%s) ===\n", time.Now().Format("15:04:05.000"))
 	for _, r := range results {
 		PrintTicker(r.Data)
@@ -65,7 +65,7 @@ func PrintTickersReport(results []types.Result) {
 	fmt.Println()
 }
 
-func PrintTicker(t types.BookTicker) {
+func PrintTicker(t entity.BookTicker) {
 	fmt.Printf(
 		"  [%s] -> покупка: %s (%s) | продажа: %s (%s)\n",
 		t.Symbol,

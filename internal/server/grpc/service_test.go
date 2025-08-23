@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dimryb/cross-arb/internal/types"
+	"github.com/dimryb/cross-arb/internal/entity"
 	"github.com/dimryb/cross-arb/mocks"
 	"github.com/dimryb/cross-arb/proto"
 	"github.com/golang/mock/gomock"
@@ -29,7 +29,7 @@ func TestTickerService_Subscribe_Success(t *testing.T) {
 	mockApp := mocks.NewMockApplication(ctrl)
 
 	// Тестовые данные
-	testTicker := types.TickerData{
+	testTicker := entity.TickerData{
 		Symbol:   "BTC_USDT",
 		Exchange: "mexc",
 		BidPrice: 60000.0,
@@ -49,10 +49,10 @@ func TestTickerService_Subscribe_Success(t *testing.T) {
 	mockStore.EXPECT().AddSubscriber().Return(mockSub).Times(1)
 
 	// Канал для эмуляции потока событий
-	eventCh := make(chan types.TickerEvent, 1)
+	eventCh := make(chan entity.TickerEvent, 1)
 
 	// Мок Recv(): возвращает событие, затем реагирует на отмену
-	mockSub.EXPECT().Recv().DoAndReturn(func() (types.TickerEvent, bool) {
+	mockSub.EXPECT().Recv().DoAndReturn(func() (entity.TickerEvent, bool) {
 		select {
 		case event, ok := <-eventCh:
 			if ok {
@@ -61,7 +61,7 @@ func TestTickerService_Subscribe_Success(t *testing.T) {
 			return event, ok
 		case <-appCtx.Done():
 			t.Log("Subscriber context cancelled, exiting Recv")
-			var zero types.TickerEvent
+			var zero entity.TickerEvent
 			return zero, false
 		}
 	}).AnyTimes()
@@ -91,7 +91,7 @@ func TestTickerService_Subscribe_Success(t *testing.T) {
 	}()
 
 	t.Log("Publishing ticker event")
-	eventCh <- types.TickerEvent{Ticker: testTicker}
+	eventCh <- entity.TickerEvent{Ticker: testTicker}
 
 	t.Log("Waiting for gRPC update to be sent...")
 	var update *proto.TickerUpdate

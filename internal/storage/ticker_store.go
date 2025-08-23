@@ -4,28 +4,28 @@ import (
 	"context"
 	"sync"
 
+	"github.com/dimryb/cross-arb/internal/entity"
 	i "github.com/dimryb/cross-arb/internal/interface"
-	"github.com/dimryb/cross-arb/internal/types"
 )
 
 // TickerStore — потокобезопасное хранилище тикеров с поддержкой подписок.
 type TickerStore struct {
 	mu          sync.RWMutex
-	tickers     map[string]types.TickerData
-	subscribers []chan types.TickerEvent // Каналы для рассылки
+	tickers     map[string]entity.TickerData
+	subscribers []chan entity.TickerEvent // Каналы для рассылки
 }
 
 // NewTickerStore — создаёт новое хранилище.
 func NewTickerStore() *TickerStore {
 	return &TickerStore{
-		tickers:     make(map[string]types.TickerData),
-		subscribers: make([]chan types.TickerEvent, 0),
+		tickers:     make(map[string]entity.TickerData),
+		subscribers: make([]chan entity.TickerEvent, 0),
 	}
 }
 
 // Set — добавляет или обновляет тикер.
 // Если данные изменились — уведомляет подписчиков.
-func (s *TickerStore) Set(t types.TickerData) {
+func (s *TickerStore) Set(t entity.TickerData) {
 	key := t.Symbol + "-" + t.Exchange
 
 	s.mu.Lock()
@@ -39,11 +39,11 @@ func (s *TickerStore) Set(t types.TickerData) {
 }
 
 // GetAll — возвращает копию всех тикеров (используется HTTP).
-func (s *TickerStore) GetAll() []types.TickerData {
+func (s *TickerStore) GetAll() []entity.TickerData {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	all := make([]types.TickerData, 0, len(s.tickers))
+	all := make([]entity.TickerData, 0, len(s.tickers))
 	for _, v := range s.tickers {
 		all = append(all, v)
 	}
@@ -53,7 +53,7 @@ func (s *TickerStore) GetAll() []types.TickerData {
 // AddSubscriber — регистрирует нового подписчика.
 // Возвращает обёртку i.TickerSubscriber для безопасного чтения и управления.
 func (s *TickerStore) AddSubscriber() i.TickerSubscriber {
-	ch := make(chan types.TickerEvent, 10)
+	ch := make(chan entity.TickerEvent, 10)
 	ctx, cancel := context.WithCancel(context.Background())
 	sub := newSubscriber(ctx, ch, cancel)
 
@@ -70,11 +70,11 @@ func (s *TickerStore) AddSubscriber() i.TickerSubscriber {
 }
 
 // notifySubscribers — отправляет событие всем активным подписчикам (каналам).
-func (s *TickerStore) notifySubscribers(ticker types.TickerData) {
+func (s *TickerStore) notifySubscribers(ticker entity.TickerData) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	event := types.TickerEvent{Ticker: ticker}
+	event := entity.TickerEvent{Ticker: ticker}
 	for _, ch := range s.subscribers {
 		select {
 		case ch <- event:
@@ -86,7 +86,7 @@ func (s *TickerStore) notifySubscribers(ticker types.TickerData) {
 }
 
 // Вызывается при завершении контекста подписки.
-func (s *TickerStore) removeSubscriber(ch chan types.TickerEvent) {
+func (s *TickerStore) removeSubscriber(ch chan entity.TickerEvent) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
