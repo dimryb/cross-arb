@@ -1,4 +1,4 @@
-package adapter
+package mexc
 
 import (
 	"context"
@@ -11,22 +11,22 @@ import (
 	i "github.com/dimryb/cross-arb/internal/interface"
 )
 
-// MexcAdapter реализует доступ к публичному REST-API биржи MEXC.
+// Adapter реализует доступ к публичному REST-API биржи MEXC.
 // Используется только энд-поинт depth, поэтому ключ и секрет
 // не обязательны. Для боевой торговли стоит добавить WebSocket-стримы.
-type MexcAdapter struct {
+type Adapter struct {
 	client  *http.Client
 	baseURL string
 	logger  i.Logger
 }
 
-// NewMexcAdapter возвращает готовый к работе адаптер.
+// NewAdapter возвращает готовый к работе адаптер.
 // clientTimeout — таймаут HTTP-запросов; при 0 берётся 3 сек.
-func NewMexcAdapter(l i.Logger, clientTimeout time.Duration) *MexcAdapter {
+func NewAdapter(l i.Logger, clientTimeout time.Duration) *Adapter {
 	if clientTimeout <= 0 {
 		clientTimeout = 3 * time.Second
 	}
-	return &MexcAdapter{
+	return &Adapter{
 		client:  &http.Client{Timeout: clientTimeout},
 		baseURL: "https://api.mexc.com",
 		logger:  l.Named("mexc"),
@@ -34,14 +34,14 @@ func NewMexcAdapter(l i.Logger, clientTimeout time.Duration) *MexcAdapter {
 }
 
 // Name удовлетворяет интерфейсу ExchangeAdapter.
-func (m *MexcAdapter) Name() string { return "mexc" }
+func (m *Adapter) Name() string { return "mexc" }
 
 // OrderBookTop запрашивает топ стакана:
 //
 //	GET /api/v3/depth?symbol=<SYMBOL>&limit=5
 //
 // SYMBOL формируем из пары, убирая «/» и приводя к верхнему регистру.
-func (m *MexcAdapter) OrderBookTop(ctx context.Context, pair string) (bestBid, bestAsk float64, err error) {
+func (m *Adapter) OrderBookTop(ctx context.Context, pair string) (bestBid, bestAsk float64, err error) {
 	symbol := strings.ReplaceAll(strings.ToUpper(pair), "/", "")
 	url := fmt.Sprintf("%s/api/v3/depth?symbol=%s&limit=5", m.baseURL, symbol)
 
@@ -81,7 +81,7 @@ func (m *MexcAdapter) OrderBookTop(ctx context.Context, pair string) (bestBid, b
 }
 
 // TradingFee возвращает фиксированную комиссию MEXC для спота: 0.1 %.
-func (m *MexcAdapter) TradingFee(string) (maker, taker float64) { return 0.001, 0.001 }
+func (m *Adapter) TradingFee(string) (maker, taker float64) { return 0.001, 0.001 }
 
 // Close удовлетворяет интерфейсу, доп. ресурсы не удерживаются.
-func (m *MexcAdapter) Close() error { return nil }
+func (m *Adapter) Close() error { return nil }

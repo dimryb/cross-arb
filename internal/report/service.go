@@ -5,12 +5,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dimryb/cross-arb/internal/entity"
 	i "github.com/dimryb/cross-arb/internal/interface"
-	"github.com/dimryb/cross-arb/internal/types"
 )
 
 // TickerBySymbolAndExchange — агрегированное хранилище тикеров: symbol → exchange → TickerData.
-type TickerBySymbolAndExchange map[string]map[string]types.TickerData
+type TickerBySymbolAndExchange map[string]map[string]entity.TickerData
 
 type Service struct {
 	log      i.Logger
@@ -35,7 +35,7 @@ func (r *Service) Start() {
 }
 
 func (r *Service) run() {
-	eventCh := make(chan types.TickerEvent, 10)
+	eventCh := make(chan entity.TickerEvent, 10)
 
 	go func() {
 		for {
@@ -69,7 +69,7 @@ func (r *Service) run() {
 	}
 }
 
-func (r *Service) handleEvent(event types.TickerEvent) {
+func (r *Service) handleEvent(event entity.TickerEvent) {
 	ticker := event.Ticker
 	symbol := ticker.Symbol
 	exchange := ticker.Exchange
@@ -78,7 +78,7 @@ func (r *Service) handleEvent(event types.TickerEvent) {
 	defer r.mu.Unlock()
 
 	if _, ok := r.lastData[symbol]; !ok {
-		r.lastData[symbol] = make(map[string]types.TickerData)
+		r.lastData[symbol] = make(map[string]entity.TickerData)
 	}
 	r.lastData[symbol][exchange] = ticker
 }

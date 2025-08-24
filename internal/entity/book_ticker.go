@@ -1,4 +1,4 @@
-package types
+package entity
 
 type BookTicker struct {
 	Symbol   string `json:"symbol"`

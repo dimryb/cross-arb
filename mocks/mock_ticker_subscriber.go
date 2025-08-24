@@ -7,7 +7,7 @@ package mocks
 import (
 	reflect "reflect"
 
-	types "github.com/dimryb/cross-arb/internal/types"
+	types "github.com/dimryb/cross-arb/internal/entity"
 	gomock "github.com/golang/mock/gomock"
 )
 

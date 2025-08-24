@@ -8,7 +8,7 @@ import (
 	reflect "reflect"
 
 	interfaces "github.com/dimryb/cross-arb/internal/interface"
-	types "github.com/dimryb/cross-arb/internal/types"
+	types "github.com/dimryb/cross-arb/internal/entity"
 	gomock "github.com/golang/mock/gomock"
 )
 

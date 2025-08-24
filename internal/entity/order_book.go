@@ -1,4 +1,4 @@
-package types
+package entity
 
 type Order struct {
 	Price    float64

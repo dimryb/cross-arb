@@ -4,14 +4,14 @@ import (
 	"context"
 	"sync"
 
+	"github.com/dimryb/cross-arb/internal/entity"
 	i "github.com/dimryb/cross-arb/internal/interface"
-	"github.com/dimryb/cross-arb/internal/types"
 )
 
 // subscriber — приватная реализация i.TickerSubscriber.
 type subscriber struct {
 	ctx     context.Context
-	eventCh <-chan types.TickerEvent
+	eventCh <-chan entity.TickerEvent
 	cancel  context.CancelFunc
 	once    sync.Once
 }
@@ -19,7 +19,7 @@ type subscriber struct {
 // newSubscriber создаёт новую подписку.
 func newSubscriber(
 	ctx context.Context,
-	eventCh <-chan types.TickerEvent,
+	eventCh <-chan entity.TickerEvent,
 	cancel context.CancelFunc,
 ) i.TickerSubscriber {
 	return &subscriber{
@@ -29,13 +29,13 @@ func newSubscriber(
 	}
 }
 
-// Recv — возвращает types.TickerEvent, как в интерфейсе.
-func (s *subscriber) Recv() (types.TickerEvent, bool) {
+// Recv — возвращает entity.TickerEvent, как в интерфейсе.
+func (s *subscriber) Recv() (entity.TickerEvent, bool) {
 	select {
 	case event, ok := <-s.eventCh:
 		return event, ok
 	case <-s.ctx.Done():
-		var zero types.TickerEvent
+		var zero entity.TickerEvent
 		return zero, false
 	}
 }

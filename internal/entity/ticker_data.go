@@ -1,4 +1,4 @@
-package types
+package entity
 
 // TickerData — данные одного тикера.
 type TickerData struct {

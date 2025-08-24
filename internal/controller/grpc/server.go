@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/dimryb/cross-arb/internal/controller/grpc/interceptors"
 	i "github.com/dimryb/cross-arb/internal/interface"
-	"github.com/dimryb/cross-arb/internal/server/grpc/interceptors"
 	"github.com/dimryb/cross-arb/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"

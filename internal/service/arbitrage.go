@@ -12,9 +12,9 @@ import (
 	spotlist "github.com/dimryb/cross-arb/internal/api/mexc/spot"
 	"github.com/dimryb/cross-arb/internal/api/mexc/utils"
 	"github.com/dimryb/cross-arb/internal/config"
+	"github.com/dimryb/cross-arb/internal/entity"
 	i "github.com/dimryb/cross-arb/internal/interface"
 	"github.com/dimryb/cross-arb/internal/report"
-	"github.com/dimryb/cross-arb/internal/types"
 )
 
 const (
@@ -31,15 +31,18 @@ type Arbitrage struct {
 }
 
 func NewArbitrageService(
+	ctx context.Context,
 	app i.Application,
+	logger i.Logger,
 	cfg *config.CrossArbConfig,
+	store i.TickerStore,
 ) *Arbitrage {
 	return &Arbitrage{
-		ctx:   app.Context(),
+		ctx:   ctx,
 		app:   app,
-		log:   app.Logger(),
+		log:   logger,
 		cfg:   cfg,
-		store: app.TickerStore(),
+		store: store,
 	}
 }
 
@@ -63,7 +66,7 @@ func (m *Arbitrage) Run() error {
 			case <-m.ctx.Done():
 				return
 			case <-ticker.C:
-				results := make([]types.Result, len(m.cfg.Symbols))
+				results := make([]entity.Result, len(m.cfg.Symbols))
 				wgSymbols := &sync.WaitGroup{}
 				for ind, symbol := range m.cfg.Symbols {
 					wgSymbols.Add(1)
@@ -93,15 +96,15 @@ func (m *Arbitrage) Run() error {
 	return nil
 }
 
-func (m *Arbitrage) updateAllStores(exchange string, results []types.Result) {
+func (m *Arbitrage) updateAllStores(exchange string, results []entity.Result) {
 	for _, r := range results {
 		m.updateStore(exchange, r)
 	}
 }
 
-func (m *Arbitrage) updateStore(exchange string, r types.Result) {
+func (m *Arbitrage) updateStore(exchange string, r entity.Result) {
 	if r.Error == nil {
-		m.store.Set(types.TickerData{
+		m.store.Set(entity.TickerData{
 			Symbol:   r.Data.Symbol,
 			Exchange: exchange,
 			BidPrice: parseFloat(r.Data.BidPrice),
@@ -132,7 +135,7 @@ func (m *Arbitrage) runJupiterClient(wg *sync.WaitGroup) error {
 			case <-m.ctx.Done():
 				return
 			case <-ticker.C:
-				results := make([]types.Result, len(m.cfg.Symbols))
+				results := make([]entity.Result, len(m.cfg.Symbols))
 				wgSymbols := &sync.WaitGroup{}
 
 				for ind, symbol := range m.cfg.Symbols {
@@ -154,43 +157,43 @@ func (m *Arbitrage) runJupiterClient(wg *sync.WaitGroup) error {
 }
 
 // getJupiterTicker запрашивает котировку Jupiter и преобразует её в BookTicker.
-func getJupiterTicker(jc *jupiter.Client, symbol string) (types.BookTicker, error) {
+func getJupiterTicker(jc *jupiter.Client, symbol string) (entity.BookTicker, error) {
 	inMint, outMint, err := jupiter.ConvertSpotToMints(symbol)
 	if err != nil {
-		return types.BookTicker{}, fmt.Errorf("unsupported symbol format %q", symbol)
+		return entity.BookTicker{}, fmt.Errorf("unsupported symbol format %q", symbol)
 	}
 
 	base, quote, err := jupiter.ParseSpotSymbol(symbol)
 	if err != nil {
-		return types.BookTicker{}, err
+		return entity.BookTicker{}, err
 	}
 
 	// Получаем единичные количества для нормализации
 	baseUnit, err := jupiter.UnitAmount(base)
 	if err != nil {
-		return types.BookTicker{}, fmt.Errorf("failed to get unit amount for %s: %w", base, err)
+		return entity.BookTicker{}, fmt.Errorf("failed to get unit amount for %s: %w", base, err)
 	}
 	quoteUnit, err := jupiter.UnitAmount(quote)
 	if err != nil {
-		return types.BookTicker{}, fmt.Errorf("failed to get unit amount for %s: %w", quote, err)
+		return entity.BookTicker{}, fmt.Errorf("failed to get unit amount for %s: %w", quote, err)
 	}
 
 	// Запрос 1: base → quote (ASK - цена продажи базового актива)
 	askQuote, err := jc.Quote(context.Background(), inMint, outMint, baseUnit, jupiter.DefaultQuoteOptions())
 	if err != nil {
-		return types.BookTicker{}, fmt.Errorf("failed to get ask quote: %w", err)
+		return entity.BookTicker{}, fmt.Errorf("failed to get ask quote: %w", err)
 	}
 
 	// Запрос 2: quote → base (BID - сколько базового актива получим за единицу котировочного)
 	bidQuote, err := jc.Quote(context.Background(), outMint, inMint, quoteUnit, jupiter.DefaultQuoteOptions())
 	if err != nil {
-		return types.BookTicker{}, fmt.Errorf("failed to get bid quote: %w", err)
+		return entity.BookTicker{}, fmt.Errorf("failed to get bid quote: %w", err)
 	}
 
 	askPrice := calculatePrice(askQuote.InAmount, askQuote.OutAmount, baseUnit, quoteUnit, false)
 	bidPrice := calculatePrice(bidQuote.InAmount, bidQuote.OutAmount, quoteUnit, baseUnit, true)
 
-	return types.BookTicker{
+	return entity.BookTicker{
 		Symbol:   symbol,
 		BidPrice: fmt.Sprintf("%.6f", bidPrice),
 		BidQty:   "0",
@@ -216,20 +219,20 @@ func calculatePrice(inAmount, outAmount string, inUnit, outUnit int64, invert bo
 	return outReal / inReal
 }
 
-func getMexcTicker(sc *spotlist.SpotClient, results []types.Result, index int, symbol string) {
+func getMexcTicker(sc *spotlist.SpotClient, results []entity.Result, index int, symbol string) {
 	ticker, err := bookMexcTicker(sc, symbol)
 	processTickerResult(results, index, symbol, ticker, err)
 }
 
-func processTickerResult(results []types.Result, index int, symbol string, ticker types.BookTicker, err error) {
+func processTickerResult(results []entity.Result, index int, symbol string, ticker entity.BookTicker, err error) {
 	if err != nil {
-		results[index] = types.Result{
+		results[index] = entity.Result{
 			Symbol: symbol,
-			Data:   types.BookTicker{},
+			Data:   entity.BookTicker{},
 			Error:  err,
 		}
 	} else {
-		results[index] = types.Result{
+		results[index] = entity.Result{
 			Symbol: symbol,
 			Data:   ticker,
 			Error:  nil,
@@ -237,17 +240,17 @@ func processTickerResult(results []types.Result, index int, symbol string, ticke
 	}
 }
 
-func bookMexcTicker(sc *spotlist.SpotClient, symbol string) (types.BookTicker, error) {
+func bookMexcTicker(sc *spotlist.SpotClient, symbol string) (entity.BookTicker, error) {
 	params := fmt.Sprintf(`{"symbol":"%s"}`, symbol)
 	resp, err := sc.BookTicker(params)
 	if err != nil {
-		return types.BookTicker{}, fmt.Errorf("BookTicker request failed: %w", err)
+		return entity.BookTicker{}, fmt.Errorf("BookTicker request failed: %w", err)
 	}
 
-	var tickerData types.BookTicker
+	var tickerData entity.BookTicker
 	err = json.Unmarshal(resp.Body(), &tickerData)
 	if err != nil {
-		return types.BookTicker{}, fmt.Errorf("failed to parse JSON: %w", err)
+		return entity.BookTicker{}, fmt.Errorf("failed to parse JSON: %w", err)
 	}
 	return tickerData, nil
 }
@@ -273,7 +276,7 @@ func (m *Arbitrage) runMexcOrderBook(wg *sync.WaitGroup) {
 			case <-m.ctx.Done():
 				return
 			case <-ticker.C:
-				results := make([]types.OrderBookResult, len(m.cfg.Symbols))
+				results := make([]entity.OrderBookResult, len(m.cfg.Symbols))
 				wgSymbols := &sync.WaitGroup{}
 				for ind, symbol := range m.cfg.Symbols {
 					wgSymbols.Add(1)
@@ -292,7 +295,7 @@ func (m *Arbitrage) runMexcOrderBook(wg *sync.WaitGroup) {
 }
 
 func (m *Arbitrage) findBestOrder(
-	results []types.OrderBookResult,
+	results []entity.OrderBookResult,
 	exchange string,
 	maxPriceDiff float64,
 	minQtyImprovement float64,
@@ -342,7 +345,7 @@ func (m *Arbitrage) findBestOrder(
 		// fmt.Printf("Покупка: %.2f USDT | Количество: %.3f\n", bestAskPrice, bestAskQty)
 		// fmt.Printf("Продать: %.2f USDT | Количество: %.3f\n", bestBidPrice, bestBidQty)
 
-		m.store.Set(types.TickerData{
+		m.store.Set(entity.TickerData{
 			Symbol:   r.Symbol,
 			Exchange: exchange,
 			BidPrice: bestBidPrice,
@@ -353,20 +356,20 @@ func (m *Arbitrage) findBestOrder(
 	}
 }
 
-func getMexcOrder(sc *spotlist.SpotClient, results []types.OrderBookResult, index int, symbol string, limit int) {
+func getMexcOrder(sc *spotlist.SpotClient, results []entity.OrderBookResult, index int, symbol string, limit int) {
 	book, err := bookMexcOrder(sc, symbol, limit)
 	processOrderResult(results, index, symbol, book, err)
 }
 
-func processOrderResult(results []types.OrderBookResult, index int, symbol string, book types.OrderBook, err error) {
+func processOrderResult(results []entity.OrderBookResult, index int, symbol string, book entity.OrderBook, err error) {
 	if err != nil {
-		results[index] = types.OrderBookResult{
+		results[index] = entity.OrderBookResult{
 			Symbol: symbol,
-			Data:   types.OrderBook{},
+			Data:   entity.OrderBook{},
 			Error:  err,
 		}
 	} else {
-		results[index] = types.OrderBookResult{
+		results[index] = entity.OrderBookResult{
 			Symbol: symbol,
 			Data:   book,
 			Error:  nil,
@@ -374,11 +377,11 @@ func processOrderResult(results []types.OrderBookResult, index int, symbol strin
 	}
 }
 
-func bookMexcOrder(sc *spotlist.SpotClient, symbol string, limit int) (types.OrderBook, error) {
+func bookMexcOrder(sc *spotlist.SpotClient, symbol string, limit int) (entity.OrderBook, error) {
 	params := fmt.Sprintf(`{"symbol":"%s", "limit":"%d"}`, symbol, limit)
 	resp, err := sc.Depth(params)
 	if err != nil {
-		return types.OrderBook{}, fmt.Errorf("MEXC Depth request failed: %w", err)
+		return entity.OrderBook{}, fmt.Errorf("MEXC Depth request failed: %w", err)
 	}
 
 	var raw struct {
@@ -387,10 +390,10 @@ func bookMexcOrder(sc *spotlist.SpotClient, symbol string, limit int) (types.Ord
 	}
 	err = json.Unmarshal(resp.Body(), &raw)
 	if err != nil {
-		return types.OrderBook{}, fmt.Errorf("failed to parse MEXC Depth JSON: %w", err)
+		return entity.OrderBook{}, fmt.Errorf("failed to parse MEXC Depth JSON: %w", err)
 	}
 
-	var bids, asks []types.Order
+	var bids, asks []entity.Order
 	for _, item := range raw.Bids {
 		if len(item) != 2 {
 			continue
@@ -398,7 +401,7 @@ func bookMexcOrder(sc *spotlist.SpotClient, symbol string, limit int) (types.Ord
 		price := parseFloat(item[0])
 		qty := parseFloat(item[1])
 		if price > 0 && qty > 0 {
-			bids = append(bids, types.Order{Price: price, Quantity: qty})
+			bids = append(bids, entity.Order{Price: price, Quantity: qty})
 		}
 	}
 	for _, item := range raw.Asks {
@@ -408,11 +411,11 @@ func bookMexcOrder(sc *spotlist.SpotClient, symbol string, limit int) (types.Ord
 		price := parseFloat(item[0])
 		qty := parseFloat(item[1])
 		if price > 0 && qty > 0 {
-			asks = append(asks, types.Order{Price: price, Quantity: qty})
+			asks = append(asks, entity.Order{Price: price, Quantity: qty})
 		}
 	}
 
-	return types.OrderBook{Bids: bids, Asks: asks}, nil
+	return entity.OrderBook{Bids: bids, Asks: asks}, nil
 }
 
 func parseFloat(s string) float64 {

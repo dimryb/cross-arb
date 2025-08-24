@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dimryb/cross-arb/internal/types"
+	"github.com/dimryb/cross-arb/internal/entity"
 )
 
-func PrintOrderBookReport(results []types.OrderBookResult) {
+func PrintOrderBookReport(results []entity.OrderBookResult) {
 	enable := false
 	if enable {
 		fmt.Printf("=== Стакан (обновлено: %s) ===\n", time.Now().Format("15:04:05.000"))
