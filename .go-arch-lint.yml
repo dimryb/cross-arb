@@ -2,7 +2,6 @@
 version: 3
 
 allow:
-  depOnAnyVendor: false
   deepScan: false
 
 excludeFiles:
@@ -31,21 +30,30 @@ vendors:
   3rd-grpc-codes:      { in: "google.golang.org/grpc/codes" }
 
 components:
-  main:                { in: "cmd/**" }
+  main:                { in: "cmd/app/**" }
   app:                 { in: "internal/app/**" }
   config:              { in: "internal/config/**" }
   logger:              { in: "internal/logger/**" }
   interface:           { in: "internal/interface/**" }
   entity:              { in: "internal/entity/**" }
-  adapter:             { in: "internal/adapter/**" }
-  api:                 { in: "internal/api/**" }
+  adapterGrpc:         { in: "internal/adapter/grpc/**" }
+  adapterJupiter:      { in: "internal/adapter/jupiter/**" }
+  adapterMexc:         { in: "internal/adapter/mexc/**" }
+  apiJupiter:          { in: "internal/api/jupiter/**" }
+  apiMexcSpot:         { in: "internal/api/mexc/spot/**" }
+  apiMexcUtils:        { in: "internal/api/mexc/utils/**" }
   storage:             { in: "internal/storage/**" }
   service:             { in: "internal/service/**" }
+  serviceScanner:      { in: "internal/service/scanner/**" }
   usecase:             { in: "internal/usecase/**" }
-  controller:          { in: "internal/controller/**" }
+  controllerGrpc:      { in: "internal/controller/grpc/**" }
+  controllerHttp:      { in: "internal/controller/http/**" }
+  interceptors:        { in: "internal/controller/grpc/interceptors" }
   report:              { in: "internal/report/**" }
   solana:              { in: "internal/solana/**" }
   wallet:              { in: "internal/wallet/**" }
+  proto:               { in: "proto/**" }
+  client:              { in: "cmd/client/**" }
 
 commonVendors:
   - go-std
@@ -65,7 +73,6 @@ deps:
       - app
       - config
       - logger
-      - controller
     canUse:
       - go-errors
       - 3rd-grpc
@@ -79,48 +86,79 @@ deps:
     mayDependOn:
       - config
       - logger
-      - controller
       - service
       - storage
-      - adapter
+      - adapterJupiter
+      - adapterMexc
+      - controllerGrpc
+      - controllerHttp
+      - serviceScanner
       - report
       - interface
 
-  controller:
-    mayDependOn:
-      - app
-      - usecase
-      - interface
-      - entity
-      - storage
-
   service:
     mayDependOn:
-      - adapter
-      - api
       - interface
       - entity
       - storage
       - logger
+      - config
+      - apiJupiter
+      - report
+      - apiMexcUtils
+      - apiMexcSpot
+
+  serviceScanner:
+    mayDependOn:
+      - interface
+      - config
 
   usecase:
     mayDependOn:
       - interface
       - entity
       - logger
+      - apiJupiter
+      - solana
+    canUse:
+      - 3rd-solana-go
 
-  adapter:
+  controllerGrpc:
     mayDependOn:
-      - api
-      - interface
-      - entity
-      - logger
+      - proto
+      - interceptors
+    canUse:
+      - 3rd-grpc
+      - 3rd-grpc-reflection
+      - 3rd-grpc-status
+      - 3rd-grpc-codes
 
-  api:
+  interceptors:
+    canUse:
+      - 3rd-grpc
+
+  apiMexcSpot:
     mayDependOn:
-      - interface
-      - entity
-      - logger
+      - apiMexcUtils
+    canUse:
+      - 3rd-resty
+
+  apiMexcUtils:
+    canUse:
+      - 3rd-resty
+
+  adapterGrpc:
+    mayDependOn:
+      - proto
+
+  adapterJupiter:
+    mayDependOn:
+      - apiJupiter
+
+  adapterMexc:
+    mayDependOn:
+      - apiMexcSpot
+      - apiMexcUtils
 
   storage:
     mayDependOn:
@@ -140,12 +178,17 @@ deps:
       - logger
     canUse:
       - 3rd-solana-go
+      - 3rd-solana-rpc
+      - 3rd-solana-send
+      - 3rd-solana-ws
 
   wallet:
     mayDependOn:
       - interface
       - logger
       - solana
+    canUse:
+      - 3rd-solana-go
 
   config:
     mayDependOn: []
@@ -156,9 +199,15 @@ deps:
     anyVendorDeps: true
 
   interface:
-    mayDependOn: []
-    anyProjectDeps: true
+    canUse:
+      - 3rd-solana-go
 
   entity:
     mayDependOn: []
     anyProjectDeps: true
+
+  client:
+    mayDependOn:
+      - adapterGrpc
+      - proto
+    anyVendorDeps: true
