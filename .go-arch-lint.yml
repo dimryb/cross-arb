@@ -1,0 +1,164 @@
+# .go-arch-lint.yml
+version: 3
+
+allow:
+  depOnAnyVendor: false
+  deepScan: false
+
+excludeFiles:
+  - "^.*_test\\.go$"
+  - "mocks\\.*"
+  - "proto\\.*"
+
+vendors:
+  go-std:              { in: "std" }
+  go-log:              { in: "log/slog" }
+  go-context:          { in: "context" }
+  go-errors:           { in: "errors" }
+  go-os:               { in: "os/signal" }
+  go-time:             { in: "time" }
+
+  3rd-grpc:            { in: "google.golang.org/grpc" }
+  3rd-protoc-gen:      { in: "google.golang.org/protobuf" }
+  3rd-solana-go:       { in: "github.com/gagliardetto/solana-go" }
+  3rd-resty:           { in: "github.com/go-resty/resty/v2" }
+  3rd-solana-rpc:      { in: "github.com/gagliardetto/solana-go/rpc" }
+  3rd-solana-ws:       { in: "github.com/gagliardetto/solana-go/rpc/ws" }
+  3rd-solana-send:     { in: "github.com/gagliardetto/solana-go/rpc/sendAndConfirmTransaction" }
+  3rd-grpc-insecure:   { in: "google.golang.org/grpc/credentials/insecure" }
+  3rd-grpc-reflection: { in: "google.golang.org/grpc/reflection" }
+  3rd-grpc-status:     { in: "google.golang.org/grpc/status" }
+  3rd-grpc-codes:      { in: "google.golang.org/grpc/codes" }
+
+components:
+  main:                { in: "cmd/**" }
+  app:                 { in: "internal/app/**" }
+  config:              { in: "internal/config/**" }
+  logger:              { in: "internal/logger/**" }
+  interface:           { in: "internal/interface/**" }
+  entity:              { in: "internal/entity/**" }
+  adapter:             { in: "internal/adapter/**" }
+  api:                 { in: "internal/api/**" }
+  storage:             { in: "internal/storage/**" }
+  service:             { in: "internal/service/**" }
+  usecase:             { in: "internal/usecase/**" }
+  controller:          { in: "internal/controller/**" }
+  report:              { in: "internal/report/**" }
+  solana:              { in: "internal/solana/**" }
+  wallet:              { in: "internal/wallet/**" }
+
+commonVendors:
+  - go-std
+  - go-log
+  - go-context
+  - go-errors
+  - go-os
+  - go-time
+
+commonComponents:
+  - interface
+  - entity
+
+deps:
+  main:
+    mayDependOn:
+      - app
+      - config
+      - logger
+      - controller
+    canUse:
+      - go-errors
+      - 3rd-grpc
+      - 3rd-protoc-gen
+      - 3rd-grpc-insecure
+      - 3rd-grpc-reflection
+      - 3rd-grpc-status
+      - 3rd-grpc-codes
+
+  app:
+    mayDependOn:
+      - config
+      - logger
+      - controller
+      - service
+      - storage
+      - adapter
+      - report
+      - interface
+
+  controller:
+    mayDependOn:
+      - app
+      - usecase
+      - interface
+      - entity
+      - storage
+
+  service:
+    mayDependOn:
+      - adapter
+      - api
+      - interface
+      - entity
+      - storage
+      - logger
+
+  usecase:
+    mayDependOn:
+      - interface
+      - entity
+      - logger
+
+  adapter:
+    mayDependOn:
+      - api
+      - interface
+      - entity
+      - logger
+
+  api:
+    mayDependOn:
+      - interface
+      - entity
+      - logger
+
+  storage:
+    mayDependOn:
+      - interface
+      - entity
+      - logger
+
+  report:
+    mayDependOn:
+      - storage
+      - logger
+      - interface
+
+  solana:
+    mayDependOn:
+      - interface
+      - logger
+    canUse:
+      - 3rd-solana-go
+
+  wallet:
+    mayDependOn:
+      - interface
+      - logger
+      - solana
+
+  config:
+    mayDependOn: []
+    anyVendorDeps: true
+
+  logger:
+    mayDependOn: []
+    anyVendorDeps: true
+
+  interface:
+    mayDependOn: []
+    anyProjectDeps: true
+
+  entity:
+    mayDependOn: []
+    anyProjectDeps: true
