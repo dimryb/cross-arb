@@ -45,21 +45,21 @@ func NewAdapter(l i.Logger, cfg *AdapterConfig) *Adapter {
 	}
 }
 
-// Name удовлетворяет интерфейсу ExchangeAdapter.
+// Name удовлетворяет интерфейсу EXAdapter.
 func (j *Adapter) Name() string { return "jupiter" }
 
-// OrderBookTop для Jupiter: цены в QUOTE за 1 BASE для пары, например SOL/USDT.
-func (j *Adapter) OrderBookTop(
+// Quote для Jupiter: цены в QUOTE за 1 BASE для пары, например SOL/USDT.
+func (j *Adapter) Quote(
 	ctx context.Context,
 	pair string,
-) (bestBid, bestAsk float64, err error) {
+) (bid, ask float64, err error) {
 	mints, ok := j.pairConfig[pair]
 	if !ok {
 		return 0, 0, fmt.Errorf("неизвестная пара %s", pair)
 	}
 
 	// ask: сколько QUOTE за 1 BASE
-	ask, err := j.quote(ctx, mints.BaseMint, mints.QuoteMint, nil)
+	ask, err = j.quote(ctx, mints.BaseMint, mints.QuoteMint, nil)
 	if err != nil {
 		return 0, 0, fmt.Errorf("ask: %w", err)
 	}
@@ -74,7 +74,7 @@ func (j *Adapter) OrderBookTop(
 	}
 
 	// bid в тех же единицах, что и ask: QUOTE за 1 BASE
-	bid := 1 / rawBid
+	bid = 1 / rawBid
 	return bid, ask, nil
 }
 
