@@ -1,5 +1,11 @@
 package interfaces
 
+import (
+	"context"
+
+	"github.com/dimryb/cross-arb/internal/entity"
+)
+
 // EXAdapter описывает минимальный набор функций,
 // который должен реализовать адаптер конкретной биржи,
 // чтобы сканер мог получать рыночные данные и рассчитывать спреды.
@@ -18,4 +24,21 @@ type EXAdapter interface {
 	// Close освобождает ресурсы (например, закрывает WebSocket-соединения).
 	// Должен быть идемпотентным.
 	Close() error
+}
+
+// DEXAdapter — адаптер для DEX-бирж (агрегаторы маршрутов, AMM и т.п.).
+// Возвращает котировку обмена BASE→QUOTE (ask) и обратную котировку через реверс маршрута (bid).
+type DEXAdapter interface {
+	EXAdapter
+	// Quote возвращает котировку: bid и ask в котируемой валюте (QUOTE) за 1 BASE.
+	Quote(ctx context.Context, pair string) (bid, ask float64, err error)
+}
+
+// CEXAdapter — адаптер для централизованных бирж, предоставляющий глубину стакана.
+// Реализация может быть по REST или WS; метод обязан уважать ctx.
+type CEXAdapter interface {
+	EXAdapter
+	// OrderBookDepth возвращает полную (или ограниченную limit) глубину стакана для пары.
+	// Предполагается, что bids упорядочены по убыванию, а asks — по возрастанию цены.
+	OrderBookDepth(ctx context.Context, pair string, limit int) (entity.OrderBook, error)
 }
