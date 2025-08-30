@@ -2,8 +2,6 @@ package app
 
 import (
 	"context"
-	"errors"
-	"log/slog"
 	"os/signal"
 	"syscall"
 	"time"
@@ -16,7 +14,6 @@ import (
 	i "github.com/dimryb/cross-arb/internal/interface"
 	"github.com/dimryb/cross-arb/internal/logger"
 	"github.com/dimryb/cross-arb/internal/report"
-	"github.com/dimryb/cross-arb/internal/service/scanner"
 	"github.com/dimryb/cross-arb/internal/storage"
 )
 
@@ -97,23 +94,6 @@ func (a *App) Run() {
 		}
 	}()
 
-	adapters := []i.ExchangeAdapter{mexcAdapter, jupiterAdapter}
-	scan, err := scanner.NewScannerFromConfig(a.log, a.cfg.Scanner, adapters)
-	if err != nil {
-		a.log.Error("Failed to create scan", slog.Any("err", err))
-		a.cancel()
-		return
-	}
-
-	// Подписываемся и логируем возможности
-	if a.cfg.Scanner.LogOpportunities {
-		scanner.SubscribeAndHandle(
-			scan,
-			a.cfg.Scanner.Pairs,
-			scanner.LogOpportunities(a.log),
-		)
-	}
-
 	// TODO: вынести порты в конфиг
 	grpcServer := grpc.NewServer(a, grpc.ServerConfig{Port: "9090"}, a.log)
 
@@ -128,14 +108,6 @@ func (a *App) Run() {
 	go func() {
 		if err := grpcServer.Run(); err != nil {
 			a.log.Errorf("gRPC server failed: %v", err)
-			a.cancel()
-		}
-	}()
-
-	// Запускаем сканер
-	go func() {
-		if err := scan.Run(a.ctx); err != nil && !errors.Is(err, context.Canceled) {
-			a.log.Errorf("Scanner stopped with error: %v", err)
 			a.cancel()
 		}
 	}()
