@@ -27,11 +27,12 @@ type EXAdapter interface {
 }
 
 // DEXAdapter — адаптер для DEX-бирж (агрегаторы маршрутов, AMM и т.п.).
-// Возвращает котировку обмена BASE→QUOTE (ask) и обратную котировку через реверс маршрута (bid).
+// Объем-зависимое квотирование: возвращает эффективные котировки для заданного объёма baseAmount.
 type DEXAdapter interface {
 	EXAdapter
-	// Quote возвращает котировку: bid и ask в котируемой валюте (QUOTE) за 1 BASE.
-	Quote(ctx context.Context, pair string) (bid, ask float64, err error)
+	// Quote возвращает эффективные котировки bid/ask в QUOTE за BASE для указанного объёма baseAmount (в BASE).
+	// Реализация должна учесть маршрутизацию/слиппедж. Для малых объёмов результат может совпадать с top-of-book.
+	Quote(ctx context.Context, pair string, baseAmount float64) (bid, ask float64, err error)
 }
 
 // CEXAdapter — адаптер для централизованных бирж, предоставляющий глубину стакана.
