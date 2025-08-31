@@ -26,6 +26,10 @@ scanner:
   pairs:
     - "SOL/USDT"
   logOpportunities: true
+  buffers:
+    prices: 0        # без буфера
+    orderBooks: 1   # малый коалесцирующий буфер
+    opportunities: 0 # события редки — можно 0
 
 symbols:
   - SOLUSDT

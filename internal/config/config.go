@@ -45,10 +45,17 @@ type (
 		Quote string `yaml:"quote"`
 	}
 
+	ScannerBuffers struct {
+		Prices        int `yaml:"prices"`
+		OrderBooks    int `yaml:"orderBooks"`
+		Opportunities int `yaml:"opportunities"`
+	}
+
 	ScannerConfig struct {
-		Interval         string   `yaml:"interval"`
-		Pairs            []string `yaml:"pairs"`
-		LogOpportunities bool     `yaml:"logOpportunities"`
+		Interval         string         `yaml:"interval"`
+		Pairs            []string       `yaml:"pairs"`
+		LogOpportunities bool           `yaml:"logOpportunities"`
+		Buffers          ScannerBuffers `yaml:"buffers"`
 	}
 )
 
