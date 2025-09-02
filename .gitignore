@@ -28,3 +28,4 @@ Thumbs.db
 *.bak
 
 bin/
+/go-arch-lint-graph.svg

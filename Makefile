@@ -47,6 +47,8 @@ lint: install-lint-deps
 arch:
 	go-arch-lint check
 
+graph:
+	go-arch-lint graph
 
 generate:
 	protoc \
@@ -63,4 +65,4 @@ generate-mocks:
 grpc-subscribe:
 	grpcurl -plaintext localhost:9090 ticker.TickerService/Subscribe
 
-.PHONY: build run version test install-lint-deps lint arch generate generate-mocks grpc-subscribe
+.PHONY: build run version test install-lint-deps lint arch graph generate generate-mocks grpc-subscribe
