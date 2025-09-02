@@ -40,6 +40,7 @@ components:
   adapterJupiter:      { in: "internal/adapter/jupiter/**" }
   adapterMexc:         { in: "internal/adapter/mexc/**" }
   apiJupiter:          { in: "internal/api/jupiter/**" }
+  apiMexc:             { in: "internal/api/mexc/**" }
   apiMexcSpot:         { in: "internal/api/mexc/spot/**" }
   apiMexcUtils:        { in: "internal/api/mexc/utils/**" }
   storage:             { in: "internal/storage/**" }
@@ -157,8 +158,7 @@ deps:
 
   adapterMexc:
     mayDependOn:
-      - apiMexcSpot
-      - apiMexcUtils
+      - apiMexc
 
   storage:
     mayDependOn:
