@@ -44,6 +44,10 @@ install-lint-deps:
 lint: install-lint-deps
 	golangci-lint run --config golangci.yml ./...
 
+arch:
+	go-arch-lint check
+
+
 generate:
 	protoc \
 		-I proto \
@@ -59,4 +63,4 @@ generate-mocks:
 grpc-subscribe:
 	grpcurl -plaintext localhost:9090 ticker.TickerService/Subscribe
 
-.PHONY: build run version test install-lint-deps lint generate generate-mocks grpc-subscribe
+.PHONY: build run version test install-lint-deps lint arch generate generate-mocks grpc-subscribe
