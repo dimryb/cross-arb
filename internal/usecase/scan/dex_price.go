@@ -9,35 +9,72 @@ import (
 )
 
 // DEXPriceUseCase — входной юзкейс для периодической загрузки цен с DEX.
+// Периодически получает объем-зависимые котировки от DEX-провайдеров.
 // Адаптеры обязаны реализовывать интерфейс DEXAdapter и предоставлять объем-зависимый метод Quote.
 // Каналом out владеет вызывающая сторона. Реализация обязана уважать ctx.
 //
 // Формат выхода — ExecutableQuote: bid/ask — эффективные цены в QUOTE за BASE для указанного baseAmount.
 // Для объем-зависимых DEX BidQty/AskQty устанавливаются равными baseAmount (в BASE).
-type DEXPriceUseCase interface {
-	Stream(
-		ctx context.Context,
-		providers []i.DEXAdapter,
-		pairs []string,
-		interval time.Duration,
-		baseAmount float64,
-		out chan<- entity.ExecutableQuote,
-	) error
-}
+type DEXPriceUseCase struct{}
 
-// NoopDEXPriceUseCase — заглушка, полезна для стадий интеграции.
-type NoopDEXPriceUseCase struct{}
+// NewDEXPriceUseCase конструктор.
+func NewDEXPriceUseCase() *DEXPriceUseCase { return &DEXPriceUseCase{} }
 
-func NewNoopDEXPriceUseCase() *NoopDEXPriceUseCase { return &NoopDEXPriceUseCase{} }
-
-func (n *NoopDEXPriceUseCase) Stream(
+// Stream раз в interval обходит все пары и провайдеры, вызывает Quote и публикует ExecutableQuote в out.
+// Bid/Ask — цены QUOTE за 1 BASE, BidQty/AskQty = baseAmount, Timestamp = now, Exchange = provider.Name().
+func (u *DEXPriceUseCase) Stream(
 	ctx context.Context,
-	_ []i.DEXAdapter,
-	_ []string,
-	_ time.Duration,
-	_ float64,
-	_ chan<- entity.ExecutableQuote,
+	providers []i.DEXAdapter,
+	pairs []string,
+	interval time.Duration,
+	baseAmount float64,
+	out chan<- entity.ExecutableQuote,
 ) error {
-	<-ctx.Done()
-	return ctx.Err()
+	if ctx == nil {
+		return context.Canceled
+	}
+	if interval <= 0 {
+		interval = time.Second
+	}
+
+	// helper для одного прохода
+	scanOnce := func(now time.Time) {
+		for _, p := range providers {
+			for _, pair := range pairs {
+				bid, ask, err := p.Quote(ctx, pair, baseAmount)
+				if err != nil {
+					// Ошибка конкретного провайдера/пары — пропускаем итерацию.
+					continue
+				}
+				q := entity.ExecutableQuote{
+					Exchange:  p.Name(),
+					Pair:      pair,
+					Bid:       bid,
+					Ask:       ask,
+					BidQty:    baseAmount,
+					AskQty:    baseAmount,
+					Timestamp: now,
+				}
+				select {
+				case <-ctx.Done():
+					return
+				case out <- q:
+				}
+			}
+		}
+	}
+
+	// Немедленный старт
+	scanOnce(time.Now())
+
+	t := time.NewTicker(interval)
+	defer t.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case now := <-t.C:
+			scanOnce(now)
+		}
+	}
 }
