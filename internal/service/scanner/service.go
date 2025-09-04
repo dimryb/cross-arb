@@ -95,7 +95,7 @@ func NewService(
 		cexUC = uc.NewNoopCEXOrderBookUseCase()
 	}
 	if oppUC == nil {
-		oppUC = uc.NewNoopOpportunityUseCase()
+		oppUC = uc.NewOpportunityUseCase()
 	}
 
 	return &Service{
