@@ -52,6 +52,7 @@ type (
 	}
 
 	ScannerConfig struct {
+		BaseAmount       float64        `yaml:"baseAmount"`
 		Interval         string         `yaml:"interval"`
 		Pairs            []string       `yaml:"pairs"`
 		LogOpportunities bool           `yaml:"logOpportunities"`

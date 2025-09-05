@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"github.com/dimryb/cross-arb/internal/usecase/scan"
 	"log/slog"
 	"time"
 
@@ -102,24 +103,37 @@ func (a *App) Run(ctxParent context.Context) {
 		cancel()
 		return
 	}
-	_, err = scanner.NewService(
+
+	orderLimit := a.cfg.Exchanges["mexc"].OrderLimit
+	if orderLimit <= 0 {
+		orderLimit = 5
+	}
+
+	svc, err := scanner.NewService(
 		a.log,
 		interval,
-		1.0, // placeholder: объём сделки в BASE для квотирования DEX
+		a.cfg.Scanner.BaseAmount, // объём сделки в BASE
 		a.cfg.Scanner.Pairs,
 		adapters,
 		pricesCh,
 		orderBooksCh,
 		oppCh,
-		nil, // используем DEXPriceUseCase по умолчанию
-		nil, // используем CEXOrderBookUseCase по умолчанию
-		nil, // используем OpportunityUseCase по умолчанию
+		scan.NewDEXPriceUseCase(),
+		scan.NewCEXOrderBookUseCase(orderLimit),
+		scan.NewOpportunityUseCase(adapters),
 	)
 	if err != nil {
 		a.log.Error("Failed to create scanner service", slog.Any("err", err))
 		cancel()
 		return
 	}
+
+	// ВАЖНО: запускаем сканер
+	go func() {
+		if err := svc.Start(a.ctx); err != nil {
+			a.log.Errorf("scanner stopped: %v", err)
+		}
+	}()
 
 	// Заглушки консьюмеры
 	go func() {
