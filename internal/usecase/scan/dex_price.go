@@ -2,6 +2,7 @@ package scan
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/dimryb/cross-arb/internal/entity"
@@ -38,12 +39,17 @@ func (u *DEXPriceUseCase) Stream(
 	}
 
 	// helper для одного прохода
+	// helper для одного прохода
 	scanOnce := func(now time.Time) {
+		log.Printf("[DEX] tick now=%s providers=%d pairs=%d baseAmount=%.8f",
+			now.Format(time.RFC3339), len(providers), len(pairs), baseAmount)
+
 		for _, p := range providers {
 			for _, pair := range pairs {
+				log.Printf("[DEX] quote start ex=%s pair=%s base=%.8f", p.Name(), pair, baseAmount)
 				bid, ask, err := p.Quote(ctx, pair, baseAmount)
 				if err != nil {
-					// Ошибка конкретного провайдера/пары — пропускаем итерацию.
+					log.Printf("[DEX] quote ERR ex=%s pair=%s: %v", p.Name(), pair, err)
 					continue
 				}
 				q := entity.ExecutableQuote{
@@ -57,8 +63,10 @@ func (u *DEXPriceUseCase) Stream(
 				}
 				select {
 				case <-ctx.Done():
+					log.Printf("[DEX] publish canceled ex=%s pair=%s", p.Name(), pair)
 					return
 				case out <- q:
+					log.Printf("[DEX] publish OK ex=%s pair=%s bid=%.8f ask=%.8f", p.Name(), pair, bid, ask)
 				}
 			}
 		}

@@ -1,8 +1,8 @@
 package scanner
 
 import (
+	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/dimryb/cross-arb/internal/entity"
@@ -23,25 +23,14 @@ type Service struct {
 	orderBooksCh chan<- entity.OrderBookResult
 	oppCh        chan<- entity.ArbOpportunity
 
-	dexUC uc.DEXPriceUseCase
-	cexUC uc.CEXOrderBookUseCase
-	oppUC uc.ArbOpportunityUseCase
+	dexUC *uc.DEXPriceUseCase
+	cexUC *uc.CEXOrderBookUseCase
+	oppUC *uc.ArbOpportunityUseCase
 }
 
-// NewService создает сканер (оркестратор) для набора DEX/CEX адаптеров.
-// Не запускает горутины и не закрывает внешние каналы.
-//
-// Коротко — что нужно:
-//   - interval > 0
-//   - len(pairs) > 0
-//   - len(adapters) >= 2
-//   - oppCh != nil
-//
-// Режимы:
-//   - Есть DEX: pricesCh != nil и baseAmount > 0
-//   - Только CEX: orderBooksCh != nil
-//
-// Nil-юзкейсы автоматически заменяются на Noop-реализации.
+// NewService — принимает готовые зависимости (usecase’ы, каналы, адаптеры).
+// Требования: interval>0, baseAmount>0, есть пары и хотя бы один адаптер;
+// хотя бы один из выходных каналов не nil; для детектора нужен oppCh.
 func NewService(
 	log i.Logger,
 	interval time.Duration,
@@ -51,59 +40,41 @@ func NewService(
 	pricesCh chan<- entity.ExecutableQuote,
 	orderBooksCh chan<- entity.OrderBookResult,
 	oppCh chan<- entity.ArbOpportunity,
-	dexUC uc.DEXPriceUseCase,
-	cexUC uc.CEXOrderBookUseCase,
-	oppUC uc.ArbOpportunityUseCase,
+	dexUC *uc.DEXPriceUseCase,
+	cexUC *uc.CEXOrderBookUseCase,
+	oppUC *uc.ArbOpportunityUseCase,
 ) (*Service, error) {
-	// Быстрая валидация входных данных
+	if interval <= 0 {
+		return nil, errors.New("interval must be > 0")
+	}
+	if baseAmount <= 0 {
+		return nil, errors.New("baseAmount must be > 0")
+	}
 	if len(pairs) == 0 {
 		return nil, errors.New("no pairs provided")
 	}
-	if len(adapters) < 2 {
-		return nil, errors.New("must be at least 2 adapters")
+	if len(adapters) == 0 {
+		return nil, errors.New("no adapters provided")
 	}
-	if interval <= 0 {
-		return nil, fmt.Errorf("interval must be positive, got %s", interval)
+	if pricesCh == nil && orderBooksCh == nil && oppCh == nil {
+		return nil, errors.New("no output channels provided")
 	}
-	if oppCh == nil {
-		return nil, errors.New("oppCh must not be nil")
-	}
-
-	hasDEX, hasCEX := detectAdapterKinds(adapters)
-	if !hasDEX && !hasCEX {
-		return nil, errors.New("no supported adapters")
-	}
-
-	if hasDEX {
-		if pricesCh == nil {
-			return nil, errors.New("pricesCh must not be nil when DEX adapters are used")
-		}
-		if baseAmount <= 0 {
-			return nil, errors.New("baseAmount must be positive when DEX adapters are used")
-		}
-	}
-	// Если только CEX — нужен orderBooksCh
-	if !hasDEX && hasCEX && orderBooksCh == nil {
-		return nil, errors.New("orderBooksCh must not be nil when only CEX adapters are used")
-	}
-
-	// Значения по умолчанию
 	if dexUC == nil {
-		dexUC = uc.NewNoopDEXPriceUseCase()
+		dexUC = uc.NewDEXPriceUseCase()
 	}
 	if cexUC == nil {
-		cexUC = uc.NewNoopCEXOrderBookUseCase()
+		cexUC = uc.NewCEXOrderBookUseCase(5) // дефолтный limit
 	}
 	if oppUC == nil {
-		oppUC = uc.NewOpportunityUseCase()
+		oppUC = uc.NewOpportunityUseCase(nil)
 	}
 
 	return &Service{
 		log:          log,
 		interval:     interval,
 		baseAmount:   baseAmount,
-		pairs:        append([]string(nil), pairs...),
-		adapters:     append([]i.EXAdapter(nil), adapters...),
+		pairs:        pairs,
+		adapters:     adapters,
 		pricesCh:     pricesCh,
 		orderBooksCh: orderBooksCh,
 		oppCh:        oppCh,
@@ -113,21 +84,90 @@ func NewService(
 	}, nil
 }
 
-// detectAdapterKinds reports whether the provided set contains any DEX and/or CEX adapters.
-func detectAdapterKinds(adapters []i.EXAdapter) (hasDEX, hasCEX bool) {
+// Start запускает DEX-цены, CEX-стаканы и детектор возможностей; блокирует до отмены контекста.
+func (s *Service) Start(ctx context.Context) error {
+	if ctx == nil {
+		return errors.New("nil context")
+	}
+
+	dexAdapters, cexAdapters := splitAdapters(s.adapters)
+	if len(dexAdapters) == 0 && len(cexAdapters) == 0 {
+		return errors.New("no supported adapters (DEX/CEX)")
+	}
+
+	// Локальный канал DEX-котировок: потом сделаем fan-out наружу и в детектор
+	var dexOut chan entity.ExecutableQuote
+	if len(dexAdapters) > 0 {
+		dexOut = make(chan entity.ExecutableQuote, 128)
+		go func() {
+			_ = s.dexUC.Stream(ctx, dexAdapters, s.pairs, s.interval, s.baseAmount, dexOut)
+		}()
+	}
+
+	// Fan-out: наружу (pricesCh) и в opp-детектор
+	var oppIn <-chan entity.ExecutableQuote
+	if dexOut != nil {
+		if s.pricesCh == nil {
+			oppIn = dexOut
+		} else {
+			fan := make(chan entity.ExecutableQuote, 128)
+			oppIn = fan
+			go func() {
+				for {
+					select {
+					case <-ctx.Done():
+						return
+					case q, ok := <-dexOut:
+						if !ok {
+							return
+						}
+						select {
+						case <-ctx.Done():
+							return
+						case s.pricesCh <- q:
+						}
+						select {
+						case <-ctx.Done():
+							return
+						case fan <- q:
+						}
+					}
+				}
+			}()
+		}
+	}
+
+	// CEX-стаканы напрямую наружу
+	if s.orderBooksCh != nil && len(cexAdapters) > 0 {
+		go func() {
+			_ = s.cexUC.Stream(ctx, cexAdapters, s.pairs, s.interval, s.orderBooksCh)
+		}()
+	}
+
+	// Детектор возможностей (если есть вход и выход)
+	if s.oppCh != nil && oppIn != nil {
+		go func() {
+			if err := s.oppUC.Detect(ctx, oppIn, s.oppCh); err != nil && s.log != nil {
+				s.log.Errorf("opportunity detector stopped: %v", err)
+			}
+		}()
+	}
+
+	<-ctx.Done()
+	return ctx.Err()
+}
+
+// splitAdapters делит общий список на DEX и CEX.
+func splitAdapters(adapters []i.EXAdapter) (dex []i.DEXAdapter, cex []i.CEXAdapter) {
 	for _, ad := range adapters {
-		if !hasDEX {
-			if _, ok := any(ad).(i.DEXAdapter); ok {
-				hasDEX = true
-			}
+		if ad == nil {
+			continue
 		}
-		if !hasCEX {
-			if _, ok := any(ad).(i.CEXAdapter); ok {
-				hasCEX = true
-			}
+		if da, ok := any(ad).(i.DEXAdapter); ok {
+			dex = append(dex, da)
 		}
-		if hasDEX && hasCEX {
-			break
+		if ca, ok := any(ad).(i.CEXAdapter); ok {
+			cex = append(cex, ca)
 		}
 	}
 	return

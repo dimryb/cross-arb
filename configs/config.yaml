@@ -22,6 +22,7 @@ exchanges:
         quote: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"
 
 scanner:
+  baseAmount: 0.7
   interval: "2s"
   pairs:
     - "SOL/USDT"
