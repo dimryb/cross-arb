@@ -31,32 +31,39 @@ vendors:
   3rd-cleanenv:        { in: "github.com/ilyakaznacheev/cleanenv" }
 
 components:
+  # Fw & Drivers
   main:                { in: "cmd/app/**" }
+  client:              { in: "cmd/client/**" }
+  proto:               { in: "proto/**" }
   app:                 { in: "internal/app/**" }
   config:              { in: "internal/config/**" }
   logger:              { in: "internal/logger/**" }
-  interface:           { in: "internal/interface/**" }
-  entity:              { in: "internal/entity/**" }
-  adapterGrpc:         { in: "internal/adapter/grpc/**" }
-  adapterJupiter:      { in: "internal/adapter/jupiter/**" }
-  adapterMexc:         { in: "internal/adapter/mexc/**" }
   apiJupiter:          { in: "internal/api/jupiter/**" }
   apiMexc:             { in: "internal/api/mexc/**" }
   apiMexcSpot:         { in: "internal/api/mexc/spot/**" }
   apiMexcUtils:        { in: "internal/api/mexc/utils/**" }
-  storage:             { in: "internal/storage/**" }
+
+  # Int. Adapters
   oldArbitrage:        { in: "internal/service/" }
-  serviceScanner:      { in: "internal/service/scanner/**" }
-  usecaseScan:         { in: "internal/usecase/scan/**" }
-  usecaseSwap:         { in: "internal/usecase/swap/**" }
+  report:              { in: "internal/report/**" }
+  adapterGrpc:         { in: "internal/adapter/grpc/**" }
+  adapterJupiter:      { in: "internal/adapter/jupiter/**" }
+  adapterMexc:         { in: "internal/adapter/mexc/**" }
+  solana:              { in: "internal/solana/**" }
+  wallet:              { in: "internal/wallet/**" }
+  storage:             { in: "internal/storage/**" }
   controllerGrpc:      { in: "internal/controller/grpc/**" }
   controllerHttp:      { in: "internal/controller/http/**" }
   interceptors:        { in: "internal/controller/grpc/interceptors" }
-  report:              { in: "internal/report/**" }
-  solana:              { in: "internal/solana/**" }
-  wallet:              { in: "internal/wallet/**" }
-  proto:               { in: "proto/**" }
-  client:              { in: "cmd/client/**" }
+
+  # Use Cases
+  interface:           { in: "internal/interface/**" } #TODO: разнести по зависимым пакетам
+  serviceScanner:      { in: "internal/service/scanner/**" }
+  usecaseScan:         { in: "internal/usecase/scan/**" }
+  usecaseSwap:         { in: "internal/usecase/swap/**" }
+
+  # Entities
+  entity:              { in: "internal/entity/**" }
 
 commonVendors:
   - go-std
