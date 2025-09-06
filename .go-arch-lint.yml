@@ -44,9 +44,10 @@ components:
   apiMexcSpot:         { in: "internal/api/mexc/spot/**" }
   apiMexcUtils:        { in: "internal/api/mexc/utils/**" }
   storage:             { in: "internal/storage/**" }
-  service:             { in: "internal/service/**" }
+  oldArbitrage:        { in: "internal/service/" }
   serviceScanner:      { in: "internal/service/scanner/**" }
-  usecase:             { in: "internal/usecase/**" }
+  usecaseScan:         { in: "internal/usecase/scan/**" }
+  usecaseSwap:         { in: "internal/usecase/swap/**" }
   controllerGrpc:      { in: "internal/controller/grpc/**" }
   controllerHttp:      { in: "internal/controller/http/**" }
   interceptors:        { in: "internal/controller/grpc/interceptors" }
@@ -65,8 +66,7 @@ commonVendors:
   - go-time
 
 commonComponents:
-  - interface
-  - entity
+  []
 
 deps:
   main:
@@ -87,7 +87,7 @@ deps:
     mayDependOn:
       - config
       - logger
-      - service
+      - oldArbitrage
       - storage
       - adapterJupiter
       - adapterMexc
@@ -96,8 +96,9 @@ deps:
       - serviceScanner
       - report
       - interface
+      - entity
 
-  service:
+  oldArbitrage:
     mayDependOn:
       - interface
       - entity
@@ -112,13 +113,19 @@ deps:
   serviceScanner:
     mayDependOn:
       - interface
+      - entity
       - config
+      - usecaseScan
 
-  usecase:
+  usecaseScan:
     mayDependOn:
       - interface
       - entity
-      - logger
+
+  usecaseSwap:
+    mayDependOn:
+      - interface
+      - entity
       - apiJupiter
       - solana
     canUse:
@@ -128,37 +135,54 @@ deps:
     mayDependOn:
       - proto
       - interceptors
+      - interface
     canUse:
       - 3rd-grpc
       - 3rd-grpc-reflection
       - 3rd-grpc-status
       - 3rd-grpc-codes
 
+  controllerHttp:
+    mayDependOn:
+      - interface
+
   interceptors:
+    mayDependOn:
+      - interface
     canUse:
       - 3rd-grpc
+
+  apiJupiter:
+    mayDependOn:
+      - interface
 
   apiMexcSpot:
     mayDependOn:
       - apiMexcUtils
+      - interface
     canUse:
       - 3rd-resty
 
   apiMexcUtils:
+    mayDependOn:
+      - interface
     canUse:
       - 3rd-resty
 
   adapterGrpc:
     mayDependOn:
       - proto
+      - entity
 
   adapterJupiter:
     mayDependOn:
       - apiJupiter
+      - interface
 
   adapterMexc:
     mayDependOn:
       - apiMexc
+      - interface
 
   storage:
     mayDependOn:
@@ -171,6 +195,7 @@ deps:
       - storage
       - logger
       - interface
+      - entity
 
   solana:
     mayDependOn:
@@ -195,10 +220,13 @@ deps:
     anyVendorDeps: true
 
   logger:
-    mayDependOn: []
+    mayDependOn:
+      - interface
     anyVendorDeps: true
 
   interface:
+    mayDependOn:
+      - entity
     canUse:
       - 3rd-solana-go
 
@@ -210,4 +238,5 @@ deps:
     mayDependOn:
       - adapterGrpc
       - proto
+      - entity
     anyVendorDeps: true
