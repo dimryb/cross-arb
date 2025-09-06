@@ -39,12 +39,10 @@ components:
   config:              { in: "internal/config/**" }
   logger:              { in: "internal/logger/**" }
   apiJupiter:          { in: "internal/api/jupiter/**" }
-  apiMexc:             { in: "internal/api/mexc/**" }
   apiMexcSpot:         { in: "internal/api/mexc/spot/**" }
   apiMexcUtils:        { in: "internal/api/mexc/utils/**" }
 
   # Int. Adapters
-  oldArbitrage:        { in: "internal/service/" }
   report:              { in: "internal/report/**" }
   adapterGrpc:         { in: "internal/adapter/grpc/**" }
   adapterJupiter:      { in: "internal/adapter/jupiter/**" }
@@ -58,6 +56,7 @@ components:
 
   # Use Cases
   interface:           { in: "internal/interface/**" } #TODO: разнести по зависимым пакетам
+  oldArbitrage:        { in: "internal/service/" }  #TODO: к удалению, пробная реализация
   serviceScanner:      { in: "internal/service/scanner/**" }
   usecaseScan:         { in: "internal/usecase/scan/**" }
   usecaseSwap:         { in: "internal/usecase/swap/**" }
@@ -77,11 +76,21 @@ commonComponents:
   []
 
 deps:
+  # Fw & Drivers
   main:
     mayDependOn:
       - app
       - config
       - logger
+
+  client:
+    mayDependOn:
+      - adapterGrpc
+      - proto
+      - entity
+    canUse:
+      - 3rd-grpc
+      - 3rd-grpc-insecure
 
   app:
     mayDependOn:
@@ -97,6 +106,107 @@ deps:
       - report
       - interface
       - entity
+
+  config:
+    mayDependOn: [ ]
+    canUse:
+      - 3rd-cleanenv
+
+  logger:
+    mayDependOn:
+      - interface
+    anyVendorDeps: true
+
+  apiJupiter:
+    mayDependOn:
+      - interface
+
+  apiMexcSpot:
+    mayDependOn:
+      - apiMexcUtils
+      - interface
+    canUse:
+      - 3rd-resty
+
+  apiMexcUtils:
+    mayDependOn:
+      - interface
+    canUse:
+      - 3rd-resty
+
+  controllerGrpc:
+    mayDependOn:
+      - proto
+      - interceptors
+      - interface
+    canUse:
+      - 3rd-grpc
+      - 3rd-grpc-reflection
+      - 3rd-grpc-status
+      - 3rd-grpc-codes
+
+  interceptors:
+    mayDependOn:
+      - interface
+    canUse:
+      - 3rd-grpc
+
+  controllerHttp:
+    mayDependOn:
+      - interface
+
+  # Int. Adapters
+  report:
+    mayDependOn:
+      - storage
+      - logger
+      - interface
+      - entity
+
+  adapterGrpc:
+    mayDependOn:
+      - proto
+      - entity
+
+  adapterJupiter:
+    mayDependOn:
+      - apiJupiter
+      - interface
+
+  adapterMexc:
+    mayDependOn:
+      - interface
+
+  solana:
+    mayDependOn:
+      - interface
+      - logger
+    canUse:
+      - 3rd-solana-go
+      - 3rd-solana-rpc
+      - 3rd-solana-send
+      - 3rd-solana-ws
+
+  wallet:
+    mayDependOn:
+      - interface
+      - logger
+      - solana
+    canUse:
+      - 3rd-solana-go
+
+  storage:
+    mayDependOn:
+      - interface
+      - entity
+      - logger
+
+  # Use Cases
+  interface: #TODO: разнести по зависимым пакетам
+    mayDependOn:
+      - entity
+    canUse:
+      - 3rd-solana-go
 
   oldArbitrage:
     mayDependOn:
@@ -129,116 +239,8 @@ deps:
       - apiJupiter
       - solana
     canUse:
-      - 3rd-solana-go
+      - 3rd-solana-go #TODO: убрать зависимость от внешней библиотеки в юз-кейсе
 
-  controllerGrpc:
-    mayDependOn:
-      - proto
-      - interceptors
-      - interface
-    canUse:
-      - 3rd-grpc
-      - 3rd-grpc-reflection
-      - 3rd-grpc-status
-      - 3rd-grpc-codes
-
-  controllerHttp:
-    mayDependOn:
-      - interface
-
-  interceptors:
-    mayDependOn:
-      - interface
-    canUse:
-      - 3rd-grpc
-
-  apiJupiter:
-    mayDependOn:
-      - interface
-
-  apiMexcSpot:
-    mayDependOn:
-      - apiMexcUtils
-      - interface
-    canUse:
-      - 3rd-resty
-
-  apiMexcUtils:
-    mayDependOn:
-      - interface
-    canUse:
-      - 3rd-resty
-
-  adapterGrpc:
-    mayDependOn:
-      - proto
-      - entity
-
-  adapterJupiter:
-    mayDependOn:
-      - apiJupiter
-      - interface
-
-  adapterMexc:
-    mayDependOn:
-      - apiMexc
-      - interface
-
-  storage:
-    mayDependOn:
-      - interface
-      - entity
-      - logger
-
-  report:
-    mayDependOn:
-      - storage
-      - logger
-      - interface
-      - entity
-
-  solana:
-    mayDependOn:
-      - interface
-      - logger
-    canUse:
-      - 3rd-solana-go
-      - 3rd-solana-rpc
-      - 3rd-solana-send
-      - 3rd-solana-ws
-
-  wallet:
-    mayDependOn:
-      - interface
-      - logger
-      - solana
-    canUse:
-      - 3rd-solana-go
-
-  config:
-    mayDependOn: []
-    canUse:
-      - 3rd-cleanenv
-
-  logger:
-    mayDependOn:
-      - interface
-    anyVendorDeps: true
-
-  interface:
-    mayDependOn:
-      - entity
-    canUse:
-      - 3rd-solana-go
-
+  # Entities
   entity:
     anyProjectDeps: true
-
-  client:
-    mayDependOn:
-      - adapterGrpc
-      - proto
-      - entity
-    canUse:
-      - 3rd-grpc
-      - 3rd-grpc-insecure
