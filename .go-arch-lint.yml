@@ -28,6 +28,7 @@ vendors:
   3rd-grpc-reflection: { in: "google.golang.org/grpc/reflection" }
   3rd-grpc-status:     { in: "google.golang.org/grpc/status" }
   3rd-grpc-codes:      { in: "google.golang.org/grpc/codes" }
+  3rd-cleanenv:        { in: "github.com/ilyakaznacheev/cleanenv" }
 
 components:
   main:                { in: "cmd/app/**" }
@@ -74,14 +75,6 @@ deps:
       - app
       - config
       - logger
-    canUse:
-      - go-errors
-      - 3rd-grpc
-      - 3rd-protoc-gen
-      - 3rd-grpc-insecure
-      - 3rd-grpc-reflection
-      - 3rd-grpc-status
-      - 3rd-grpc-codes
 
   app:
     mayDependOn:
@@ -217,7 +210,8 @@ deps:
 
   config:
     mayDependOn: []
-    anyVendorDeps: true
+    canUse:
+      - 3rd-cleanenv
 
   logger:
     mayDependOn:
@@ -231,7 +225,6 @@ deps:
       - 3rd-solana-go
 
   entity:
-    mayDependOn: []
     anyProjectDeps: true
 
   client:
@@ -239,4 +232,6 @@ deps:
       - adapterGrpc
       - proto
       - entity
-    anyVendorDeps: true
+    canUse:
+      - 3rd-grpc
+      - 3rd-grpc-insecure
