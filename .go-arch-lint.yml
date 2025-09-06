@@ -92,7 +92,7 @@ deps:
       - 3rd-grpc
       - 3rd-grpc-insecure
 
-  app:
+  app: #TODO: пересмотреть инъекции зависимости для арх линтера
     mayDependOn:
       - config
       - logger
@@ -114,23 +114,23 @@ deps:
 
   logger:
     mayDependOn:
-      - interface
+      - interface #TODO: разобраться с зависимостью интерфейса логера от себя
     anyVendorDeps: true
 
   apiJupiter:
     mayDependOn:
-      - interface
+      - interface #FIXME: интерфейсы на верх пакета апи
 
   apiMexcSpot:
     mayDependOn:
       - apiMexcUtils
-      - interface
+      - interface #FIXME: интерфейсы на верх пакета апи
     canUse:
       - 3rd-resty
 
   apiMexcUtils:
     mayDependOn:
-      - interface
+      - interface #FIXME: интерфейсы на верх пакета апи
     canUse:
       - 3rd-resty
 
@@ -138,7 +138,7 @@ deps:
     mayDependOn:
       - proto
       - interceptors
-      - interface
+      - interface #FIXME: интерфейсы на верх пакета контроллеров
     canUse:
       - 3rd-grpc
       - 3rd-grpc-reflection
@@ -147,20 +147,20 @@ deps:
 
   interceptors:
     mayDependOn:
-      - interface
+      - interface #FIXME: интерфейсы на верх пакета контроллеров
     canUse:
       - 3rd-grpc
 
   controllerHttp:
     mayDependOn:
-      - interface
+      - interface #FIXME: интерфейсы на верх пакета контроллеров
 
   # Int. Adapters
   report:
     mayDependOn:
       - storage
-      - logger
-      - interface
+      - logger #FIXME: зависим от интерфейса логера
+      - interface #FIXME: интерфейсы в пакет
       - entity
 
   adapterGrpc:
@@ -171,16 +171,16 @@ deps:
   adapterJupiter:
     mayDependOn:
       - apiJupiter
-      - interface
+      - interface #FIXME: интерфейсы на верх пакета адаптеров
 
   adapterMexc:
     mayDependOn:
-      - interface
+      - interface #FIXME: интерфейсы на верх пакета адаптеров
 
   solana:
     mayDependOn:
-      - interface
-      - logger
+      - interface #FIXME: интерфейсы в пакет
+      - logger #FIXME: зависим от интерфейса логера
     canUse:
       - 3rd-solana-go
       - 3rd-solana-rpc
@@ -189,17 +189,17 @@ deps:
 
   wallet:
     mayDependOn:
-      - interface
-      - logger
+      - interface #FIXME: интерфейсы в пакет
+      - logger #FIXME: зависим от интерфейса логера
       - solana
     canUse:
       - 3rd-solana-go
 
-  storage:
+  storage: #TODO: возможно к удалению
     mayDependOn:
-      - interface
+      - interface #FIXME: интерфейсы в пакет
       - entity
-      - logger
+      - logger #FIXME: зависим от интерфейса логера
 
   # Use Cases
   interface: #TODO: разнести по зависимым пакетам
@@ -208,13 +208,13 @@ deps:
     canUse:
       - 3rd-solana-go
 
-  oldArbitrage:
+  oldArbitrage: #FIXME: удалить
     mayDependOn:
       - interface
       - entity
       - storage
-      - logger
-      - config
+      - logger #FIXME: от логера не зависеть, а от интерфейса
+      - config #FIXME: от конфигуратора не зависеть, а от интерфейса
       - apiJupiter
       - report
       - apiMexcUtils
@@ -222,19 +222,19 @@ deps:
 
   serviceScanner:
     mayDependOn:
-      - interface
+      - interface #FIXME: интерфейсы на верх пакета сервисов
       - entity
-      - config
+      - config #FIXME: зависим от интерфейса логера
       - usecaseScan
 
   usecaseScan:
     mayDependOn:
-      - interface
+      - interface #FIXME: интерфейсы на верх пакета юз-кейсов
       - entity
 
   usecaseSwap:
     mayDependOn:
-      - interface
+      - interface #FIXME: интерфейсы на верх пакета юз-кейсов
       - entity
       - apiJupiter
       - solana
