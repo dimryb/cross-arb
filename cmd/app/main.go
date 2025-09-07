@@ -1,8 +1,11 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
+	"os/signal"
+	"syscall"
 
 	"github.com/dimryb/cross-arb/internal/app"
 	"github.com/dimryb/cross-arb/internal/config"
@@ -27,5 +30,9 @@ func main() {
 		log.Fatalf("Config error: %s", err)
 	}
 
-	app.NewApp(cfg).Run()
+	ctx, cancel := signal.NotifyContext(context.Background(),
+		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+	defer cancel()
+
+	app.NewApp(ctx, cancel, cfg).Run()
 }

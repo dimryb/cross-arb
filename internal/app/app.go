@@ -3,8 +3,6 @@ package app
 import (
 	"context"
 	"log/slog"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"github.com/dimryb/cross-arb/internal/adapter/jupiter"
@@ -29,9 +27,11 @@ type App struct {
 	cfg *config.CrossArbConfig
 }
 
-func NewApp(cfg *config.CrossArbConfig) *App {
+func NewApp(ctx context.Context, cancel context.CancelFunc, cfg *config.CrossArbConfig) *App {
 	return &App{
-		cfg: cfg,
+		ctx:    ctx,
+		cancel: cancel,
+		cfg:    cfg,
 	}
 }
 
@@ -48,10 +48,6 @@ func (a *App) TickerStore() i.TickerStore {
 }
 
 func (a *App) Run() {
-	a.ctx, a.cancel = signal.NotifyContext(context.Background(),
-		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
-	defer a.cancel()
-
 	a.log = logger.New(a.cfg.Log.Level)
 	a.store = storage.NewTickerStore()
 	reportSvc := report.NewReportService(a.log, a.store)
