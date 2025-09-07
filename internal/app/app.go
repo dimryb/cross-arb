@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 	"os/signal"
 	"syscall"
@@ -13,6 +12,7 @@ import (
 	"github.com/dimryb/cross-arb/internal/config"
 	"github.com/dimryb/cross-arb/internal/controller/grpc"
 	"github.com/dimryb/cross-arb/internal/controller/http"
+	"github.com/dimryb/cross-arb/internal/entity"
 	i "github.com/dimryb/cross-arb/internal/interface"
 	"github.com/dimryb/cross-arb/internal/logger"
 	"github.com/dimryb/cross-arb/internal/report"
@@ -97,22 +97,66 @@ func (a *App) Run() {
 		}
 	}()
 
-	adapters := []i.ExchangeAdapter{mexcAdapter, jupiterAdapter}
-	scan, err := scanner.NewScannerFromConfig(a.log, a.cfg.Scanner, adapters)
+	adapters := []i.EXAdapter{mexcAdapter, jupiterAdapter}
+
+	pricesCh := make(chan entity.ExecutableQuote, a.cfg.Scanner.Buffers.Prices)
+	orderBooksCh := make(chan entity.OrderBookResult, a.cfg.Scanner.Buffers.OrderBooks)
+	oppCh := make(chan entity.ArbOpportunity, a.cfg.Scanner.Buffers.Opportunities)
+
+	interval, err := time.ParseDuration(a.cfg.Scanner.Interval)
 	if err != nil {
-		a.log.Error("Failed to create scan", slog.Any("err", err))
+		a.log.Error("invalid scanner interval",
+			slog.String("value", a.cfg.Scanner.Interval),
+			slog.Any("err", err))
+		a.cancel()
+		return
+	}
+	_, err = scanner.NewService(
+		a.log,
+		interval,
+		1.0, // placeholder: объём сделки в BASE для квотирования DEX
+		a.cfg.Scanner.Pairs,
+		adapters,
+		pricesCh,
+		orderBooksCh,
+		oppCh,
+		nil, // используем DEXPriceUseCase по умолчанию
+		nil, // используем CEXOrderBookUseCase по умолчанию
+		nil, // используем OpportunityUseCase по умолчанию
+	)
+	if err != nil {
+		a.log.Error("Failed to create scanner service", slog.Any("err", err))
 		a.cancel()
 		return
 	}
 
-	// Подписываемся и логируем возможности
-	if a.cfg.Scanner.LogOpportunities {
-		scanner.SubscribeAndHandle(
-			scan,
-			a.cfg.Scanner.Pairs,
-			scanner.LogOpportunities(a.log),
-		)
-	}
+	// Заглушки консьюмеры
+	go func() {
+		for pp := range pricesCh {
+			a.log.Info("price point",
+				slog.String("pair", pp.Pair),
+				slog.String("exchange", pp.Exchange),
+				slog.Float64("bid", pp.Bid),
+				slog.Float64("ask", pp.Ask),
+				slog.Time("ts", pp.Timestamp),
+			)
+		}
+	}()
+
+	go func() {
+		for opp := range oppCh {
+			a.log.Info("opportunity",
+				slog.String("pair", opp.Pair),
+				slog.String("buy_on", opp.BuyOn),
+				slog.Float64("buy_price", opp.BuyPrice),
+				slog.String("sell_on", opp.SellOn),
+				slog.Float64("sell_price", opp.SellPrice),
+				slog.Float64("net", opp.NetPnl),
+				slog.Float64("spread_pct", opp.SpreadPct),
+				slog.Time("ts", opp.DetectedAt),
+			)
+		}
+	}()
 
 	// TODO: вынести порты в конфиг
 	grpcServer := grpc.NewServer(a, grpc.ServerConfig{Port: "9090"}, a.log)
@@ -128,14 +172,6 @@ func (a *App) Run() {
 	go func() {
 		if err := grpcServer.Run(); err != nil {
 			a.log.Errorf("gRPC server failed: %v", err)
-			a.cancel()
-		}
-	}()
-
-	// Запускаем сканер
-	go func() {
-		if err := scan.Run(a.ctx); err != nil && !errors.Is(err, context.Canceled) {
-			a.log.Errorf("Scanner stopped with error: %v", err)
 			a.cancel()
 		}
 	}()

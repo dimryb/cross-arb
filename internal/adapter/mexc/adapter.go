@@ -1,11 +1,7 @@
 package mexc
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	i "github.com/dimryb/cross-arb/internal/interface"
@@ -33,52 +29,8 @@ func NewAdapter(l i.Logger, clientTimeout time.Duration) *Adapter {
 	}
 }
 
-// Name удовлетворяет интерфейсу ExchangeAdapter.
+// Name удовлетворяет интерфейсу EXAdapter.
 func (m *Adapter) Name() string { return "mexc" }
-
-// OrderBookTop запрашивает топ стакана:
-//
-//	GET /api/v3/depth?symbol=<SYMBOL>&limit=5
-//
-// SYMBOL формируем из пары, убирая «/» и приводя к верхнему регистру.
-func (m *Adapter) OrderBookTop(ctx context.Context, pair string) (bestBid, bestAsk float64, err error) {
-	symbol := strings.ReplaceAll(strings.ToUpper(pair), "/", "")
-	url := fmt.Sprintf("%s/api/v3/depth?symbol=%s&limit=5", m.baseURL, symbol)
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	if err != nil {
-		return 0, 0, fmt.Errorf("создание запроса: %w", err)
-	}
-
-	resp, err := m.client.Do(req)
-	if err != nil {
-		return 0, 0, fmt.Errorf("выполнение запроса: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return 0, 0, fmt.Errorf("код ответа %d", resp.StatusCode)
-	}
-
-	var raw struct {
-		Bids [][]string `json:"bids"`
-		Asks [][]string `json:"asks"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&raw); err != nil {
-		return 0, 0, fmt.Errorf("декодирование JSON: %w", err)
-	}
-	if len(raw.Bids) == 0 || len(raw.Asks) == 0 {
-		return 0, 0, fmt.Errorf("пустой стакан для %s", pair)
-	}
-
-	if _, err := fmt.Sscan(raw.Bids[0][0], &bestBid); err != nil {
-		return 0, 0, fmt.Errorf("парсинг bid: %w", err)
-	}
-	if _, err := fmt.Sscan(raw.Asks[0][0], &bestAsk); err != nil {
-		return 0, 0, fmt.Errorf("парсинг ask: %w", err)
-	}
-	return bestBid, bestAsk, nil
-}
 
 // TradingFee возвращает фиксированную комиссию MEXC для спота: 0.1 %.
 func (m *Adapter) TradingFee(string) (maker, taker float64) { return 0.001, 0.001 }
