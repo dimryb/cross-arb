@@ -1,14 +1,16 @@
+#Makefile
+NAME := "cross-arb"
 
 GIT_HASH := $(shell git log --format="%h" -n 1)
 
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
-	BIN := "./bin/cross-arb"
+	BIN := ./bin/$(NAME)
 	BIN_CLIENT := ./bin/gRPC-client
     DATE_CMD = date -u +'%Y-%m-%dT%H:%M:%S'
     GO_PATH := $(shell go env GOPATH)
 else #windows
-	BIN := "./bin/cross-arb.exe"
+	BIN := ./bin/$(NAME).exe
 	BIN_CLIENT := ./bin/gRPC-client.exe
     DATE_CMD = powershell.exe -Command "Get-Date -Format 'yyyy-MM-ddTHH:mm:ss'"
     GO_PATH := $(shell go env GOPATH | tr '\\' '/')
