@@ -56,7 +56,7 @@ func (m *Arbitrage) Run() error {
 	if err != nil {
 		return err
 	}
-	spot := mexc.NewSpotList(m.log, mexcCfg.BaseURL, client)
+	spot := mexc.NewSpotList(m.log, client)
 
 	wg.Add(1)
 	go func() {
@@ -271,7 +271,7 @@ func (m *Arbitrage) runMexcOrderBook(wg *sync.WaitGroup) {
 	if err != nil {
 		m.log.Warnf("MEXC client creation failed: %v", err)
 	}
-	spot := mexc.NewSpotList(m.log, mexcCfg.BaseURL, client)
+	spot := mexc.NewSpotList(m.log, client)
 
 	wg.Add(1)
 	go func() {

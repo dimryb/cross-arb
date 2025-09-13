@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -43,22 +44,21 @@ func NewClient(apiKey, secretKey, baseURL string, logger Logger) (*Client, error
 }
 
 // PublicGet публичный GET-запрос.
-func (c *Client) PublicGet(ctx context.Context, urlStr string, params map[string]string) (*resty.Response, error) {
-	query := make(url.Values)
+func (c *Client) PublicGet(ctx context.Context, path string, params map[string]string) (*resty.Response, error) {
+	fullURL := joinURLPath(c.baseURL, path)
+	query := fullURL.Query()
 	for k, v := range params {
 		query.Set(k, v)
 	}
-	fullURL := c.baseURL.String() + urlStr
-	if len(query) > 0 {
-		fullURL += "?" + query.Encode()
-	}
+	fullURL.RawQuery = query.Encode()
+	finalURL := fullURL.String()
 
-	c.logger.Debug("Выполняется публичный GET-запрос", "url", fullURL)
+	c.logger.Debug("Выполняется публичный GET-запрос", "url", finalURL)
 
 	client := resty.New().SetTimeout(defaultTimeout)
 	resp, err := client.R().
 		SetContext(ctx).
-		Get(fullURL)
+		Get(finalURL)
 	if err != nil {
 		c.logger.Error("Ошибка при выполнении GET-запроса", "error", err)
 		return nil, err
@@ -68,29 +68,29 @@ func (c *Client) PublicGet(ctx context.Context, urlStr string, params map[string
 }
 
 // PrivateGet выполняет авторизованный GET-запрос.
-func (c *Client) PrivateGet(ctx context.Context, urlStr string, params map[string]string) (*resty.Response, error) {
-	return c.privateRequest(ctx, http.MethodGet, urlStr, params)
+func (c *Client) PrivateGet(ctx context.Context, path string, params map[string]string) (*resty.Response, error) {
+	return c.privateRequest(ctx, http.MethodGet, path, params)
 }
 
 // PrivatePost выполняет авторизованный POST-запрос.
-func (c *Client) PrivatePost(ctx context.Context, urlStr string, params map[string]string) (*resty.Response, error) {
-	return c.privateRequest(ctx, http.MethodPost, urlStr, params)
+func (c *Client) PrivatePost(ctx context.Context, path string, params map[string]string) (*resty.Response, error) {
+	return c.privateRequest(ctx, http.MethodPost, path, params)
 }
 
 // PrivateDelete выполняет авторизованный DELETE-запрос.
-func (c *Client) PrivateDelete(ctx context.Context, urlStr string, params map[string]string) (*resty.Response, error) {
-	return c.privateRequest(ctx, http.MethodDelete, urlStr, params)
+func (c *Client) PrivateDelete(ctx context.Context, path string, params map[string]string) (*resty.Response, error) {
+	return c.privateRequest(ctx, http.MethodDelete, path, params)
 }
 
 // PrivatePut выполняет авторизованный PUT-запрос.
-func (c *Client) PrivatePut(ctx context.Context, urlStr string, params map[string]string) (*resty.Response, error) {
-	return c.privateRequest(ctx, http.MethodPut, urlStr, params)
+func (c *Client) PrivatePut(ctx context.Context, path string, params map[string]string) (*resty.Response, error) {
+	return c.privateRequest(ctx, http.MethodPut, path, params)
 }
 
 // privateRequest выполняет подписанный приватный запрос.
 func (c *Client) privateRequest(
 	ctx context.Context,
-	method, urlStr string,
+	method, path string,
 	params map[string]string,
 ) (*resty.Response, error) {
 	timestamp := time.Now().UnixMilli() // MEXC использует миллисекунды
@@ -106,11 +106,13 @@ func (c *Client) privateRequest(
 	signature := ComputeHmac256(toSign, c.secretKey)
 	query.Set("signature", signature)
 
-	fullURL := c.baseURL.String() + urlStr + "?" + query.Encode()
+	fullURL := joinURLPath(c.baseURL, path)
+	fullURL.RawQuery = query.Encode()
+	finalURL := fullURL.String()
 
 	c.logger.Debug("Выполняется приватный запрос",
 		"method", method,
-		"url", fullURL,
+		"url", finalURL,
 		"params", params,
 	)
 
@@ -127,13 +129,13 @@ func (c *Client) privateRequest(
 
 	switch method {
 	case http.MethodGet:
-		resp, err = req.Get(fullURL)
+		resp, err = req.Get(finalURL)
 	case http.MethodPost:
-		resp, err = req.Post(fullURL)
+		resp, err = req.Post(finalURL)
 	case http.MethodDelete:
-		resp, err = req.Delete(fullURL)
+		resp, err = req.Delete(finalURL)
 	case http.MethodPut:
-		resp, err = req.Put(fullURL)
+		resp, err = req.Put(finalURL)
 	default:
 		return nil, fmt.Errorf("unsupported HTTP method: %s", method)
 	}
@@ -144,6 +146,14 @@ func (c *Client) privateRequest(
 	}
 
 	return resp, nil
+}
+
+func joinURLPath(base *url.URL, path string) *url.URL {
+	baseCopy := *base
+	basePath := strings.TrimRight(base.Path, "/")
+	relPath := strings.TrimLeft(path, "/")
+	baseCopy.Path = basePath + "/" + relPath
+	return &baseCopy
 }
 
 // ComputeHmac256 рассчитывает подпись HMAC SHA256.
