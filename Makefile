@@ -46,10 +46,14 @@ install-lint-deps:
 lint: install-lint-deps
 	golangci-lint run --config golangci.yml ./...
 
-arch:
+install-arch-deps:
+	(which go-arch-lint > /dev/null) || \
+	GO111MODULE=on go install github.com/fe3dback/go-arch-lint@v1.12.0
+
+arch: install-lint-deps
 	go-arch-lint check
 
-graph:
+graph: install-lint-deps
 	go-arch-lint graph
 
 generate:
