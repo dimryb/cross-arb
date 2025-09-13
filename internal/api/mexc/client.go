@@ -25,8 +25,8 @@ type Client struct {
 	logger     Logger
 }
 
-// NewClient создаёт новый клиент для MEXC Spot API.
-func NewClient(apiKey, secretKey, baseURL string, logger Logger) (*Client, error) {
+// NewMexcClient создаёт новый клиент для MEXC Spot API.
+func NewMexcClient(apiKey, secretKey, baseURL string, logger Logger) (*Client, error) {
 	parsedURL, err := url.Parse(baseURL)
 	if err != nil {
 		return nil, fmt.Errorf("invalid base URL '%s': %w", baseURL, err)
