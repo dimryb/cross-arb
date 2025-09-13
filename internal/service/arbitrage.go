@@ -56,7 +56,7 @@ func (m *Arbitrage) Run() error {
 	if err != nil {
 		return err
 	}
-	spot := mexc.NewSpotList(m.log, client)
+	spot := mexc.NewSpotAPI(m.log, client)
 
 	wg.Add(1)
 	go func() {
@@ -221,7 +221,7 @@ func calculatePrice(inAmount, outAmount string, inUnit, outUnit int64, invert bo
 	return outReal / inReal
 }
 
-func getMexcTicker(sc *mexc.SpotList, results []entity.Result, index int, symbol string) {
+func getMexcTicker(sc *mexc.SpotAPI, results []entity.Result, index int, symbol string) {
 	ticker, err := bookMexcTicker(sc, symbol)
 	processTickerResult(results, index, symbol, ticker, err)
 }
@@ -242,12 +242,12 @@ func processTickerResult(results []entity.Result, index int, symbol string, tick
 	}
 }
 
-func bookMexcTicker(sc *mexc.SpotList, symbol string) (entity.BookTicker, error) {
+func bookMexcTicker(sc *mexc.SpotAPI, symbol string) (entity.BookTicker, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
 	params := map[string]string{"symbol": symbol}
-	resp, err := sc.BookTicker(ctx, params)
+	resp, err := sc.Market.BookTicker(ctx, params)
 	if err != nil {
 		return entity.BookTicker{}, fmt.Errorf("BookTicker request failed: %w", err)
 	}
@@ -271,7 +271,7 @@ func (m *Arbitrage) runMexcOrderBook(wg *sync.WaitGroup) {
 	if err != nil {
 		m.log.Warnf("MEXC client creation failed: %v", err)
 	}
-	spot := mexc.NewSpotList(m.log, client)
+	spot := mexc.NewSpotAPI(m.log, client)
 
 	wg.Add(1)
 	go func() {
@@ -364,7 +364,7 @@ func (m *Arbitrage) findBestOrder(
 	}
 }
 
-func getMexcOrder(sc *mexc.SpotList, results []entity.OrderBookResult, index int, symbol string, limit int) {
+func getMexcOrder(sc *mexc.SpotAPI, results []entity.OrderBookResult, index int, symbol string, limit int) {
 	book, err := bookMexcOrder(sc, symbol, limit)
 	processOrderResult(results, index, symbol, book, err)
 }
@@ -385,12 +385,12 @@ func processOrderResult(results []entity.OrderBookResult, index int, symbol stri
 	}
 }
 
-func bookMexcOrder(sc *mexc.SpotList, symbol string, limit int) (entity.OrderBook, error) {
+func bookMexcOrder(sc *mexc.SpotAPI, symbol string, limit int) (entity.OrderBook, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
 	params := map[string]string{"symbol": symbol, "limit": fmt.Sprintf("%d", limit)}
-	resp, err := sc.Depth(ctx, params)
+	resp, err := sc.Market.Depth(ctx, params)
 	if err != nil {
 		return entity.OrderBook{}, fmt.Errorf("MEXC Depth request failed: %w", err)
 	}
