@@ -1,0 +1,246 @@
+# .go-arch-lint.yml
+version: 3
+
+allow:
+  deepScan: false
+
+excludeFiles:
+  - "^.*_test\\.go$"
+  - "mocks\\.*"
+  - "proto\\.*"
+
+vendors:
+  go-std:              { in: "std" }
+  go-log:              { in: "log/slog" }
+  go-context:          { in: "context" }
+  go-errors:           { in: "errors" }
+  go-os:               { in: "os/signal" }
+  go-time:             { in: "time" }
+
+  3rd-grpc:            { in: "google.golang.org/grpc" }
+  3rd-protoc-gen:      { in: "google.golang.org/protobuf" }
+  3rd-solana-go:       { in: "github.com/gagliardetto/solana-go" }
+  3rd-resty:           { in: "github.com/go-resty/resty/v2" }
+  3rd-solana-rpc:      { in: "github.com/gagliardetto/solana-go/rpc" }
+  3rd-solana-ws:       { in: "github.com/gagliardetto/solana-go/rpc/ws" }
+  3rd-solana-send:     { in: "github.com/gagliardetto/solana-go/rpc/sendAndConfirmTransaction" }
+  3rd-grpc-insecure:   { in: "google.golang.org/grpc/credentials/insecure" }
+  3rd-grpc-reflection: { in: "google.golang.org/grpc/reflection" }
+  3rd-grpc-status:     { in: "google.golang.org/grpc/status" }
+  3rd-grpc-codes:      { in: "google.golang.org/grpc/codes" }
+  3rd-cleanenv:        { in: "github.com/ilyakaznacheev/cleanenv" }
+
+components:
+  # Fw & Drivers
+  main:                { in: "cmd/app/**" }
+  client:              { in: "cmd/client/**" }
+  proto:               { in: "proto/**" }
+  app:                 { in: "internal/app/**" }
+  config:              { in: "internal/config/**" }
+  logger:              { in: "internal/logger/**" }
+  apiJupiter:          { in: "internal/api/jupiter/**" }
+  apiMexcSpot:         { in: "internal/api/mexc/spot/**" }
+  apiMexcUtils:        { in: "internal/api/mexc/utils/**" }
+
+  # Int. Adapters
+  report:              { in: "internal/report/**" }
+  adapterGrpc:         { in: "internal/adapter/grpc/**" }
+  adapterJupiter:      { in: "internal/adapter/jupiter/**" }
+  adapterMexc:         { in: "internal/adapter/mexc/**" }
+  solana:              { in: "internal/solana/**" }
+  wallet:              { in: "internal/wallet/**" }
+  storage:             { in: "internal/storage/**" }
+  controllerGrpc:      { in: "internal/controller/grpc/**" }
+  controllerHttp:      { in: "internal/controller/http/**" }
+  interceptors:        { in: "internal/controller/grpc/interceptors" }
+
+  # Use Cases
+  interface:           { in: "internal/interface/**" } #TODO: разнести по зависимым пакетам
+  oldArbitrage:        { in: "internal/service/" }  #TODO: к удалению, пробная реализация
+  serviceScanner:      { in: "internal/service/scanner/**" }
+  usecaseScan:         { in: "internal/usecase/scan/**" }
+  usecaseSwap:         { in: "internal/usecase/swap/**" }
+
+  # Entities
+  entity:              { in: "internal/entity/**" }
+
+commonVendors:
+  - go-std
+  - go-log
+  - go-context
+  - go-errors
+  - go-os
+  - go-time
+
+commonComponents:
+  []
+
+deps:
+  # Fw & Drivers
+  main:
+    mayDependOn:
+      - app
+      - config
+      - logger
+
+  client:
+    mayDependOn:
+      - adapterGrpc
+      - proto
+      - entity
+    canUse:
+      - 3rd-grpc
+      - 3rd-grpc-insecure
+
+  app: #TODO: пересмотреть инъекции зависимости для арх линтера
+    mayDependOn:
+      - config
+      - logger
+      - oldArbitrage
+      - storage
+      - adapterJupiter
+      - adapterMexc
+      - controllerGrpc
+      - controllerHttp
+      - serviceScanner
+      - report
+      - interface
+      - entity
+
+  config:
+    mayDependOn: [ ]
+    canUse:
+      - 3rd-cleanenv
+
+  logger:
+    mayDependOn:
+      - interface #TODO: разобраться с зависимостью интерфейса логера от себя
+    anyVendorDeps: true
+
+  apiJupiter:
+    mayDependOn:
+      - interface #FIXME: интерфейсы на верх пакета апи
+
+  apiMexcSpot:
+    mayDependOn:
+      - apiMexcUtils
+      - interface #FIXME: интерфейсы на верх пакета апи
+    canUse:
+      - 3rd-resty
+
+  apiMexcUtils:
+    mayDependOn:
+      - interface #FIXME: интерфейсы на верх пакета апи
+    canUse:
+      - 3rd-resty
+
+  controllerGrpc:
+    mayDependOn:
+      - proto
+      - interceptors
+      - interface #FIXME: интерфейсы на верх пакета контроллеров
+    canUse:
+      - 3rd-grpc
+      - 3rd-grpc-reflection
+      - 3rd-grpc-status
+      - 3rd-grpc-codes
+
+  interceptors:
+    mayDependOn:
+      - interface #FIXME: интерфейсы на верх пакета контроллеров
+    canUse:
+      - 3rd-grpc
+
+  controllerHttp:
+    mayDependOn:
+      - interface #FIXME: интерфейсы на верх пакета контроллеров
+
+  # Int. Adapters
+  report:
+    mayDependOn:
+      - storage
+      - logger #FIXME: зависим от интерфейса логера
+      - interface #FIXME: интерфейсы в пакет
+      - entity
+
+  adapterGrpc:
+    mayDependOn:
+      - proto
+      - entity
+
+  adapterJupiter:
+    mayDependOn:
+      - apiJupiter
+      - interface #FIXME: интерфейсы на верх пакета адаптеров
+
+  adapterMexc:
+    mayDependOn:
+      - interface #FIXME: интерфейсы на верх пакета адаптеров
+
+  solana:
+    mayDependOn:
+      - interface #FIXME: интерфейсы в пакет
+      - logger #FIXME: зависим от интерфейса логера
+    canUse:
+      - 3rd-solana-go
+      - 3rd-solana-rpc
+      - 3rd-solana-send
+      - 3rd-solana-ws
+
+  wallet:
+    mayDependOn:
+      - interface #FIXME: интерфейсы в пакет
+      - logger #FIXME: зависим от интерфейса логера
+      - solana
+    canUse:
+      - 3rd-solana-go
+
+  storage: #TODO: возможно к удалению
+    mayDependOn:
+      - interface #FIXME: интерфейсы в пакет
+      - entity
+      - logger #FIXME: зависим от интерфейса логера
+
+  # Use Cases
+  interface: #TODO: разнести по зависимым пакетам
+    mayDependOn:
+      - entity
+    canUse:
+      - 3rd-solana-go
+
+  oldArbitrage: #FIXME: удалить
+    mayDependOn:
+      - interface
+      - entity
+      - storage
+      - logger #FIXME: от логера не зависеть, а от интерфейса
+      - config #FIXME: от конфигуратора не зависеть, а от интерфейса
+      - apiJupiter
+      - report
+      - apiMexcUtils
+      - apiMexcSpot
+
+  serviceScanner:
+    mayDependOn:
+      - interface #FIXME: интерфейсы на верх пакета сервисов
+      - entity
+      - config #FIXME: зависим от интерфейса логера
+      - usecaseScan
+
+  usecaseScan:
+    mayDependOn:
+      - interface #FIXME: интерфейсы на верх пакета юз-кейсов
+      - entity
+
+  usecaseSwap:
+    mayDependOn:
+      - interface #FIXME: интерфейсы на верх пакета юз-кейсов
+      - entity
+      - apiJupiter
+      - solana
+    canUse:
+      - 3rd-solana-go #TODO: убрать зависимость от внешней библиотеки в юз-кейсе
+
+  # Entities
+  entity:
+    anyProjectDeps: true
