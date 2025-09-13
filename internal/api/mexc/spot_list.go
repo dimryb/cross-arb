@@ -8,17 +8,15 @@ import (
 
 // SpotList — клиент для работы с MEXC Spot API.
 type SpotList struct {
-	log     Logger
-	BaseURL string
-	client  *Client
+	log    Logger
+	client *Client
 }
 
 // NewSpotList создаёт новый клиент для Spot API.
-func NewSpotList(log Logger, baseURL string, client *Client) *SpotList {
+func NewSpotList(log Logger, client *Client) *SpotList {
 	return &SpotList{
-		log:     log,
-		BaseURL: baseURL,
-		client:  client,
+		log:    log,
+		client: client,
 	}
 }
 
@@ -27,11 +25,9 @@ func NewSpotList(log Logger, baseURL string, client *Client) *SpotList {
 
 // Ping 1. Проверка подключения к серверу (Test Connectivity).
 func (s *SpotList) Ping(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/ping"
-	requestURL := s.BaseURL + caseURL
-	s.log.Debug("Ping request to MEXC", "url", requestURL, "params", params)
-
-	resp, err := s.client.PublicGet(ctx, requestURL, params)
+	casePath := "/ping"
+	s.log.Debug("Ping request to MEXC", "path", casePath, "params", params)
+	resp, err := s.client.PublicGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка в Ping", "error", err)
 		return nil, err
@@ -42,11 +38,9 @@ func (s *SpotList) Ping(ctx context.Context, params map[string]string) (*resty.R
 
 // Time 2. Получить серверное время (Check Server Time).
 func (s *SpotList) Time(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/time"
-	requestURL := s.BaseURL + caseURL
-	s.log.Debug("Time request to MEXC", "url", requestURL, "params", params)
-
-	resp, err := s.client.PublicGet(ctx, requestURL, params)
+	casePath := "/time"
+	s.log.Debug("Time request to MEXC", "path", casePath, "params", params)
+	resp, err := s.client.PublicGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка в Time", "error", err)
 		return nil, err
@@ -57,11 +51,9 @@ func (s *SpotList) Time(ctx context.Context, params map[string]string) (*resty.R
 
 // APISymbol 3. Список торговых пар по умолчанию (API Default Symbol).
 func (s *SpotList) APISymbol(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/defaultSymbols"
-	requestURL := s.BaseURL + caseURL
-	s.log.Debug("API symbol request to MEXC", "url", requestURL, "params", params)
-
-	resp, err := s.client.PublicGet(ctx, requestURL, params)
+	casePath := "/defaultSymbols"
+	s.log.Debug("API symbol request to MEXC", "path", casePath, "params", params)
+	resp, err := s.client.PublicGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка в APISymbol", "error", err)
 		return nil, err
@@ -72,11 +64,9 @@ func (s *SpotList) APISymbol(ctx context.Context, params map[string]string) (*re
 
 // ExchangeInfo 4. Информация о торгах (Exchange Information).
 func (s *SpotList) ExchangeInfo(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/exchangeInfo"
-	requestURL := s.BaseURL + caseURL
-	s.log.Debug("Exchange info request to MEXC", "url", requestURL, "params", params)
-
-	resp, err := s.client.PublicGet(ctx, requestURL, params)
+	casePath := "/exchangeInfo"
+	s.log.Debug("Exchange info request to MEXC", "path", casePath, "params", params)
+	resp, err := s.client.PublicGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка в ExchangeInfo", "error", err)
 		return nil, err
@@ -87,11 +77,9 @@ func (s *SpotList) ExchangeInfo(ctx context.Context, params map[string]string) (
 
 // Depth 5. Глубина стакана (Depth).
 func (s *SpotList) Depth(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/depth"
-	requestURL := s.BaseURL + caseURL
-	s.log.Debug("Order book depth request to MEXC", "url", requestURL, "params", params)
-
-	resp, err := s.client.PublicGet(ctx, requestURL, params)
+	casePath := "/depth"
+	s.log.Debug("Order book depth request to MEXC", "path", casePath, "params", params)
+	resp, err := s.client.PublicGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка в Depth", "error", err)
 		return nil, err
@@ -102,11 +90,10 @@ func (s *SpotList) Depth(ctx context.Context, params map[string]string) (*resty.
 
 // Trades 6. Список последних сделок (Recent Trades List).
 func (s *SpotList) Trades(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/trades"
-	requestURL := s.BaseURL + caseURL
-	s.log.Debug("Recent trades request to MEXC", "url", requestURL, "params", params)
+	casePath := "/trades"
+	s.log.Debug("Recent trades request to MEXC", "path", casePath, "params", params)
 
-	resp, err := s.client.PublicGet(ctx, requestURL, params)
+	resp, err := s.client.PublicGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка в Trades", "error", err)
 		return nil, err
@@ -117,11 +104,9 @@ func (s *SpotList) Trades(ctx context.Context, params map[string]string) (*resty
 
 // AggTrades 7. Агрегированный список сделок (Aggregate Trades List).
 func (s *SpotList) AggTrades(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/aggTrades"
-	requestURL := s.BaseURL + caseURL
-	s.log.Debug("Aggregate trades request to MEXC", "url", requestURL, "params", params)
-
-	resp, err := s.client.PublicGet(ctx, requestURL, params)
+	casePath := "/aggTrades"
+	s.log.Debug("Aggregate trades request to MEXC", "path", casePath, "params", params)
+	resp, err := s.client.PublicGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка в AggTrades", "error", err)
 		return nil, err
@@ -132,11 +117,9 @@ func (s *SpotList) AggTrades(ctx context.Context, params map[string]string) (*re
 
 // Kline 8. Данные свечей (K-line Data).
 func (s *SpotList) Kline(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/klines"
-	requestURL := s.BaseURL + caseURL
-	s.log.Debug("K-line data request to MEXC", "url", requestURL, "params", params)
-
-	resp, err := s.client.PublicGet(ctx, requestURL, params)
+	casePath := "/klines"
+	s.log.Debug("K-line data request to MEXC", "path", casePath, "params", params)
+	resp, err := s.client.PublicGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка в Kline", "error", err)
 		return nil, err
@@ -147,11 +130,9 @@ func (s *SpotList) Kline(ctx context.Context, params map[string]string) (*resty.
 
 // AvgPrice 9. Средняя цена за период (Current Average Price).
 func (s *SpotList) AvgPrice(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/avgPrice"
-	requestURL := s.BaseURL + caseURL
-	s.log.Debug("Average price request to MEXC", "url", requestURL, "params", params)
-
-	resp, err := s.client.PublicGet(ctx, requestURL, params)
+	casePath := "/avgPrice"
+	s.log.Debug("Average price request to MEXC", "path", casePath, "params", params)
+	resp, err := s.client.PublicGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка в AvgPrice", "error", err)
 		return nil, err
@@ -162,11 +143,9 @@ func (s *SpotList) AvgPrice(ctx context.Context, params map[string]string) (*res
 
 // Ticker24hr 10. Статистика изменения цены за 24 часа (24hr Ticker Price Change Statistics).
 func (s *SpotList) Ticker24hr(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/ticker/24hr"
-	requestURL := s.BaseURL + caseURL
-	s.log.Debug("24hr ticker stats request to MEXC", "url", requestURL, "params", params)
-
-	resp, err := s.client.PublicGet(ctx, requestURL, params)
+	casePath := "/ticker/24hr"
+	s.log.Debug("24hr ticker stats request to MEXC", "path", casePath, "params", params)
+	resp, err := s.client.PublicGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка в Ticker24hr", "error", err)
 		return nil, err
@@ -177,11 +156,9 @@ func (s *SpotList) Ticker24hr(ctx context.Context, params map[string]string) (*r
 
 // Price 11. Текущая цена символа (Symbol Price Ticker).
 func (s *SpotList) Price(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/ticker/price"
-	requestURL := s.BaseURL + caseURL
-	s.log.Debug("Symbol price request to MEXC", "url", requestURL, "params", params)
-
-	resp, err := s.client.PublicGet(ctx, requestURL, params)
+	casePath := "/ticker/price"
+	s.log.Debug("Symbol price request to MEXC", "path", casePath, "params", params)
+	resp, err := s.client.PublicGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка в Price", "error", err)
 		return nil, err
@@ -192,11 +169,9 @@ func (s *SpotList) Price(ctx context.Context, params map[string]string) (*resty.
 
 // BookTicker 12. Лучшие цены в стакане (Symbol Order Book Ticker).
 func (s *SpotList) BookTicker(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/ticker/bookTicker"
-	requestURL := s.BaseURL + caseURL
-	s.log.Debug("Order book ticker request to MEXC", "url", requestURL, "params", params)
-
-	resp, err := s.client.PublicGet(ctx, requestURL, params)
+	casePath := "/ticker/bookTicker"
+	s.log.Debug("Order book ticker request to MEXC", "path", casePath, "params", params)
+	resp, err := s.client.PublicGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка в BookTicker", "error", err)
 		return nil, err
@@ -209,11 +184,9 @@ func (s *SpotList) BookTicker(ctx context.Context, params map[string]string) (*r
 
 // CreateSub 1. Создать суб‑аккаунт (Create a Sub-account).
 func (s *SpotList) CreateSub(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/sub-account/virtualSubAccount"
-	url := s.BaseURL + caseURL
-	s.log.Debug("CreateSub", "url", url, "params", params)
-
-	resp, err := s.client.PrivatePost(ctx, url, params)
+	casePath := "/sub-account/virtualSubAccount"
+	s.log.Debug("CreateSub", "path", casePath, "params", params)
+	resp, err := s.client.PrivatePost(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка CreateSub", "error", err)
 		return nil, err
@@ -223,11 +196,9 @@ func (s *SpotList) CreateSub(ctx context.Context, params map[string]string) (*re
 
 // QuerySub 2. Получить список суб‑аккаунтов (Query Sub-account List).
 func (s *SpotList) QuerySub(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/sub-account/list"
-	url := s.BaseURL + caseURL
-	s.log.Debug("QuerySub", "url", url, "params", params)
-
-	resp, err := s.client.PrivateGet(ctx, url, params)
+	casePath := "/sub-account/list"
+	s.log.Debug("QuerySub", "path", casePath, "params", params)
+	resp, err := s.client.PrivateGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка QuerySub", "error", err)
 		return nil, err
@@ -237,11 +208,9 @@ func (s *SpotList) QuerySub(ctx context.Context, params map[string]string) (*res
 
 // CreateSubApikey 3. Создать API‑ключ для суб‑аккаунта (Create an apiKey for a sub-account).
 func (s *SpotList) CreateSubApikey(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/sub-account/apiKey" //nolint:goconst
-	url := s.BaseURL + caseURL
-	s.log.Debug("CreateSubApikey", "url", url, "params", params)
-
-	resp, err := s.client.PrivatePost(ctx, url, params)
+	casePath := "/sub-account/apiKey" //nolint:goconst
+	s.log.Debug("CreateSubApikey", "path", casePath, "params", params)
+	resp, err := s.client.PrivatePost(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка CreateSubApikey", "error", err)
 		return nil, err
@@ -251,11 +220,9 @@ func (s *SpotList) CreateSubApikey(ctx context.Context, params map[string]string
 
 // QuerySubApikey 4. Получить API‑ключи суб‑аккаунта (apiKey Query the apiKey of a sub-account).
 func (s *SpotList) QuerySubApikey(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/sub-account/apiKey"
-	url := s.BaseURL + caseURL
-	s.log.Debug("QuerySubApikey", "url", url, "params", params)
-
-	resp, err := s.client.PrivateGet(ctx, url, params)
+	casePath := "/sub-account/apiKey"
+	s.log.Debug("QuerySubApikey", "path", casePath, "params", params)
+	resp, err := s.client.PrivateGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка QuerySubApikey", "error", err)
 		return nil, err
@@ -265,11 +232,9 @@ func (s *SpotList) QuerySubApikey(ctx context.Context, params map[string]string)
 
 // DeleteSubApikey 5. Удалить API‑ключ суб‑аккаунта (apiKey Delete the apiKey of a sub-account).
 func (s *SpotList) DeleteSubApikey(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/sub-account/apiKey"
-	url := s.BaseURL + caseURL
-	s.log.Debug("DeleteSubApikey", "url", url, "params", params)
-
-	resp, err := s.client.PrivateDelete(ctx, url, params)
+	casePath := "/sub-account/apiKey"
+	s.log.Debug("DeleteSubApikey", "path", casePath, "params", params)
+	resp, err := s.client.PrivateDelete(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка DeleteSubApikey", "error", err)
 		return nil, err
@@ -279,11 +244,9 @@ func (s *SpotList) DeleteSubApikey(ctx context.Context, params map[string]string
 
 // UniTransfer 6. Универсальный перевод между аккаунтами (Universal Transfer).
 func (s *SpotList) UniTransfer(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/capital/sub-account/universalTransfer"
-	url := s.BaseURL + caseURL
-	s.log.Debug("UniTransfer", "url", url, "params", params)
-
-	resp, err := s.client.PrivatePost(ctx, url, params)
+	casePath := "/capital/sub-account/universalTransfer"
+	s.log.Debug("UniTransfer", "path", casePath, "params", params)
+	resp, err := s.client.PrivatePost(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка UniTransfer", "error", err)
 		return nil, err
@@ -293,11 +256,9 @@ func (s *SpotList) UniTransfer(ctx context.Context, params map[string]string) (*
 
 // QueryUniTransfer 7. История универсальных переводов (Query Universal Transfer History).
 func (s *SpotList) QueryUniTransfer(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/capital/sub-account/universalTransfer"
-	url := s.BaseURL + caseURL
-	s.log.Debug("QueryUniTransfer", "url", url, "params", params)
-
-	resp, err := s.client.PrivateGet(ctx, url, params)
+	casePath := "/capital/sub-account/universalTransfer"
+	s.log.Debug("QueryUniTransfer", "path", casePath, "params", params)
+	resp, err := s.client.PrivateGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка QueryUniTransfer", "error", err)
 		return nil, err
@@ -309,11 +270,9 @@ func (s *SpotList) QueryUniTransfer(ctx context.Context, params map[string]strin
 
 // SelfSymbols 1. Список разрешённых символов пользователя (User API default symbol).
 func (s *SpotList) SelfSymbols(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/selfSymbols"
-	url := s.BaseURL + caseURL
-	s.log.Debug("SelfSymbols", "url", url, "params", params)
-
-	resp, err := s.client.PrivateGet(ctx, url, params)
+	casePath := "/selfSymbols"
+	s.log.Debug("SelfSymbols", "path", casePath, "params", params)
+	resp, err := s.client.PrivateGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка SelfSymbols", "error", err)
 		return nil, err
@@ -323,11 +282,9 @@ func (s *SpotList) SelfSymbols(ctx context.Context, params map[string]string) (*
 
 // TestOrder 2. Тестовый ордер (Test New Order).
 func (s *SpotList) TestOrder(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/order/test"
-	url := s.BaseURL + caseURL
-	s.log.Debug("TestOrder", "url", url, "params", params)
-
-	resp, err := s.client.PrivatePost(ctx, url, params)
+	casePath := "/order/test"
+	s.log.Debug("TestOrder", "path", casePath, "params", params)
+	resp, err := s.client.PrivatePost(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка TestOrder", "error", err)
 		return nil, err
@@ -337,11 +294,9 @@ func (s *SpotList) TestOrder(ctx context.Context, params map[string]string) (*re
 
 // PlaceOrder 3. Разместить ордер (New Order).
 func (s *SpotList) PlaceOrder(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/order" //nolint:goconst
-	url := s.BaseURL + caseURL
-	s.log.Debug("PlaceOrder", "url", url, "params", params)
-
-	resp, err := s.client.PrivatePost(ctx, url, params)
+	casePath := "/order" //nolint:goconst
+	s.log.Debug("PlaceOrder", "path", casePath, "params", params)
+	resp, err := s.client.PrivatePost(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка PlaceOrder", "error", err)
 		return nil, err
@@ -351,11 +306,9 @@ func (s *SpotList) PlaceOrder(ctx context.Context, params map[string]string) (*r
 
 // BatchOrder 4. Пакетное размещение ордеров (Batch Orders).
 func (s *SpotList) BatchOrder(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/batchOrders"
-	url := s.BaseURL + caseURL
-	s.log.Debug("BatchOrder", "url", url, "params", params)
-
-	resp, err := s.client.PrivatePost(ctx, url, params)
+	casePath := "/batchOrders"
+	s.log.Debug("BatchOrder", "path", casePath, "params", params)
+	resp, err := s.client.PrivatePost(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка BatchOrder", "error", err)
 		return nil, err
@@ -365,11 +318,9 @@ func (s *SpotList) BatchOrder(ctx context.Context, params map[string]string) (*r
 
 // CancelOrder 5. Отменить ордер (Cancel Order).
 func (s *SpotList) CancelOrder(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/order"
-	url := s.BaseURL + caseURL
-	s.log.Debug("CancelOrder", "url", url, "params", params)
-
-	resp, err := s.client.PrivateDelete(ctx, url, params)
+	casePath := "/order"
+	s.log.Debug("CancelOrder", "path", casePath, "params", params)
+	resp, err := s.client.PrivateDelete(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка CancelOrder", "error", err)
 		return nil, err
@@ -379,11 +330,9 @@ func (s *SpotList) CancelOrder(ctx context.Context, params map[string]string) (*
 
 // CancelAllOrders 6. Отменить все ордера по символу (Cancel all Open Orders on a Symbol).
 func (s *SpotList) CancelAllOrders(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/openOrders"
-	url := s.BaseURL + caseURL
-	s.log.Debug("CancelAllOrders", "url", url, "params", params)
-
-	resp, err := s.client.PrivateDelete(ctx, url, params)
+	casePath := "/openOrders"
+	s.log.Debug("CancelAllOrders", "path", casePath, "params", params)
+	resp, err := s.client.PrivateDelete(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка CancelAllOrders", "error", err)
 		return nil, err
@@ -393,11 +342,9 @@ func (s *SpotList) CancelAllOrders(ctx context.Context, params map[string]string
 
 // QueryOrder 7. Информация об ордере (Query Order).
 func (s *SpotList) QueryOrder(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/order"
-	url := s.BaseURL + caseURL
-	s.log.Debug("QueryOrder", "url", url, "params", params)
-
-	resp, err := s.client.PrivateGet(ctx, url, params)
+	casePath := "/order"
+	s.log.Debug("QueryOrder", "path", casePath, "params", params)
+	resp, err := s.client.PrivateGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка QueryOrder", "error", err)
 		return nil, err
@@ -407,11 +354,9 @@ func (s *SpotList) QueryOrder(ctx context.Context, params map[string]string) (*r
 
 // OpenOrder 8. Открытые ордера (Current Open Orders).
 func (s *SpotList) OpenOrder(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/openOrders"
-	url := s.BaseURL + caseURL
-	s.log.Debug("OpenOrder", "url", url, "params", params)
-
-	resp, err := s.client.PrivateGet(ctx, url, params)
+	casePath := "/openOrders"
+	s.log.Debug("OpenOrder", "path", casePath, "params", params)
+	resp, err := s.client.PrivateGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка OpenOrder", "error", err)
 		return nil, err
@@ -421,11 +366,9 @@ func (s *SpotList) OpenOrder(ctx context.Context, params map[string]string) (*re
 
 // AllOrders 9. Все ордера (All Orders).
 func (s *SpotList) AllOrders(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/allOrders"
-	url := s.BaseURL + caseURL
-	s.log.Debug("AllOrders", "url", url, "params", params)
-
-	resp, err := s.client.PrivateGet(ctx, url, params)
+	casePath := "/allOrders"
+	s.log.Debug("AllOrders", "path", casePath, "params", params)
+	resp, err := s.client.PrivateGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка AllOrders", "error", err)
 		return nil, err
@@ -435,11 +378,9 @@ func (s *SpotList) AllOrders(ctx context.Context, params map[string]string) (*re
 
 // SpotAccountInfo 10. Информация об аккаунте (Account Information).
 func (s *SpotList) SpotAccountInfo(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/account"
-	url := s.BaseURL + caseURL
-	s.log.Debug("SpotAccountInfo", "url", url, "params", params)
-
-	resp, err := s.client.PrivateGet(ctx, url, params)
+	casePath := "/account"
+	s.log.Debug("SpotAccountInfo", "path", casePath, "params", params)
+	resp, err := s.client.PrivateGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка SpotAccountInfo", "error", err)
 		return nil, err
@@ -449,11 +390,9 @@ func (s *SpotList) SpotAccountInfo(ctx context.Context, params map[string]string
 
 // SpotMyTrade 11. История сделок (Account Trade List).
 func (s *SpotList) SpotMyTrade(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/myTrades"
-	url := s.BaseURL + caseURL
-	s.log.Debug("SpotMyTrade", "url", url, "params", params)
-
-	resp, err := s.client.PrivateGet(ctx, url, params)
+	casePath := "/myTrades"
+	s.log.Debug("SpotMyTrade", "path", casePath, "params", params)
+	resp, err := s.client.PrivateGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка SpotMyTrade", "error", err)
 		return nil, err
@@ -463,11 +402,9 @@ func (s *SpotList) SpotMyTrade(ctx context.Context, params map[string]string) (*
 
 // MxDeduct 12. Включить MX‑дедукцию (Enable MX Deduct).
 func (s *SpotList) MxDeduct(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/mxDeduct/enable"
-	url := s.BaseURL + caseURL
-	s.log.Debug("MxDeduct", "url", url, "params", params)
-
-	resp, err := s.client.PrivatePost(ctx, url, params)
+	casePath := "/mxDeduct/enable"
+	s.log.Debug("MxDeduct", "path", casePath, "params", params)
+	resp, err := s.client.PrivatePost(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка MxDeduct", "error", err)
 		return nil, err
@@ -477,11 +414,9 @@ func (s *SpotList) MxDeduct(ctx context.Context, params map[string]string) (*res
 
 // QueryMxDeduct 13. Статус MX‑дедукции (Query MX Deduct Status).
 func (s *SpotList) QueryMxDeduct(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/mxDeduct/enable"
-	url := s.BaseURL + caseURL
-	s.log.Debug("QueryMxDeduct", "url", url, "params", params)
-
-	resp, err := s.client.PrivateGet(ctx, url, params)
+	casePath := "/mxDeduct/enable"
+	s.log.Debug("QueryMxDeduct", "path", casePath, "params", params)
+	resp, err := s.client.PrivateGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка QueryMxDeduct", "error", err)
 		return nil, err
@@ -493,11 +428,9 @@ func (s *SpotList) QueryMxDeduct(ctx context.Context, params map[string]string) 
 
 // QueryCurrencyInfo 1. Информация о валюте (Query the currency information).
 func (s *SpotList) QueryCurrencyInfo(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/capital/config/getall"
-	url := s.BaseURL + caseURL
-	s.log.Debug("QueryCurrencyInfo", "url", url, "params", params)
-
-	resp, err := s.client.PrivateGet(ctx, url, params)
+	casePath := "/capital/config/getall"
+	s.log.Debug("QueryCurrencyInfo", "path", casePath, "params", params)
+	resp, err := s.client.PrivateGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка QueryCurrencyInfo", "error", err)
 		return nil, err
@@ -507,11 +440,9 @@ func (s *SpotList) QueryCurrencyInfo(ctx context.Context, params map[string]stri
 
 // Withdraw 2. Вывод средств (Withdraw).
 func (s *SpotList) Withdraw(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/capital/withdraw/apply"
-	url := s.BaseURL + caseURL
-	s.log.Debug("Withdraw", "url", url, "params", params)
-
-	resp, err := s.client.PrivatePost(ctx, url, params)
+	casePath := "/capital/withdraw/apply"
+	s.log.Debug("Withdraw", "path", casePath, "params", params)
+	resp, err := s.client.PrivatePost(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка Withdraw", "error", err)
 		return nil, err
@@ -521,11 +452,9 @@ func (s *SpotList) Withdraw(ctx context.Context, params map[string]string) (*res
 
 // CancelWithdraw 3. Отменить вывод (Cancel withdraw).
 func (s *SpotList) CancelWithdraw(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/capital/withdraw"
-	url := s.BaseURL + caseURL
-	s.log.Debug("CancelWithdraw", "url", url, "params", params)
-
-	resp, err := s.client.PrivateDelete(ctx, url, params)
+	casePath := "/capital/withdraw"
+	s.log.Debug("CancelWithdraw", "path", casePath, "params", params)
+	resp, err := s.client.PrivateDelete(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка CancelWithdraw", "error", err)
 		return nil, err
@@ -535,11 +464,9 @@ func (s *SpotList) CancelWithdraw(ctx context.Context, params map[string]string)
 
 // DepositHistory 4. История депозитов (Deposit History).
 func (s *SpotList) DepositHistory(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/capital/deposit/hisrec"
-	url := s.BaseURL + caseURL
-	s.log.Debug("DepositHistory", "url", url, "params", params)
-
-	resp, err := s.client.PrivateGet(ctx, url, params)
+	casePath := "/capital/deposit/hisrec"
+	s.log.Debug("DepositHistory", "path", casePath, "params", params)
+	resp, err := s.client.PrivateGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка DepositHistory", "error", err)
 		return nil, err
@@ -549,11 +476,9 @@ func (s *SpotList) DepositHistory(ctx context.Context, params map[string]string)
 
 // WithdrawHistory 5. История выводов (Withdraw History).
 func (s *SpotList) WithdrawHistory(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/capital/withdraw/history"
-	url := s.BaseURL + caseURL
-	s.log.Debug("WithdrawHistory", "url", url, "params", params)
-
-	resp, err := s.client.PrivateGet(ctx, url, params)
+	casePath := "/capital/withdraw/history"
+	s.log.Debug("WithdrawHistory", "path", casePath, "params", params)
+	resp, err := s.client.PrivateGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка WithdrawHistory", "error", err)
 		return nil, err
@@ -563,11 +488,9 @@ func (s *SpotList) WithdrawHistory(ctx context.Context, params map[string]string
 
 // GenDepositAddress 6. Сгенерировать адрес депозита (Generate deposit address).
 func (s *SpotList) GenDepositAddress(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/capital/deposit/address"
-	url := s.BaseURL + caseURL
-	s.log.Debug("GenDepositAddress", "url", url, "params", params)
-
-	resp, err := s.client.PrivatePost(ctx, url, params)
+	casePath := "/capital/deposit/address"
+	s.log.Debug("GenDepositAddress", "path", casePath, "params", params)
+	resp, err := s.client.PrivatePost(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка GenDepositAddress", "error", err)
 		return nil, err
@@ -577,11 +500,9 @@ func (s *SpotList) GenDepositAddress(ctx context.Context, params map[string]stri
 
 // DepositAddress 7. Получить адрес депозита (Deposit Address).
 func (s *SpotList) DepositAddress(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/capital/deposit/address"
-	url := s.BaseURL + caseURL
-	s.log.Debug("DepositAddress", "url", url, "params", params)
-
-	resp, err := s.client.PrivateGet(ctx, url, params)
+	casePath := "/capital/deposit/address"
+	s.log.Debug("DepositAddress", "path", casePath, "params", params)
+	resp, err := s.client.PrivateGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка DepositAddress", "error", err)
 		return nil, err
@@ -591,11 +512,9 @@ func (s *SpotList) DepositAddress(ctx context.Context, params map[string]string)
 
 // WithdrawAddress 8. Получить адрес вывода (Withdraw Address).
 func (s *SpotList) WithdrawAddress(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/capital/withdraw/address"
-	url := s.BaseURL + caseURL
-	s.log.Debug("WithdrawAddress", "url", url, "params", params)
-
-	resp, err := s.client.PrivateGet(ctx, url, params)
+	casePath := "/capital/withdraw/address"
+	s.log.Debug("WithdrawAddress", "path", casePath, "params", params)
+	resp, err := s.client.PrivateGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка WithdrawAddress", "error", err)
 		return nil, err
@@ -605,11 +524,9 @@ func (s *SpotList) WithdrawAddress(ctx context.Context, params map[string]string
 
 // Transfer 9. Универсальный перевод (User Universal Transfer).
 func (s *SpotList) Transfer(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/capital/transfer"
-	url := s.BaseURL + caseURL
-	s.log.Debug("Transfer", "url", url, "params", params)
-
-	resp, err := s.client.PrivatePost(ctx, url, params)
+	casePath := "/capital/transfer"
+	s.log.Debug("Transfer", "path", casePath, "params", params)
+	resp, err := s.client.PrivatePost(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка Transfer", "error", err)
 		return nil, err
@@ -619,11 +536,9 @@ func (s *SpotList) Transfer(ctx context.Context, params map[string]string) (*res
 
 // TransferHistory 10. История переводов (Query User Universal Transfer History).
 func (s *SpotList) TransferHistory(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/capital/transfer"
-	url := s.BaseURL + caseURL
-	s.log.Debug("TransferHistory", "url", url, "params", params)
-
-	resp, err := s.client.PrivateGet(ctx, url, params)
+	casePath := "/capital/transfer"
+	s.log.Debug("TransferHistory", "path", casePath, "params", params)
+	resp, err := s.client.PrivateGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка TransferHistory", "error", err)
 		return nil, err
@@ -633,11 +548,9 @@ func (s *SpotList) TransferHistory(ctx context.Context, params map[string]string
 
 // TransferHistoryByID 11. История перевода по tranId (Query User Universal Transfer History （by tranId）).
 func (s *SpotList) TransferHistoryByID(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/capital/transfer/tranId"
-	url := s.BaseURL + caseURL
-	s.log.Debug("TransferHistoryByID", "url", url, "params", params)
-
-	resp, err := s.client.PrivateGet(ctx, url, params)
+	casePath := "/capital/transfer/tranId"
+	s.log.Debug("TransferHistoryByID", "path", casePath, "params", params)
+	resp, err := s.client.PrivateGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка TransferHistoryByID", "error", err)
 		return nil, err
@@ -647,11 +560,9 @@ func (s *SpotList) TransferHistoryByID(ctx context.Context, params map[string]st
 
 // ConvertList 12. Список активов для конвертации (Get Assets That Can Be Converted Into MX).
 func (s *SpotList) ConvertList(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/capital/convert/list"
-	url := s.BaseURL + caseURL
-	s.log.Debug("ConvertList", "url", url, "params", params)
-
-	resp, err := s.client.PrivateGet(ctx, url, params)
+	casePath := "/capital/convert/list"
+	s.log.Debug("ConvertList", "path", casePath, "params", params)
+	resp, err := s.client.PrivateGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка ConvertList", "error", err)
 		return nil, err
@@ -661,11 +572,9 @@ func (s *SpotList) ConvertList(ctx context.Context, params map[string]string) (*
 
 // Convert 13. Конвертация мелких активов (Dust Transfer).
 func (s *SpotList) Convert(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/capital/convert"
-	url := s.BaseURL + caseURL
-	s.log.Debug("Convert", "url", url, "params", params)
-
-	resp, err := s.client.PrivatePost(ctx, url, params)
+	casePath := "/capital/convert"
+	s.log.Debug("Convert", "path", casePath, "params", params)
+	resp, err := s.client.PrivatePost(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка Convert", "error", err)
 		return nil, err
@@ -675,11 +584,9 @@ func (s *SpotList) Convert(ctx context.Context, params map[string]string) (*rest
 
 // ConvertHistory 14. История конвертаций (DustLog).
 func (s *SpotList) ConvertHistory(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/capital/convert"
-	url := s.BaseURL + caseURL
-	s.log.Debug("ConvertHistory", "url", url, "params", params)
-
-	resp, err := s.client.PrivateGet(ctx, url, params)
+	casePath := "/capital/convert"
+	s.log.Debug("ConvertHistory", "path", casePath, "params", params)
+	resp, err := s.client.PrivateGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка ConvertHistory", "error", err)
 		return nil, err
@@ -689,11 +596,9 @@ func (s *SpotList) ConvertHistory(ctx context.Context, params map[string]string)
 
 // ETFInfo 15. Информация об ETF (Get ETF info).
 func (s *SpotList) ETFInfo(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/etf/info"
-	url := s.BaseURL + caseURL
-	s.log.Debug("ETFInfo", "url", url, "params", params)
-
-	resp, err := s.client.PrivateGet(ctx, url, params)
+	casePath := "/etf/info"
+	s.log.Debug("ETFInfo", "path", casePath, "params", params)
+	resp, err := s.client.PrivateGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка ETFInfo", "error", err)
 		return nil, err
@@ -703,11 +608,9 @@ func (s *SpotList) ETFInfo(ctx context.Context, params map[string]string) (*rest
 
 // InternalTransfer 16. Внутренний перевод (Internal Transfer).
 func (s *SpotList) InternalTransfer(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/capital/transfer/internal"
-	url := s.BaseURL + caseURL
-	s.log.Debug("InternalTransfer", "url", url, "params", params)
-
-	resp, err := s.client.PrivatePost(ctx, url, params)
+	casePath := "/capital/transfer/internal"
+	s.log.Debug("InternalTransfer", "path", casePath, "params", params)
+	resp, err := s.client.PrivatePost(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка InternalTransfer", "error", err)
 		return nil, err
@@ -717,11 +620,9 @@ func (s *SpotList) InternalTransfer(ctx context.Context, params map[string]strin
 
 // InternalTransferHistory 17. История внутренних переводов (Internal Transfer History).
 func (s *SpotList) InternalTransferHistory(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/capital/transfer/internal"
-	url := s.BaseURL + caseURL
-	s.log.Debug("InternalTransferHistory", "url", url, "params", params)
-
-	resp, err := s.client.PrivateGet(ctx, url, params)
+	casePath := "/capital/transfer/internal"
+	s.log.Debug("InternalTransferHistory", "path", casePath, "params", params)
+	resp, err := s.client.PrivateGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка InternalTransferHistory", "error", err)
 		return nil, err
@@ -733,11 +634,9 @@ func (s *SpotList) InternalTransferHistory(ctx context.Context, params map[strin
 
 // CreateListenKey 1. Создать ListenKey (Listen Key  Create a ListenKey).
 func (s *SpotList) CreateListenKey(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/userDataStream" //nolint:goconst
-	url := s.BaseURL + caseURL
-	s.log.Debug("CreateListenKey", "url", url, "params", params)
-
-	resp, err := s.client.PrivatePost(ctx, url, params)
+	casePath := "/userDataStream" //nolint:goconst
+	s.log.Debug("CreateListenKey", "path", casePath, "params", params)
+	resp, err := s.client.PrivatePost(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка CreateListenKey", "error", err)
 		return nil, err
@@ -747,11 +646,9 @@ func (s *SpotList) CreateListenKey(ctx context.Context, params map[string]string
 
 // KeepListenKey 2. Продлить ListenKey (Keep-alive a ListenKey).
 func (s *SpotList) KeepListenKey(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/userDataStream"
-	url := s.BaseURL + caseURL
-	s.log.Debug("KeepListenKey", "url", url, "params", params)
-
-	resp, err := s.client.PrivatePut(ctx, url, params)
+	casePath := "/userDataStream"
+	s.log.Debug("KeepListenKey", "path", casePath, "params", params)
+	resp, err := s.client.PrivatePut(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка KeepListenKey", "error", err)
 		return nil, err
@@ -761,11 +658,9 @@ func (s *SpotList) KeepListenKey(ctx context.Context, params map[string]string) 
 
 // CloseListenKey 3. Закрыть ListenKey ().
 func (s *SpotList) CloseListenKey(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/userDataStream"
-	url := s.BaseURL + caseURL
-	s.log.Debug("CloseListenKey", "url", url, "params", params)
-
-	resp, err := s.client.PrivateDelete(ctx, url, params)
+	casePath := "/userDataStream"
+	s.log.Debug("CloseListenKey", "path", casePath, "params", params)
+	resp, err := s.client.PrivateDelete(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка CloseListenKey", "error", err)
 		return nil, err
@@ -777,11 +672,9 @@ func (s *SpotList) CloseListenKey(ctx context.Context, params map[string]string)
 
 // RebateHistory 1. История реферальных вознаграждений (Get Rebate History Records).
 func (s *SpotList) RebateHistory(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/rebate/taxQuery"
-	url := s.BaseURL + caseURL
-	s.log.Debug("RebateHistory", "url", url, "params", params)
-
-	resp, err := s.client.PrivateGet(ctx, url, params)
+	casePath := "/rebate/taxQuery"
+	s.log.Debug("RebateHistory", "path", casePath, "params", params)
+	resp, err := s.client.PrivateGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка RebateHistory", "error", err)
 		return nil, err
@@ -791,11 +684,9 @@ func (s *SpotList) RebateHistory(ctx context.Context, params map[string]string) 
 
 // RebateDetail 2. Детали реферальных выплат (Get Rebate Records Detail).
 func (s *SpotList) RebateDetail(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/rebate/detail"
-	url := s.BaseURL + caseURL
-	s.log.Debug("RebateDetail", "url", url, "params", params)
-
-	resp, err := s.client.PrivateGet(ctx, url, params)
+	casePath := "/rebate/detail"
+	s.log.Debug("RebateDetail", "path", casePath, "params", params)
+	resp, err := s.client.PrivateGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка RebateDetail", "error", err)
 		return nil, err
@@ -805,11 +696,9 @@ func (s *SpotList) RebateDetail(ctx context.Context, params map[string]string) (
 
 // SelfRecordsDetail 3. Детали собственных выплат (Get Self Rebate Records Detail).
 func (s *SpotList) SelfRecordsDetail(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/rebate/detail/kickback"
-	url := s.BaseURL + caseURL
-	s.log.Debug("SelfRecordsDetail", "url", url, "params", params)
-
-	resp, err := s.client.PrivateGet(ctx, url, params)
+	casePath := "/rebate/detail/kickback"
+	s.log.Debug("SelfRecordsDetail", "path", casePath, "params", params)
+	resp, err := s.client.PrivateGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка SelfRecordsDetail", "error", err)
 		return nil, err
@@ -819,11 +708,9 @@ func (s *SpotList) SelfRecordsDetail(ctx context.Context, params map[string]stri
 
 // ReferCode 4. Получить код приглашения (Query ReferCode).
 func (s *SpotList) ReferCode(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/rebate/referCode"
-	url := s.BaseURL + caseURL
-	s.log.Debug("ReferCode", "url", url, "params", params)
-
-	resp, err := s.client.PrivateGet(ctx, url, params)
+	casePath := "/rebate/referCode"
+	s.log.Debug("ReferCode", "path", casePath, "params", params)
+	resp, err := s.client.PrivateGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка ReferCode", "error", err)
 		return nil, err
@@ -833,11 +720,9 @@ func (s *SpotList) ReferCode(ctx context.Context, params map[string]string) (*re
 
 // AffiliateCommission 5. Комиссии аффилиата (Get Affiliate Commission Record (affiliate only)).
 func (s *SpotList) AffiliateCommission(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/rebate/affiliate/commission"
-	url := s.BaseURL + caseURL
-	s.log.Debug("AffiliateCommission", "url", url, "params", params)
-
-	resp, err := s.client.PrivateGet(ctx, url, params)
+	casePath := "/rebate/affiliate/commission"
+	s.log.Debug("AffiliateCommission", "path", casePath, "params", params)
+	resp, err := s.client.PrivateGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка AffiliateCommission", "error", err)
 		return nil, err
@@ -847,11 +732,9 @@ func (s *SpotList) AffiliateCommission(ctx context.Context, params map[string]st
 
 // AffiliateWithdraw 6. История выводов аффилиата (Get Affiliate Withdraw Record (affiliate only)).
 func (s *SpotList) AffiliateWithdraw(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/rebate/affiliate/withdraw"
-	url := s.BaseURL + caseURL
-	s.log.Debug("AffiliateWithdraw", "url", url, "params", params)
-
-	resp, err := s.client.PrivateGet(ctx, url, params)
+	casePath := "/rebate/affiliate/withdraw"
+	s.log.Debug("AffiliateWithdraw", "path", casePath, "params", params)
+	resp, err := s.client.PrivateGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка AffiliateWithdraw", "error", err)
 		return nil, err
@@ -861,11 +744,9 @@ func (s *SpotList) AffiliateWithdraw(ctx context.Context, params map[string]stri
 
 // AffiliateCommissionDetail 7. Детали комиссий аффилиата (Get Affiliate Commission Detail Record (affiliate only)).
 func (s *SpotList) AffiliateCommissionDetail(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/rebate/affiliate/commission/detail"
-	url := s.BaseURL + caseURL
-	s.log.Debug("AffiliateCommissionDetail", "url", url, "params", params)
-
-	resp, err := s.client.PrivateGet(ctx, url, params)
+	casePath := "/rebate/affiliate/commission/detail"
+	s.log.Debug("AffiliateCommissionDetail", "path", casePath, "params", params)
+	resp, err := s.client.PrivateGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка AffiliateCommissionDetail", "error", err)
 		return nil, err
@@ -875,11 +756,9 @@ func (s *SpotList) AffiliateCommissionDetail(ctx context.Context, params map[str
 
 // AffiliateReferral 8. Сводка реферальных данных аффилиата (Get Affiliate Referral Data（affiliate only）).
 func (s *SpotList) AffiliateReferral(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/rebate/affiliate/referral"
-	url := s.BaseURL + caseURL
-	s.log.Debug("AffiliateReferral", "url", url, "params", params)
-
-	resp, err := s.client.PrivateGet(ctx, url, params)
+	casePath := "/rebate/affiliate/referral"
+	s.log.Debug("AffiliateReferral", "path", casePath, "params", params)
+	resp, err := s.client.PrivateGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка AffiliateReferral", "error", err)
 		return nil, err
@@ -889,11 +768,9 @@ func (s *SpotList) AffiliateReferral(ctx context.Context, params map[string]stri
 
 // Subaffiliates 9. Суб‑аффилиаты (Get Subaffiliates Data (affiliate only)).
 func (s *SpotList) Subaffiliates(ctx context.Context, params map[string]string) (*resty.Response, error) {
-	caseURL := "/rebate/affiliate/subaffiliates"
-	url := s.BaseURL + caseURL
-	s.log.Debug("Subaffiliates", "url", url, "params", params)
-
-	resp, err := s.client.PrivateGet(ctx, url, params)
+	casePath := "/rebate/affiliate/subaffiliates"
+	s.log.Debug("Subaffiliates", "path", casePath, "params", params)
+	resp, err := s.client.PrivateGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка Subaffiliates", "error", err)
 		return nil, err
