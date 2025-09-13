@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/dimryb/cross-arb/internal/api/jupiter"
+	"github.com/dimryb/cross-arb/internal/api/mexc"
 	spotlist "github.com/dimryb/cross-arb/internal/api/mexc/spot"
-	"github.com/dimryb/cross-arb/internal/api/mexc/utils"
 	"github.com/dimryb/cross-arb/internal/config"
 	"github.com/dimryb/cross-arb/internal/entity"
 	i "github.com/dimryb/cross-arb/internal/interface"
@@ -53,7 +53,10 @@ func (m *Arbitrage) Run() error {
 	if !ok || !mexcCfg.Enabled {
 		return fmt.Errorf("mexc exchange not configured")
 	}
-	client := utils.NewClient(mexcCfg.APIKey, mexcCfg.SecretKey, m.log)
+	client, err := mexc.NewClient(mexcCfg.APIKey, mexcCfg.SecretKey, mexcCfg.BaseURL, m.log)
+	if err != nil {
+		return err
+	}
 	spot := spotlist.NewSpotClient(m.log, mexcCfg.BaseURL, client)
 
 	wg.Add(1)
@@ -84,7 +87,7 @@ func (m *Arbitrage) Run() error {
 
 	m.runMexcOrderBook(wg)
 
-	err := m.runJupiterClient(wg)
+	err = m.runJupiterClient(wg)
 	if err != nil {
 		return err
 	}
@@ -262,7 +265,10 @@ func (m *Arbitrage) runMexcOrderBook(wg *sync.WaitGroup) {
 		return
 	}
 
-	client := utils.NewClient(mexcCfg.APIKey, mexcCfg.SecretKey, m.log)
+	client, err := mexc.NewClient(mexcCfg.APIKey, mexcCfg.SecretKey, mexcCfg.BaseURL, m.log)
+	if err != nil {
+		m.log.Warnf("MEXC client creation failed: %v", err)
+	}
 	spot := spotlist.NewSpotClient(m.log, mexcCfg.BaseURL, client)
 
 	wg.Add(1)

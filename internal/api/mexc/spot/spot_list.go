@@ -1,7 +1,7 @@
 package spotlist
 
 import (
-	"github.com/dimryb/cross-arb/internal/api/mexc/utils"
+	"github.com/dimryb/cross-arb/internal/api/mexc"
 	i "github.com/dimryb/cross-arb/internal/interface"
 	"github.com/go-resty/resty/v2"
 )
@@ -10,11 +10,11 @@ import (
 type SpotClient struct {
 	log     i.Logger
 	BaseURL string
-	client  *utils.Client
+	client  *mexc.Client
 }
 
 // NewSpotClient создаёт новый клиент для Spot API.
-func NewSpotClient(log i.Logger, baseURL string, client *utils.Client) *SpotClient {
+func NewSpotClient(log i.Logger, baseURL string, client *mexc.Client) *SpotClient {
 	return &SpotClient{
 		log:     log,
 		BaseURL: baseURL,
@@ -235,7 +235,7 @@ func (s *SpotClient) QuerySub(jsonParams string) (*resty.Response, error) {
 	return resp, nil
 }
 
-// CreateSubApikey 3. Создать API‑ключ для суб‑аккаунта (Create an APIKey for a sub-account).
+// CreateSubApikey 3. Создать API‑ключ для суб‑аккаунта (Create an apiKey for a sub-account).
 func (s *SpotClient) CreateSubApikey(jsonParams string) (*resty.Response, error) {
 	caseURL := "/sub-account/apiKey" //nolint:goconst
 	url := s.BaseURL + caseURL
@@ -249,7 +249,7 @@ func (s *SpotClient) CreateSubApikey(jsonParams string) (*resty.Response, error)
 	return resp, nil
 }
 
-// QuerySubApikey 4. Получить API‑ключи суб‑аккаунта (APIKey Query the APIKey of a sub-account).
+// QuerySubApikey 4. Получить API‑ключи суб‑аккаунта (apiKey Query the apiKey of a sub-account).
 func (s *SpotClient) QuerySubApikey(jsonParams string) (*resty.Response, error) {
 	caseURL := "/sub-account/apiKey"
 	url := s.BaseURL + caseURL
@@ -263,7 +263,7 @@ func (s *SpotClient) QuerySubApikey(jsonParams string) (*resty.Response, error) 
 	return resp, nil
 }
 
-// DeleteSubApikey 5. Удалить API‑ключ суб‑аккаунта (APIKey Delete the APIKey of a sub-account).
+// DeleteSubApikey 5. Удалить API‑ключ суб‑аккаунта (apiKey Delete the apiKey of a sub-account).
 func (s *SpotClient) DeleteSubApikey(jsonParams string) (*resty.Response, error) {
 	caseURL := "/sub-account/apiKey"
 	url := s.BaseURL + caseURL
