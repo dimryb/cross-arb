@@ -52,7 +52,7 @@ func (m *Arbitrage) Run() error {
 	if !ok || !mexcCfg.Enabled {
 		return fmt.Errorf("mexc exchange not configured")
 	}
-	client, err := mexc.NewClient(mexcCfg.APIKey, mexcCfg.SecretKey, mexcCfg.BaseURL, m.log)
+	client, err := mexc.NewMexcClient(mexcCfg.APIKey, mexcCfg.SecretKey, mexcCfg.BaseURL, m.log)
 	if err != nil {
 		return err
 	}
@@ -267,7 +267,7 @@ func (m *Arbitrage) runMexcOrderBook(wg *sync.WaitGroup) {
 		return
 	}
 
-	client, err := mexc.NewClient(mexcCfg.APIKey, mexcCfg.SecretKey, mexcCfg.BaseURL, m.log)
+	client, err := mexc.NewMexcClient(mexcCfg.APIKey, mexcCfg.SecretKey, mexcCfg.BaseURL, m.log)
 	if err != nil {
 		m.log.Warnf("MEXC client creation failed: %v", err)
 	}
