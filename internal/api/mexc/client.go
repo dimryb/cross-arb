@@ -17,6 +17,15 @@ import (
 
 const defaultTimeout = 30 * time.Second
 
+// APIClient — интерфейс для всех запросов к MEXC API.
+type APIClient interface {
+	PublicGet(ctx context.Context, path string, params map[string]string) (*resty.Response, error)
+	PrivateGet(ctx context.Context, path string, params map[string]string) (*resty.Response, error)
+	PrivatePost(ctx context.Context, path string, params map[string]string) (*resty.Response, error)
+	PrivateDelete(ctx context.Context, path string, params map[string]string) (*resty.Response, error)
+	PrivatePut(ctx context.Context, path string, params map[string]string) (*resty.Response, error)
+}
+
 type Client struct {
 	baseURL    *url.URL
 	httpClient *http.Client
