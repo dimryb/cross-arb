@@ -10,7 +10,6 @@ import (
 
 	"github.com/dimryb/cross-arb/internal/api/jupiter"
 	"github.com/dimryb/cross-arb/internal/api/mexc"
-	spotlist "github.com/dimryb/cross-arb/internal/api/mexc/spot"
 	"github.com/dimryb/cross-arb/internal/config"
 	"github.com/dimryb/cross-arb/internal/entity"
 	i "github.com/dimryb/cross-arb/internal/interface"
@@ -57,7 +56,7 @@ func (m *Arbitrage) Run() error {
 	if err != nil {
 		return err
 	}
-	spot := spotlist.NewSpotClient(m.log, mexcCfg.BaseURL, client)
+	spot := mexc.NewSpotList(m.log, mexcCfg.BaseURL, client)
 
 	wg.Add(1)
 	go func() {
@@ -222,7 +221,7 @@ func calculatePrice(inAmount, outAmount string, inUnit, outUnit int64, invert bo
 	return outReal / inReal
 }
 
-func getMexcTicker(sc *spotlist.SpotClient, results []entity.Result, index int, symbol string) {
+func getMexcTicker(sc *mexc.SpotList, results []entity.Result, index int, symbol string) {
 	ticker, err := bookMexcTicker(sc, symbol)
 	processTickerResult(results, index, symbol, ticker, err)
 }
@@ -243,9 +242,12 @@ func processTickerResult(results []entity.Result, index int, symbol string, tick
 	}
 }
 
-func bookMexcTicker(sc *spotlist.SpotClient, symbol string) (entity.BookTicker, error) {
-	params := fmt.Sprintf(`{"symbol":"%s"}`, symbol)
-	resp, err := sc.BookTicker(params)
+func bookMexcTicker(sc *mexc.SpotList, symbol string) (entity.BookTicker, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	params := map[string]string{"symbol": symbol}
+	resp, err := sc.BookTicker(ctx, params)
 	if err != nil {
 		return entity.BookTicker{}, fmt.Errorf("BookTicker request failed: %w", err)
 	}
@@ -269,7 +271,7 @@ func (m *Arbitrage) runMexcOrderBook(wg *sync.WaitGroup) {
 	if err != nil {
 		m.log.Warnf("MEXC client creation failed: %v", err)
 	}
-	spot := spotlist.NewSpotClient(m.log, mexcCfg.BaseURL, client)
+	spot := mexc.NewSpotList(m.log, mexcCfg.BaseURL, client)
 
 	wg.Add(1)
 	go func() {
@@ -362,7 +364,7 @@ func (m *Arbitrage) findBestOrder(
 	}
 }
 
-func getMexcOrder(sc *spotlist.SpotClient, results []entity.OrderBookResult, index int, symbol string, limit int) {
+func getMexcOrder(sc *mexc.SpotList, results []entity.OrderBookResult, index int, symbol string, limit int) {
 	book, err := bookMexcOrder(sc, symbol, limit)
 	processOrderResult(results, index, symbol, book, err)
 }
@@ -383,9 +385,12 @@ func processOrderResult(results []entity.OrderBookResult, index int, symbol stri
 	}
 }
 
-func bookMexcOrder(sc *spotlist.SpotClient, symbol string, limit int) (entity.OrderBook, error) {
-	params := fmt.Sprintf(`{"symbol":"%s", "limit":"%d"}`, symbol, limit)
-	resp, err := sc.Depth(params)
+func bookMexcOrder(sc *mexc.SpotList, symbol string, limit int) (entity.OrderBook, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	params := map[string]string{"symbol": symbol, "limit": fmt.Sprintf("%d", limit)}
+	resp, err := sc.Depth(ctx, params)
 	if err != nil {
 		return entity.OrderBook{}, fmt.Errorf("MEXC Depth request failed: %w", err)
 	}
