@@ -40,7 +40,7 @@ components:
   logger:              { in: "internal/logger/**" }
   apiJupiter:          { in: "internal/api/jupiter/**" }
   apiMexcSpot:         { in: "internal/api/mexc/spot/**" }
-  apiMexcUtils:        { in: "internal/api/mexc/utils/**" }
+  apiMexc:             { in: "internal/api/mexc/**" }
 
   # Int. Adapters
   report:              { in: "internal/report/**" }
@@ -123,14 +123,14 @@ deps:
 
   apiMexcSpot:
     mayDependOn:
-      - apiMexcUtils
+      - apiMexc
       - interface #FIXME: интерфейсы на верх пакета апи
     canUse:
       - 3rd-resty
 
-  apiMexcUtils:
+  apiMexc:
     mayDependOn:
-      - interface #FIXME: интерфейсы на верх пакета апи
+      []
     canUse:
       - 3rd-resty
 
@@ -217,7 +217,7 @@ deps:
       - config #FIXME: от конфигуратора не зависеть, а от интерфейса
       - apiJupiter
       - report
-      - apiMexcUtils
+      - apiMexc
       - apiMexcSpot
 
   serviceScanner:
