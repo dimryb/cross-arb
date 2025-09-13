@@ -1,14 +1,14 @@
 package mexc
 
 import (
+	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
+	"strconv"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -43,22 +43,22 @@ func NewClient(apiKey, secretKey, baseURL string, logger Logger) (*Client, error
 }
 
 // PublicGet публичный GET-запрос.
-func (c *Client) PublicGet(urlStr string, jsonParams string) (*resty.Response, error) {
-	var path string
-	if jsonParams == "" {
-		path = urlStr
-	} else {
-		strParams := JSONToParamStr(jsonParams)
-		path = urlStr + "?" + strParams
+func (c *Client) PublicGet(ctx context.Context, urlStr string, params map[string]string) (*resty.Response, error) {
+	query := make(url.Values)
+	for k, v := range params {
+		query.Set(k, v)
+	}
+	fullURL := c.baseURL.String() + urlStr
+	if len(query) > 0 {
+		fullURL += "?" + query.Encode()
 	}
 
-	c.logger.Debug("Выполняется публичный GET-запрос", "url", path)
+	c.logger.Debug("Выполняется публичный GET-запрос", "url", fullURL)
 
-	// Создаём HTTP-клиент
-	client := resty.New()
-
-	// Выполняем запрос
-	resp, err := client.R().Get(path)
+	client := resty.New().SetTimeout(defaultTimeout)
+	resp, err := client.R().
+		SetContext(ctx).
+		Get(fullURL)
 	if err != nil {
 		c.logger.Error("Ошибка при выполнении GET-запроса", "error", err)
 		return nil, err
@@ -68,162 +68,82 @@ func (c *Client) PublicGet(urlStr string, jsonParams string) (*resty.Response, e
 }
 
 // PrivateGet выполняет авторизованный GET-запрос.
-func (c *Client) PrivateGet(urlStr string, jsonParams string) (*resty.Response, error) { //nolint: dupl
-	var path string
-	timestamp := time.Now().UnixNano() / 1e6
-
-	c.logger.Debug("Текущее время (timestamp)", "timestamp", timestamp)
-
-	if jsonParams == "" {
-		message := fmt.Sprintf("timestamp=%d", timestamp)
-		sign := ComputeHmac256(message, c.secretKey)
-		path = fmt.Sprintf("%s?timestamp=%d&signature=%s", urlStr, timestamp, sign)
-		c.logger.Debug("Подпись запроса", "message", message, "signature", sign)
-	} else {
-		strParams := JSONToParamStr(jsonParams)
-		message := fmt.Sprintf("%s&timestamp=%d", strParams, timestamp)
-		sign := ComputeHmac256(message, c.secretKey)
-		path = fmt.Sprintf("%s?%s&timestamp=%d&signature=%s", urlStr, strParams, timestamp, sign)
-		c.logger.Debug("Подпись запроса", "message", message, "signature", sign)
-	}
-
-	c.logger.Debug("Выполняется приватный GET-запрос", "url", path)
-
-	client := resty.New()
-	resp, err := client.R().SetHeaders(map[string]string{
-		"X-MEXC-APIKEY": c.apiKey,
-		"Content-Type":  "application/json",
-	}).Get(path)
-	if err != nil {
-		c.logger.Error("Ошибка при приватном GET-запросе", "error", err)
-		return nil, err
-	}
-
-	return resp, nil
+func (c *Client) PrivateGet(ctx context.Context, urlStr string, params map[string]string) (*resty.Response, error) {
+	return c.privateRequest(ctx, http.MethodGet, urlStr, params)
 }
 
 // PrivatePost выполняет авторизованный POST-запрос.
-func (c *Client) PrivatePost(urlStr string, jsonParams string) (*resty.Response, error) { //nolint: dupl
-	var path string
-	timestamp := time.Now().UnixNano() / 1e6
-
-	c.logger.Debug("Текущее время (timestamp)", "timestamp", timestamp)
-
-	if jsonParams == "" {
-		message := fmt.Sprintf("timestamp=%d", timestamp)
-		sign := ComputeHmac256(message, c.secretKey)
-		path = fmt.Sprintf("%s?timestamp=%d&signature=%s", urlStr, timestamp, sign)
-		c.logger.Debug("Подпись запроса", "message", message, "signature", sign)
-	} else {
-		strParams := JSONToParamStr(jsonParams)
-		message := fmt.Sprintf("%s&timestamp=%d", strParams, timestamp)
-		sign := ComputeHmac256(message, c.secretKey)
-		path = fmt.Sprintf("%s?%s&timestamp=%d&signature=%s", urlStr, strParams, timestamp, sign)
-		c.logger.Debug("Подпись запроса", "message", message, "signature", sign)
-	}
-
-	c.logger.Debug("Выполняется приватный POST-запрос", "url", path)
-
-	client := resty.New()
-	resp, err := client.R().SetHeaders(map[string]string{
-		"X-MEXC-APIKEY": c.apiKey,
-		"Content-Type":  "application/json",
-	}).Post(path)
-	if err != nil {
-		c.logger.Error("Ошибка при приватном POST-запросе", "error", err)
-		return nil, err
-	}
-
-	return resp, nil
+func (c *Client) PrivatePost(ctx context.Context, urlStr string, params map[string]string) (*resty.Response, error) {
+	return c.privateRequest(ctx, http.MethodPost, urlStr, params)
 }
 
 // PrivateDelete выполняет авторизованный DELETE-запрос.
-func (c *Client) PrivateDelete(urlStr string, jsonParams string) (*resty.Response, error) { //nolint: dupl
-	var path string
-	timestamp := time.Now().UnixNano() / 1e6
-
-	c.logger.Debug("Текущее время (timestamp)", "timestamp", timestamp)
-
-	if jsonParams == "" {
-		message := fmt.Sprintf("timestamp=%d", timestamp)
-		sign := ComputeHmac256(message, c.secretKey)
-		path = fmt.Sprintf("%s?timestamp=%d&signature=%s", urlStr, timestamp, sign)
-		c.logger.Debug("Подпись запроса", "message", message, "signature", sign)
-	} else {
-		strParams := JSONToParamStr(jsonParams)
-		message := fmt.Sprintf("%s&timestamp=%d", strParams, timestamp)
-		sign := ComputeHmac256(message, c.secretKey)
-		path = fmt.Sprintf("%s?%s&timestamp=%d&signature=%s", urlStr, strParams, timestamp, sign)
-		c.logger.Debug("Подпись запроса", "message", message, "signature", sign)
-	}
-
-	c.logger.Debug("Выполняется приватный DELETE-запрос", "url", path)
-
-	client := resty.New()
-	resp, err := client.R().SetHeaders(map[string]string{
-		"X-MEXC-APIKEY": c.apiKey,
-		"Content-Type":  "application/json",
-	}).Delete(path)
-	if err != nil {
-		c.logger.Error("Ошибка при приватном DELETE-запросе", "error", err)
-		return nil, err
-	}
-
-	return resp, nil
+func (c *Client) PrivateDelete(ctx context.Context, urlStr string, params map[string]string) (*resty.Response, error) {
+	return c.privateRequest(ctx, http.MethodDelete, urlStr, params)
 }
 
 // PrivatePut выполняет авторизованный PUT-запрос.
-func (c *Client) PrivatePut(urlStr string, jsonParams string) (*resty.Response, error) { //nolint: dupl
-	var path string
-	timestamp := time.Now().UnixNano() / 1e6
+func (c *Client) PrivatePut(ctx context.Context, urlStr string, params map[string]string) (*resty.Response, error) {
+	return c.privateRequest(ctx, http.MethodPut, urlStr, params)
+}
 
-	c.logger.Debug("Текущее время (timestamp)", "timestamp", timestamp)
+// privateRequest выполняет подписанный приватный запрос.
+func (c *Client) privateRequest(
+	ctx context.Context,
+	method, urlStr string,
+	params map[string]string,
+) (*resty.Response, error) {
+	timestamp := time.Now().UnixMilli() // MEXC использует миллисекунды
 
-	if jsonParams == "" {
-		message := fmt.Sprintf("timestamp=%d", timestamp)
-		sign := ComputeHmac256(message, c.secretKey)
-		path = fmt.Sprintf("%s?timestamp=%d&signature=%s", urlStr, timestamp, sign)
-		c.logger.Debug("Подпись запроса", "message", message, "signature", sign)
-	} else {
-		strParams := JSONToParamStr(jsonParams)
-		message := fmt.Sprintf("%s&timestamp=%d", strParams, timestamp)
-		sign := ComputeHmac256(message, c.secretKey)
-		path = fmt.Sprintf("%s?%s&timestamp=%d&signature=%s", urlStr, strParams, timestamp, sign)
-		c.logger.Debug("Подпись запроса", "message", message, "signature", sign)
+	// Формируем строку запроса
+	query := make(url.Values)
+	for k, v := range params {
+		query.Set(k, v)
+	}
+	query.Set("timestamp", strconv.FormatInt(timestamp, 10))
+
+	toSign := query.Encode()
+	signature := ComputeHmac256(toSign, c.secretKey)
+	query.Set("signature", signature)
+
+	fullURL := c.baseURL.String() + urlStr + "?" + query.Encode()
+
+	c.logger.Debug("Выполняется приватный запрос",
+		"method", method,
+		"url", fullURL,
+		"params", params,
+	)
+
+	client := resty.New().SetTimeout(defaultTimeout)
+	req := client.R().
+		SetContext(ctx).
+		SetHeaders(map[string]string{
+			"X-MEXC-APIKEY": c.apiKey,
+			"Content-Type":  "application/json",
+		})
+
+	var resp *resty.Response
+	var err error
+
+	switch method {
+	case http.MethodGet:
+		resp, err = req.Get(fullURL)
+	case http.MethodPost:
+		resp, err = req.Post(fullURL)
+	case http.MethodDelete:
+		resp, err = req.Delete(fullURL)
+	case http.MethodPut:
+		resp, err = req.Put(fullURL)
+	default:
+		return nil, fmt.Errorf("unsupported HTTP method: %s", method)
 	}
 
-	c.logger.Debug("Выполняется приватный PUT-запрос", "url", path)
-
-	client := resty.New()
-	resp, err := client.R().SetHeaders(map[string]string{
-		"X-MEXC-APIKEY": c.apiKey,
-		"Content-Type":  "application/json",
-	}).Put(path)
 	if err != nil {
-		c.logger.Error("Ошибка при приватном PUT-запросе", "error", err)
+		c.logger.Error("Ошибка при выполнении приватного запроса", "error", err, "method", method)
 		return nil, err
 	}
 
 	return resp, nil
-}
-
-// JSONToParamStr форматирует строку параметров из JSON.
-func JSONToParamStr(jsonParams string) string {
-	m := make(map[string]string)
-	err := json.Unmarshal([]byte(jsonParams), &m)
-	if err != nil {
-		return ""
-	}
-	params := make([]string, 0, len(m))
-	for key, value := range m {
-		params = append(params, fmt.Sprintf("%s=%s", key, value))
-	}
-	return strings.Join(params, "&")
-}
-
-// ParamsEncode кодирует строку как URL-параметры.
-func ParamsEncode(paramStr string) string {
-	return url.QueryEscape(paramStr)
 }
 
 // ComputeHmac256 рассчитывает подпись HMAC SHA256.
