@@ -2,8 +2,25 @@ package mexc
 
 import (
 	"context"
+	"encoding/json"
+)
 
-	"github.com/go-resty/resty/v2"
+// TODO: DTOs — будут заполнены позже.
+
+type (
+	SelfSymbolsResponse     struct{}
+	TestOrderResponse       struct{}
+	PlaceOrderResponse      struct{}
+	BatchOrderResponse      struct{}
+	CancelOrderResponse     struct{}
+	CancelAllOrdersResponse struct{}
+	QueryOrderResponse      struct{}
+	OpenOrderResponse       struct{}
+	AllOrdersResponse       struct{}
+	SpotAccountInfoResponse struct{}
+	SpotMyTradeResponse     struct{}
+	MxDeductResponse        struct{}
+	QueryMxDeductResponse   struct{}
 )
 
 type SpotTradeClient struct {
@@ -21,193 +38,297 @@ func NewSpotTradeClient(log Logger, client APIClient) *SpotTradeClient {
 func (s *SpotTradeClient) SelfSymbols(
 	ctx context.Context,
 	params map[string]string,
-) (*resty.Response, error) {
-	casePath := "/selfSymbols"
-	s.log.Debug("SelfSymbols", "path", casePath, "params", params)
-	resp, err := s.client.PrivateGet(ctx, casePath, params)
+) (*SelfSymbolsResponse, error) {
+	const path = "/selfSymbols"
+	s.log.Debug("SelfSymbols request to MEXC", "path", path, "params", params)
+
+	resp, err := s.client.PrivateGet(ctx, path, params)
 	if err != nil {
-		s.log.Error("Ошибка SelfSymbols", "error", err)
+		s.log.Error("Ошибка в SelfSymbols", "error", err)
 		return nil, err
 	}
-	return resp, nil
+
+	var result SelfSymbolsResponse
+	if err := json.Unmarshal(resp.Body(), &result); err != nil {
+		s.log.Error("Failed to unmarshal SelfSymbols response", "error", err, "body", string(resp.Body()))
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 // TestOrder 2. Тестовый ордер (Test New Order).
 func (s *SpotTradeClient) TestOrder(
 	ctx context.Context,
 	params map[string]string,
-) (*resty.Response, error) {
-	casePath := "/order/test"
-	s.log.Debug("TestOrder", "path", casePath, "params", params)
-	resp, err := s.client.PrivatePost(ctx, casePath, params)
+) (*TestOrderResponse, error) {
+	const path = "/order/test"
+	s.log.Debug("TestOrder request to MEXC", "path", path, "params", params)
+
+	resp, err := s.client.PrivatePost(ctx, path, params)
 	if err != nil {
-		s.log.Error("Ошибка TestOrder", "error", err)
+		s.log.Error("Ошибка в TestOrder", "error", err)
 		return nil, err
 	}
-	return resp, nil
+
+	var result TestOrderResponse
+	if err := json.Unmarshal(resp.Body(), &result); err != nil {
+		s.log.Error("Failed to unmarshal TestOrder response", "error", err, "body", string(resp.Body()))
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 // PlaceOrder 3. Разместить ордер (New Order).
 func (s *SpotTradeClient) PlaceOrder(
 	ctx context.Context,
 	params map[string]string,
-) (*resty.Response, error) {
-	casePath := "/order" //nolint:goconst
-	s.log.Debug("PlaceOrder", "path", casePath, "params", params)
-	resp, err := s.client.PrivatePost(ctx, casePath, params)
+) (*PlaceOrderResponse, error) {
+	const path = "/order"
+	s.log.Debug("PlaceOrder request to MEXC", "path", path, "params", params)
+
+	resp, err := s.client.PrivatePost(ctx, path, params)
 	if err != nil {
-		s.log.Error("Ошибка PlaceOrder", "error", err)
+		s.log.Error("Ошибка в PlaceOrder", "error", err)
 		return nil, err
 	}
-	return resp, nil
+
+	var result PlaceOrderResponse
+	if err := json.Unmarshal(resp.Body(), &result); err != nil {
+		s.log.Error("Failed to unmarshal PlaceOrder response", "error", err, "body", string(resp.Body()))
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 // BatchOrder 4. Пакетное размещение ордеров (Batch Orders).
 func (s *SpotTradeClient) BatchOrder(
 	ctx context.Context,
 	params map[string]string,
-) (*resty.Response, error) {
-	casePath := "/batchOrders"
-	s.log.Debug("BatchOrder", "path", casePath, "params", params)
-	resp, err := s.client.PrivatePost(ctx, casePath, params)
+) (*BatchOrderResponse, error) {
+	const path = "/batchOrders"
+	s.log.Debug("BatchOrder request to MEXC", "path", path, "params", params)
+
+	resp, err := s.client.PrivatePost(ctx, path, params)
 	if err != nil {
-		s.log.Error("Ошибка BatchOrder", "error", err)
+		s.log.Error("Ошибка в BatchOrder", "error", err)
 		return nil, err
 	}
-	return resp, nil
+
+	var result BatchOrderResponse
+	if err := json.Unmarshal(resp.Body(), &result); err != nil {
+		s.log.Error("Failed to unmarshal BatchOrder response", "error", err, "body", string(resp.Body()))
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 // CancelOrder 5. Отменить ордер (Cancel Order).
 func (s *SpotTradeClient) CancelOrder(
 	ctx context.Context,
 	params map[string]string,
-) (*resty.Response, error) {
-	casePath := "/order"
-	s.log.Debug("CancelOrder", "path", casePath, "params", params)
-	resp, err := s.client.PrivateDelete(ctx, casePath, params)
+) (*CancelOrderResponse, error) {
+	const path = "/order"
+	s.log.Debug("CancelOrder request to MEXC", "path", path, "params", params)
+
+	resp, err := s.client.PrivateDelete(ctx, path, params)
 	if err != nil {
-		s.log.Error("Ошибка CancelOrder", "error", err)
+		s.log.Error("Ошибка в CancelOrder", "error", err)
 		return nil, err
 	}
-	return resp, nil
+
+	var result CancelOrderResponse
+	if err := json.Unmarshal(resp.Body(), &result); err != nil {
+		s.log.Error("Failed to unmarshal CancelOrder response", "error", err, "body", string(resp.Body()))
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 // CancelAllOrders 6. Отменить все ордера по символу (Cancel all Open Orders on a Symbol).
 func (s *SpotTradeClient) CancelAllOrders(
 	ctx context.Context,
 	params map[string]string,
-) (*resty.Response, error) {
-	casePath := "/openOrders"
-	s.log.Debug("CancelAllOrders", "path", casePath, "params", params)
-	resp, err := s.client.PrivateDelete(ctx, casePath, params)
+) (*CancelAllOrdersResponse, error) {
+	const path = "/openOrders"
+	s.log.Debug("CancelAllOrders request to MEXC", "path", path, "params", params)
+
+	resp, err := s.client.PrivateDelete(ctx, path, params)
 	if err != nil {
-		s.log.Error("Ошибка CancelAllOrders", "error", err)
+		s.log.Error("Ошибка в CancelAllOrders", "error", err)
 		return nil, err
 	}
-	return resp, nil
+
+	var result CancelAllOrdersResponse
+	if err := json.Unmarshal(resp.Body(), &result); err != nil {
+		s.log.Error("Failed to unmarshal CancelAllOrders response", "error", err, "body", string(resp.Body()))
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 // QueryOrder 7. Информация об ордере (Query Order).
 func (s *SpotTradeClient) QueryOrder(
 	ctx context.Context,
 	params map[string]string,
-) (*resty.Response, error) {
-	casePath := "/order"
-	s.log.Debug("QueryOrder", "path", casePath, "params", params)
-	resp, err := s.client.PrivateGet(ctx, casePath, params)
+) (*QueryOrderResponse, error) {
+	const path = "/order"
+	s.log.Debug("QueryOrder request to MEXC", "path", path, "params", params)
+
+	resp, err := s.client.PrivateGet(ctx, path, params)
 	if err != nil {
-		s.log.Error("Ошибка QueryOrder", "error", err)
+		s.log.Error("Ошибка в QueryOrder", "error", err)
 		return nil, err
 	}
-	return resp, nil
+
+	var result QueryOrderResponse
+	if err := json.Unmarshal(resp.Body(), &result); err != nil {
+		s.log.Error("Failed to unmarshal QueryOrder response", "error", err, "body", string(resp.Body()))
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 // OpenOrder 8. Открытые ордера (Current Open Orders).
 func (s *SpotTradeClient) OpenOrder(
 	ctx context.Context,
 	params map[string]string,
-) (*resty.Response, error) {
-	casePath := "/openOrders"
-	s.log.Debug("OpenOrder", "path", casePath, "params", params)
-	resp, err := s.client.PrivateGet(ctx, casePath, params)
+) (*OpenOrderResponse, error) {
+	const path = "/openOrders"
+	s.log.Debug("OpenOrder request to MEXC", "path", path, "params", params)
+
+	resp, err := s.client.PrivateGet(ctx, path, params)
 	if err != nil {
-		s.log.Error("Ошибка OpenOrder", "error", err)
+		s.log.Error("Ошибка в OpenOrder", "error", err)
 		return nil, err
 	}
-	return resp, nil
+
+	var result OpenOrderResponse
+	if err := json.Unmarshal(resp.Body(), &result); err != nil {
+		s.log.Error("Failed to unmarshal OpenOrder response", "error", err, "body", string(resp.Body()))
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 // AllOrders 9. Все ордера (All Orders).
 func (s *SpotTradeClient) AllOrders(
 	ctx context.Context,
 	params map[string]string,
-) (*resty.Response, error) {
-	casePath := "/allOrders"
-	s.log.Debug("AllOrders", "path", casePath, "params", params)
-	resp, err := s.client.PrivateGet(ctx, casePath, params)
+) (*AllOrdersResponse, error) {
+	const path = "/allOrders"
+	s.log.Debug("AllOrders request to MEXC", "path", path, "params", params)
+
+	resp, err := s.client.PrivateGet(ctx, path, params)
 	if err != nil {
-		s.log.Error("Ошибка AllOrders", "error", err)
+		s.log.Error("Ошибка в AllOrders", "error", err)
 		return nil, err
 	}
-	return resp, nil
+
+	var result AllOrdersResponse
+	if err := json.Unmarshal(resp.Body(), &result); err != nil {
+		s.log.Error("Failed to unmarshal AllOrders response", "error", err, "body", string(resp.Body()))
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 // SpotAccountInfo 10. Информация об аккаунте (Account Information).
 func (s *SpotTradeClient) SpotAccountInfo(
 	ctx context.Context,
 	params map[string]string,
-) (*resty.Response, error) {
-	casePath := "/account"
-	s.log.Debug("SpotAccountInfo", "path", casePath, "params", params)
-	resp, err := s.client.PrivateGet(ctx, casePath, params)
+) (*SpotAccountInfoResponse, error) {
+	const path = "/account"
+	s.log.Debug("SpotAccountInfo request to MEXC", "path", path, "params", params)
+
+	resp, err := s.client.PrivateGet(ctx, path, params)
 	if err != nil {
-		s.log.Error("Ошибка SpotAccountInfo", "error", err)
+		s.log.Error("Ошибка в SpotAccountInfo", "error", err)
 		return nil, err
 	}
-	return resp, nil
+
+	var result SpotAccountInfoResponse
+	if err := json.Unmarshal(resp.Body(), &result); err != nil {
+		s.log.Error("Failed to unmarshal SpotAccountInfo response", "error", err, "body", string(resp.Body()))
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 // SpotMyTrade 11. История сделок (Account Trade List).
 func (s *SpotTradeClient) SpotMyTrade(
 	ctx context.Context,
 	params map[string]string,
-) (*resty.Response, error) {
-	casePath := "/myTrades"
-	s.log.Debug("SpotMyTrade", "path", casePath, "params", params)
-	resp, err := s.client.PrivateGet(ctx, casePath, params)
+) (*SpotMyTradeResponse, error) {
+	const path = "/myTrades"
+	s.log.Debug("SpotMyTrade request to MEXC", "path", path, "params", params)
+
+	resp, err := s.client.PrivateGet(ctx, path, params)
 	if err != nil {
-		s.log.Error("Ошибка SpotMyTrade", "error", err)
+		s.log.Error("Ошибка в SpotMyTrade", "error", err)
 		return nil, err
 	}
-	return resp, nil
+
+	var result SpotMyTradeResponse
+	if err := json.Unmarshal(resp.Body(), &result); err != nil {
+		s.log.Error("Failed to unmarshal SpotMyTrade response", "error", err, "body", string(resp.Body()))
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 // MxDeduct 12. Включить MX‑дедукцию (Enable MX Deduct).
 func (s *SpotTradeClient) MxDeduct(
 	ctx context.Context,
 	params map[string]string,
-) (*resty.Response, error) {
-	casePath := "/mxDeduct/enable"
-	s.log.Debug("MxDeduct", "path", casePath, "params", params)
-	resp, err := s.client.PrivatePost(ctx, casePath, params)
+) (*MxDeductResponse, error) {
+	const path = "/mxDeduct/enable"
+	s.log.Debug("MxDeduct request to MEXC", "path", path, "params", params)
+
+	resp, err := s.client.PrivatePost(ctx, path, params)
 	if err != nil {
-		s.log.Error("Ошибка MxDeduct", "error", err)
+		s.log.Error("Ошибка в MxDeduct", "error", err)
 		return nil, err
 	}
-	return resp, nil
+
+	var result MxDeductResponse
+	if err := json.Unmarshal(resp.Body(), &result); err != nil {
+		s.log.Error("Failed to unmarshal MxDeduct response", "error", err, "body", string(resp.Body()))
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 // QueryMxDeduct 13. Статус MX‑дедукции (Query MX Deduct Status).
 func (s *SpotTradeClient) QueryMxDeduct(
 	ctx context.Context,
 	params map[string]string,
-) (*resty.Response, error) {
-	casePath := "/mxDeduct/enable"
-	s.log.Debug("QueryMxDeduct", "path", casePath, "params", params)
-	resp, err := s.client.PrivateGet(ctx, casePath, params)
+) (*QueryMxDeductResponse, error) {
+	const path = "/mxDeduct/enable"
+	s.log.Debug("QueryMxDeduct request to MEXC", "path", path, "params", params)
+
+	resp, err := s.client.PrivateGet(ctx, path, params)
 	if err != nil {
-		s.log.Error("Ошибка QueryMxDeduct", "error", err)
+		s.log.Error("Ошибка в QueryMxDeduct", "error", err)
 		return nil, err
 	}
-	return resp, nil
+
+	var result QueryMxDeductResponse
+	if err := json.Unmarshal(resp.Body(), &result); err != nil {
+		s.log.Error("Failed to unmarshal QueryMxDeduct response", "error", err, "body", string(resp.Body()))
+		return nil, err
+	}
+
+	return &result, nil
 }
