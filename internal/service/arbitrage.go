@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"sync"
@@ -247,17 +246,18 @@ func bookMexcTicker(sc *mexc.SpotAPI, symbol string) (entity.BookTicker, error) 
 	defer cancel()
 
 	params := map[string]string{"symbol": symbol}
-	resp, err := sc.Market.BookTicker(ctx, params)
+	tickerResp, err := sc.Market.BookTicker(ctx, params)
 	if err != nil {
 		return entity.BookTicker{}, fmt.Errorf("BookTicker request failed: %w", err)
 	}
 
-	var tickerData entity.BookTicker
-	err = json.Unmarshal(resp.Body(), &tickerData)
-	if err != nil {
-		return entity.BookTicker{}, fmt.Errorf("failed to parse JSON: %w", err)
-	}
-	return tickerData, nil
+	return entity.BookTicker{
+		Symbol:   tickerResp.Symbol,
+		BidPrice: tickerResp.BidPrice,
+		BidQty:   tickerResp.BidQty,
+		AskPrice: tickerResp.AskPrice,
+		AskQty:   tickerResp.AskQty,
+	}, nil
 }
 
 func (m *Arbitrage) runMexcOrderBook(wg *sync.WaitGroup) {
@@ -389,23 +389,18 @@ func bookMexcOrder(sc *mexc.SpotAPI, symbol string, limit int) (entity.OrderBook
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	params := map[string]string{"symbol": symbol, "limit": fmt.Sprintf("%d", limit)}
-	resp, err := sc.Market.Depth(ctx, params)
+	params := map[string]string{
+		"symbol": symbol,
+		"limit":  fmt.Sprintf("%d", limit),
+	}
+
+	depthResp, err := sc.Market.Depth(ctx, params)
 	if err != nil {
 		return entity.OrderBook{}, fmt.Errorf("MEXC Depth request failed: %w", err)
 	}
 
-	var raw struct {
-		Bids [][]string `json:"bids"`
-		Asks [][]string `json:"asks"`
-	}
-	err = json.Unmarshal(resp.Body(), &raw)
-	if err != nil {
-		return entity.OrderBook{}, fmt.Errorf("failed to parse MEXC Depth JSON: %w", err)
-	}
-
 	var bids, asks []entity.Order
-	for _, item := range raw.Bids {
+	for _, item := range depthResp.Bids {
 		if len(item) != 2 {
 			continue
 		}
@@ -415,7 +410,7 @@ func bookMexcOrder(sc *mexc.SpotAPI, symbol string, limit int) (entity.OrderBook
 			bids = append(bids, entity.Order{Price: price, Quantity: qty})
 		}
 	}
-	for _, item := range raw.Asks {
+	for _, item := range depthResp.Asks {
 		if len(item) != 2 {
 			continue
 		}

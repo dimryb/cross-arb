@@ -2,9 +2,64 @@ package mexc
 
 import (
 	"context"
-
-	"github.com/go-resty/resty/v2"
+	"encoding/json"
 )
+
+// DTOs (будут заполнены позже).
+
+type PingResponse struct {
+	// TODO: определить поля ответа /ping
+}
+
+type TimeResponse struct {
+	// TODO: определить поля ответа /time
+}
+
+type APISymbolResponse struct {
+	// TODO: определить поля ответа /defaultSymbols
+}
+
+type ExchangeInfoResponse struct {
+	// TODO: определить поля ответа /exchangeInfo
+}
+
+type DepthResponse struct {
+	Bids [][]string `json:"bids"`
+	Asks [][]string `json:"asks"`
+	// TODO: определить поля ответа /depth
+}
+
+type TradesResponse struct {
+	// TODO: определить поля ответа /trades
+}
+
+type AggTradesResponse struct {
+	// TODO: определить поля ответа /aggTrades
+}
+
+type KlineResponse struct {
+	// TODO: определить поля ответа /klines
+}
+
+type AvgPriceResponse struct {
+	// TODO: определить поля ответа /avgPrice
+}
+
+type Ticker24hrResponse struct {
+	// TODO: определить поля ответа /ticker/24hr
+}
+
+type PriceResponse struct {
+	// TODO: определить поля ответа /ticker/price
+}
+
+type BookTickerResponse struct {
+	Symbol   string `json:"symbol"`
+	BidPrice string `json:"bidPrice"`
+	BidQty   string `json:"bidQty"`
+	AskPrice string `json:"askPrice"`
+	AskQty   string `json:"askQty"`
+}
 
 type SpotMarketClient struct {
 	log    Logger
@@ -22,7 +77,7 @@ func NewSpotMarketClient(log Logger, client APIClient) *SpotMarketClient {
 func (s *SpotMarketClient) Ping(
 	ctx context.Context,
 	params map[string]string,
-) (*resty.Response, error) {
+) (*PingResponse, error) {
 	casePath := "/ping"
 	s.log.Debug("Ping request to MEXC", "path", casePath, "params", params)
 	resp, err := s.client.PublicGet(ctx, casePath, params)
@@ -31,14 +86,20 @@ func (s *SpotMarketClient) Ping(
 		return nil, err
 	}
 
-	return resp, nil
+	var result PingResponse
+	if err := json.Unmarshal(resp.Body(), &result); err != nil {
+		s.log.Error("Failed to unmarshal Ping response", "error", err, "body", string(resp.Body()))
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 // Time 2. Получить серверное время (Check Server Time).
 func (s *SpotMarketClient) Time(
 	ctx context.Context,
 	params map[string]string,
-) (*resty.Response, error) {
+) (*TimeResponse, error) {
 	casePath := "/time"
 	s.log.Debug("Time request to MEXC", "path", casePath, "params", params)
 	resp, err := s.client.PublicGet(ctx, casePath, params)
@@ -47,14 +108,20 @@ func (s *SpotMarketClient) Time(
 		return nil, err
 	}
 
-	return resp, nil
+	var result TimeResponse
+	if err := json.Unmarshal(resp.Body(), &result); err != nil {
+		s.log.Error("Failed to unmarshal Time response", "error", err, "body", string(resp.Body()))
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 // APISymbol 3. Список торговых пар по умолчанию (API Default Symbol).
 func (s *SpotMarketClient) APISymbol(
 	ctx context.Context,
 	params map[string]string,
-) (*resty.Response, error) {
+) (*APISymbolResponse, error) {
 	casePath := "/defaultSymbols"
 	s.log.Debug("API symbol request to MEXC", "path", casePath, "params", params)
 	resp, err := s.client.PublicGet(ctx, casePath, params)
@@ -63,14 +130,20 @@ func (s *SpotMarketClient) APISymbol(
 		return nil, err
 	}
 
-	return resp, nil
+	var result APISymbolResponse
+	if err := json.Unmarshal(resp.Body(), &result); err != nil {
+		s.log.Error("Failed to unmarshal APISymbol response", "error", err, "body", string(resp.Body()))
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 // ExchangeInfo 4. Информация о торгах (Exchange Information).
 func (s *SpotMarketClient) ExchangeInfo(
 	ctx context.Context,
 	params map[string]string,
-) (*resty.Response, error) {
+) (*ExchangeInfoResponse, error) {
 	casePath := "/exchangeInfo"
 	s.log.Debug("Exchange info request to MEXC", "path", casePath, "params", params)
 	resp, err := s.client.PublicGet(ctx, casePath, params)
@@ -79,14 +152,20 @@ func (s *SpotMarketClient) ExchangeInfo(
 		return nil, err
 	}
 
-	return resp, nil
+	var result ExchangeInfoResponse
+	if err := json.Unmarshal(resp.Body(), &result); err != nil {
+		s.log.Error("Failed to unmarshal ExchangeInfo response", "error", err, "body", string(resp.Body()))
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 // Depth 5. Глубина стакана (Depth).
 func (s *SpotMarketClient) Depth(
 	ctx context.Context,
 	params map[string]string,
-) (*resty.Response, error) {
+) (*DepthResponse, error) {
 	casePath := "/depth"
 	s.log.Debug("Order book depth request to MEXC", "path", casePath, "params", params)
 	resp, err := s.client.PublicGet(ctx, casePath, params)
@@ -95,31 +174,42 @@ func (s *SpotMarketClient) Depth(
 		return nil, err
 	}
 
-	return resp, nil
+	var result DepthResponse
+	if err := json.Unmarshal(resp.Body(), &result); err != nil {
+		s.log.Error("Failed to unmarshal Depth response", "error", err, "body", string(resp.Body()))
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 // Trades 6. Список последних сделок (Recent Trades List).
 func (s *SpotMarketClient) Trades(
 	ctx context.Context,
 	params map[string]string,
-) (*resty.Response, error) {
+) (*TradesResponse, error) {
 	casePath := "/trades"
 	s.log.Debug("Recent trades request to MEXC", "path", casePath, "params", params)
-
 	resp, err := s.client.PublicGet(ctx, casePath, params)
 	if err != nil {
 		s.log.Error("Ошибка в Trades", "error", err)
 		return nil, err
 	}
 
-	return resp, nil
+	var result TradesResponse
+	if err := json.Unmarshal(resp.Body(), &result); err != nil {
+		s.log.Error("Failed to unmarshal Trades response", "error", err, "body", string(resp.Body()))
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 // AggTrades 7. Агрегированный список сделок (Aggregate Trades List).
 func (s *SpotMarketClient) AggTrades(
 	ctx context.Context,
 	params map[string]string,
-) (*resty.Response, error) {
+) (*AggTradesResponse, error) {
 	casePath := "/aggTrades"
 	s.log.Debug("Aggregate trades request to MEXC", "path", casePath, "params", params)
 	resp, err := s.client.PublicGet(ctx, casePath, params)
@@ -128,14 +218,20 @@ func (s *SpotMarketClient) AggTrades(
 		return nil, err
 	}
 
-	return resp, nil
+	var result AggTradesResponse
+	if err := json.Unmarshal(resp.Body(), &result); err != nil {
+		s.log.Error("Failed to unmarshal AggTrades response", "error", err, "body", string(resp.Body()))
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 // Kline 8. Данные свечей (K-line Data).
 func (s *SpotMarketClient) Kline(
 	ctx context.Context,
 	params map[string]string,
-) (*resty.Response, error) {
+) (*KlineResponse, error) {
 	casePath := "/klines"
 	s.log.Debug("K-line data request to MEXC", "path", casePath, "params", params)
 	resp, err := s.client.PublicGet(ctx, casePath, params)
@@ -144,14 +240,20 @@ func (s *SpotMarketClient) Kline(
 		return nil, err
 	}
 
-	return resp, nil
+	var result KlineResponse
+	if err := json.Unmarshal(resp.Body(), &result); err != nil {
+		s.log.Error("Failed to unmarshal Kline response", "error", err, "body", string(resp.Body()))
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 // AvgPrice 9. Средняя цена за период (Current Average Price).
 func (s *SpotMarketClient) AvgPrice(
 	ctx context.Context,
 	params map[string]string,
-) (*resty.Response, error) {
+) (*AvgPriceResponse, error) {
 	casePath := "/avgPrice"
 	s.log.Debug("Average price request to MEXC", "path", casePath, "params", params)
 	resp, err := s.client.PublicGet(ctx, casePath, params)
@@ -160,14 +262,20 @@ func (s *SpotMarketClient) AvgPrice(
 		return nil, err
 	}
 
-	return resp, nil
+	var result AvgPriceResponse
+	if err := json.Unmarshal(resp.Body(), &result); err != nil {
+		s.log.Error("Failed to unmarshal AvgPrice response", "error", err, "body", string(resp.Body()))
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 // Ticker24hr 10. Статистика изменения цены за 24 часа (24hr Ticker Price Change Statistics).
 func (s *SpotMarketClient) Ticker24hr(
 	ctx context.Context,
 	params map[string]string,
-) (*resty.Response, error) {
+) (*Ticker24hrResponse, error) {
 	casePath := "/ticker/24hr"
 	s.log.Debug("24hr ticker stats request to MEXC", "path", casePath, "params", params)
 	resp, err := s.client.PublicGet(ctx, casePath, params)
@@ -176,14 +284,20 @@ func (s *SpotMarketClient) Ticker24hr(
 		return nil, err
 	}
 
-	return resp, nil
+	var result Ticker24hrResponse
+	if err := json.Unmarshal(resp.Body(), &result); err != nil {
+		s.log.Error("Failed to unmarshal Ticker24hr response", "error", err, "body", string(resp.Body()))
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 // Price 11. Текущая цена символа (Symbol Price Ticker).
 func (s *SpotMarketClient) Price(
 	ctx context.Context,
 	params map[string]string,
-) (*resty.Response, error) {
+) (*PriceResponse, error) {
 	casePath := "/ticker/price"
 	s.log.Debug("Symbol price request to MEXC", "path", casePath, "params", params)
 	resp, err := s.client.PublicGet(ctx, casePath, params)
@@ -192,14 +306,20 @@ func (s *SpotMarketClient) Price(
 		return nil, err
 	}
 
-	return resp, nil
+	var result PriceResponse
+	if err := json.Unmarshal(resp.Body(), &result); err != nil {
+		s.log.Error("Failed to unmarshal Price response", "error", err, "body", string(resp.Body()))
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 // BookTicker 12. Лучшие цены в стакане (Symbol Order Book Ticker).
 func (s *SpotMarketClient) BookTicker(
 	ctx context.Context,
 	params map[string]string,
-) (*resty.Response, error) {
+) (*BookTickerResponse, error) {
 	casePath := "/ticker/bookTicker"
 	s.log.Debug("Order book ticker request to MEXC", "path", casePath, "params", params)
 	resp, err := s.client.PublicGet(ctx, casePath, params)
@@ -208,5 +328,11 @@ func (s *SpotMarketClient) BookTicker(
 		return nil, err
 	}
 
-	return resp, nil
+	var result BookTickerResponse
+	if err := json.Unmarshal(resp.Body(), &result); err != nil {
+		s.log.Error("Failed to unmarshal BookTicker response", "error", err, "body", string(resp.Body()))
+		return nil, err
+	}
+
+	return &result, nil
 }
