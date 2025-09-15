@@ -54,9 +54,9 @@ func (u *ArbOpportunityUseCase) Detect(
 			// Рассмотрим для данной пары все биржи: найдём минимальный ask и максимальный bid
 			var (
 				bestBuyEx  string
-				bestBuy    float64 = math.Inf(1)
+				bestBuy    = math.Inf(1)
 				bestSellEx string
-				bestSell   float64 = math.Inf(-1)
+				bestSell   = math.Inf(-1)
 			)
 			for ex, qq := range last[q.Pair] {
 				if qq.Ask > 0 && qq.Ask < bestBuy {

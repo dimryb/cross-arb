@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"github.com/dimryb/cross-arb/internal/usecase/scan"
 	"log/slog"
 	"time"
 
@@ -17,6 +16,7 @@ import (
 	"github.com/dimryb/cross-arb/internal/report"
 	"github.com/dimryb/cross-arb/internal/service/scanner"
 	"github.com/dimryb/cross-arb/internal/storage"
+	"github.com/dimryb/cross-arb/internal/usecase/scan"
 )
 
 type App struct {

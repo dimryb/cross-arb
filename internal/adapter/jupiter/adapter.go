@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"math"
 	"strconv"
 	"strings"
@@ -36,13 +37,17 @@ type Adapter struct {
 // NewAdapter создаёт адаптер.
 // pairMap: "SOL/USDT": {baseMint, quoteMint}.
 func NewAdapter(l i.Logger, cfg *AdapterConfig) *Adapter {
+	if cfg == nil {
+		log.Fatalf("AdapterConfig is nil")
+	}
+
 	cli, err := jupiter.NewJupiterClient(l, cfg.BaseURL)
 	if err != nil {
 		l.Fatalf("failed to create Jupiter client: %v", err)
 	}
 
 	var pairs map[string]MintPair
-	if cfg != nil && cfg.Pairs != nil {
+	if cfg.Pairs != nil {
 		pairs = cfg.Pairs
 	} else {
 		pairs = make(map[string]MintPair)
