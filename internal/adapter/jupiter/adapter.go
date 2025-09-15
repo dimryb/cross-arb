@@ -200,40 +200,6 @@ func (j *Adapter) estimateAsk(
 	return upper / baseAmount, nil
 }
 
-// quote возвращает: «сколько OUT токенов за 1 IN токен» в единицах OUT (не в атомах).
-func (j *Adapter) quote(
-	ctx context.Context,
-	inMint string,
-	outMint string,
-	opts *jupiter.QuoteOptions,
-) (float64, error) {
-	inUnit, err := jupiter.UnitAmountByMint(inMint) // 10^decimals(IN)
-	if err != nil {
-		return 0, err
-	}
-	// 1 IN в атомах.
-	inAtoms := inUnit
-
-	resp, err := j.client.Quote(ctx, inMint, outMint, inAtoms, opts)
-	if err != nil {
-		return 0, err
-	}
-	if resp == nil {
-		return 0, fmt.Errorf("empty response from jupiter")
-	}
-
-	outAtoms, err := strconv.ParseFloat(resp.OutAmount, 64)
-	if err != nil {
-		return 0, fmt.Errorf("parse OutAmount: %w", err)
-	}
-
-	outUnit, err := jupiter.UnitAmountByMint(outMint) // 10^decimals(OUT)
-	if err != nil {
-		return 0, err
-	}
-	return outAtoms / float64(outUnit), nil
-}
-
 // resolveMints: если пара есть в конфиге — берём её; иначе "BASE/QUOTE" → "BASEQUOTE" → mints через токен-резолвер.
 func (j *Adapter) resolveMints(pair string) (MintPair, error) {
 	if m, ok := j.pairConfig[pair]; ok && m.BaseMint != "" && m.QuoteMint != "" {
