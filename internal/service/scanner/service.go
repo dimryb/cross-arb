@@ -95,66 +95,102 @@ func (s *Service) Start(ctx context.Context) error {
 		return errors.New("no supported adapters (DEX/CEX)")
 	}
 
-	// Локальный канал DEX-котировок: потом сделаем fan-out наружу и в детектор
-	var dexOut chan entity.ExecutableQuote
-	if len(dexAdapters) > 0 {
-		dexOut = make(chan entity.ExecutableQuote, 128)
-		go func() {
-			_ = s.dexUC.Stream(ctx, dexAdapters, s.pairs, s.interval, s.baseAmount, dexOut)
-		}()
-	}
-
-	// Fan-out: наружу (pricesCh) и в opp-детектор
-	var oppIn <-chan entity.ExecutableQuote
-	if dexOut != nil {
-		if s.pricesCh == nil {
-			oppIn = dexOut
-		} else {
-			fan := make(chan entity.ExecutableQuote, 128)
-			oppIn = fan
-			go func() {
-				for {
-					select {
-					case <-ctx.Done():
-						return
-					case q, ok := <-dexOut:
-						if !ok {
-							return
-						}
-						select {
-						case <-ctx.Done():
-							return
-						case s.pricesCh <- q:
-						}
-						select {
-						case <-ctx.Done():
-							return
-						case fan <- q:
-						}
-					}
-				}
-			}()
-		}
-	}
-
-	// CEX-стаканы напрямую наружу
-	if s.orderBooksCh != nil && len(cexAdapters) > 0 {
-		go func() {
-			_ = s.cexUC.Stream(ctx, cexAdapters, s.pairs, s.interval, s.orderBooksCh)
-		}()
-	}
-
-	// Детектор возможностей (если есть вход и выход)
-	if s.oppCh != nil && oppIn != nil {
-		go func() {
-			if err := s.oppUC.Detect(ctx, oppIn, s.oppCh); err != nil && s.log != nil {
-				s.log.Errorf("opportunity detector stopped: %v", err)
-			}
-		}()
-	}
+	dexOut := s.startDEX(ctx, dexAdapters)
+	oppIn := s.setupDEXFanOut(ctx, dexOut)
+	s.startCEX(ctx, cexAdapters)
+	s.startOpportunityDetector(ctx, oppIn)
 
 	<-ctx.Done()
 	return ctx.Err()
+}
+
+// startDEX запускает поток получения DEX-котировок, если есть DEX-адаптеры.
+// Возвращает канал с котировками или nil, если DEX не используется.
+func (s *Service) startDEX(ctx context.Context, dexAdapters []i.DEXAdapter) <-chan entity.ExecutableQuote {
+	if len(dexAdapters) == 0 {
+		return nil
+	}
+
+	dexOut := make(chan entity.ExecutableQuote, 128)
+	go func() {
+		err := s.dexUC.Stream(ctx, dexAdapters, s.pairs, s.interval, s.baseAmount, dexOut)
+		if err != nil && s.log != nil {
+			s.log.Errorf("DEX stream stopped: %v", err)
+		}
+		close(dexOut)
+	}()
+	return dexOut
+}
+
+// setupDEXFanOut организует fan-out из DEX-канала: в pricesCh (если задан) и в отдельный канал для детектора.
+// Возвращает канал для детектора (oppIn) или nil, если входных данных нет.
+func (s *Service) setupDEXFanOut(
+	ctx context.Context,
+	dexOut <-chan entity.ExecutableQuote,
+) <-chan entity.ExecutableQuote {
+	if dexOut == nil {
+		return nil
+	}
+
+	if s.pricesCh == nil {
+		return dexOut // Нет внешнего канала — детектор получает напрямую
+	}
+
+	fan := make(chan entity.ExecutableQuote, 128)
+	go func() {
+		defer close(fan)
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case q, ok := <-dexOut:
+				if !ok {
+					return
+				}
+				// Отправка во внешний канал
+				select {
+				case <-ctx.Done():
+					return
+				case s.pricesCh <- q:
+				}
+				// Отправка в fan-out для детектора
+				select {
+				case <-ctx.Done():
+					return
+				case fan <- q:
+				}
+			}
+		}
+	}()
+	return fan
+}
+
+// startCEX запускает поток получения CEX-стаканов, если есть CEX-адаптеры и выходной канал.
+func (s *Service) startCEX(ctx context.Context, cexAdapters []i.CEXAdapter) {
+	if s.orderBooksCh == nil || len(cexAdapters) == 0 {
+		return
+	}
+
+	go func() {
+		err := s.cexUC.Stream(ctx, cexAdapters, s.pairs, s.interval, s.orderBooksCh)
+		if err != nil && s.log != nil {
+			s.log.Errorf("CEX stream stopped: %v", err)
+		}
+	}()
+}
+
+// startOpportunityDetector запускает детектор арбитражных возможностей, если есть вход и выход.
+func (s *Service) startOpportunityDetector(ctx context.Context, oppIn <-chan entity.ExecutableQuote) {
+	if s.oppCh == nil || oppIn == nil {
+		return
+	}
+
+	go func() {
+		err := s.oppUC.Detect(ctx, oppIn, s.oppCh)
+		if err != nil && s.log != nil {
+			s.log.Errorf("opportunity detector stopped: %v", err)
+		}
+	}()
 }
 
 // splitAdapters делит общий список на DEX и CEX.
