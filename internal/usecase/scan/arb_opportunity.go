@@ -46,67 +46,88 @@ func (u *ArbOpportunityUseCase) Detect(
 			if !ok {
 				return nil // канал закрыт — завершаем без ошибки
 			}
+
+			// Инициализируем мапу для пары, если ещё не существует
 			if _, ok := last[q.Pair]; !ok {
 				last[q.Pair] = make(map[string]entity.ExecutableQuote)
 			}
 			last[q.Pair][q.Exchange] = q
 
-			// Рассмотрим для данной пары все биржи: найдём минимальный ask и максимальный bid
-			var (
-				bestBuyEx  string
-				bestBuy    = math.Inf(1)
-				bestSellEx string
-				bestSell   = math.Inf(-1)
-			)
-			for ex, qq := range last[q.Pair] {
-				if qq.Ask > 0 && qq.Ask < bestBuy {
-					bestBuy, bestBuyEx = qq.Ask, ex
+			// Пытаемся найти арбитражную возможность для этой пары
+			if opp := u.DetectOpportunityForPair(q.Pair, last[q.Pair]); opp != nil {
+				select {
+				case <-ctx.Done():
+					return ctx.Err()
+				case out <- *opp:
 				}
-				if qq.Bid > bestSell {
-					bestSell, bestSellEx = qq.Bid, ex
-				}
-			}
-
-			if bestBuyEx == "" || bestSellEx == "" || bestBuyEx == bestSellEx {
-				continue
-			}
-
-			// Учёт комиссий: используем taker на покупке и продаже.
-			buyTaker := 0.0
-			sellTaker := 0.0
-			if a, ok := u.adapters[bestBuyEx]; ok {
-				_, t := a.TradingFee(q.Pair)
-				buyTaker = t
-			}
-			if a, ok := u.adapters[bestSellEx]; ok {
-				_, t := a.TradingFee(q.Pair)
-				sellTaker = t
-			}
-
-			effBuy := bestBuy * (1 + buyTaker)
-			effSell := bestSell * (1 - sellTaker)
-			gross := bestSell - bestBuy
-			net := effSell - effBuy
-			if net <= 0 {
-				continue
-			}
-
-			opp := entity.ArbOpportunity{
-				Pair:       q.Pair,
-				BuyOn:      bestBuyEx,
-				BuyPrice:   bestBuy,
-				SellOn:     bestSellEx,
-				SellPrice:  bestSell,
-				GrossPnl:   gross,
-				NetPnl:     net,
-				SpreadPct:  (net / bestBuy) * 100,
-				DetectedAt: time.Now(),
-			}
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			case out <- opp:
 			}
 		}
 	}
+}
+
+// DetectOpportunityForPair анализирует котировки по паре и возвращает арбитражную возможность, если она есть.
+// Возвращает nil, если арбитража нет.
+func (u *ArbOpportunityUseCase) DetectOpportunityForPair(
+	pair string,
+	quotes map[string]entity.ExecutableQuote,
+) *entity.ArbOpportunity {
+	var (
+		bestBuyEx  string
+		bestBuy    = math.Inf(1)
+		bestSellEx string
+		bestSell   = math.Inf(-1)
+	)
+
+	// Находим лучшие цены покупки (ask) и продажи (bid)
+	for ex, qq := range quotes {
+		if qq.Ask > 0 && qq.Ask < bestBuy {
+			bestBuy, bestBuyEx = qq.Ask, ex
+		}
+		if qq.Bid > bestSell {
+			bestSell, bestSellEx = qq.Bid, ex
+		}
+	}
+
+	// Проверяем, что нашли обе цены и на разных биржах
+	if bestBuyEx == "" || bestSellEx == "" || bestBuyEx == bestSellEx {
+		return nil
+	}
+
+	// Получаем комиссии
+	buyTaker := u.GetTakerFee(bestBuyEx, pair)
+	sellTaker := u.GetTakerFee(bestSellEx, pair)
+
+	// Эффективные цены с учётом комиссий
+	effBuy := bestBuy * (1 + buyTaker)
+	effSell := bestSell * (1 - sellTaker)
+	gross := bestSell - bestBuy
+	net := effSell - effBuy
+
+	// Арбитраж есть только если чистая прибыль положительна
+	if net <= 0 {
+		return nil
+	}
+
+	// Формируем объект арбитражной возможности
+	return &entity.ArbOpportunity{
+		Pair:       pair,
+		BuyOn:      bestBuyEx,
+		BuyPrice:   bestBuy,
+		SellOn:     bestSellEx,
+		SellPrice:  bestSell,
+		GrossPnl:   gross,
+		NetPnl:     net,
+		SpreadPct:  (net / bestBuy) * 100,
+		DetectedAt: time.Now(),
+	}
+}
+
+// getTakerFee возвращает комиссию тейкера для указанной биржи и пары.
+// Если адаптер не найден — возвращает 0.
+func (u *ArbOpportunityUseCase) GetTakerFee(exchange, pair string) float64 {
+	if a, ok := u.adapters[exchange]; ok {
+		_, taker := a.TradingFee(pair)
+		return taker
+	}
+	return 0.0
 }
