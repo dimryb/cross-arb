@@ -60,11 +60,11 @@ install-arch-deps:
 	GO111MODULE=on go install github.com/fe3dback/go-arch-lint@v1.12.0
 
 .PHONY: arch
-arch: install-lint-deps
+arch: install-arch-deps
 	go-arch-lint check
 
 .PHONY: graph
-graph: install-lint-deps
+graph: install-arch-deps
 	go-arch-lint graph
 
 .PHONY: generate
