@@ -7,8 +7,8 @@ package mocks
 import (
 	reflect "reflect"
 
+	entity "github.com/dimryb/cross-arb/internal/entity"
 	interfaces "github.com/dimryb/cross-arb/internal/interface"
-	types "github.com/dimryb/cross-arb/internal/entity"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -50,10 +50,10 @@ func (mr *MockTickerStoreMockRecorder) AddSubscriber() *gomock.Call {
 }
 
 // GetAll mocks base method.
-func (m *MockTickerStore) GetAll() []types.TickerData {
+func (m *MockTickerStore) GetAll() []entity.TickerData {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAll")
-	ret0, _ := ret[0].([]types.TickerData)
+	ret0, _ := ret[0].([]entity.TickerData)
 	return ret0
 }
 
@@ -64,7 +64,7 @@ func (mr *MockTickerStoreMockRecorder) GetAll() *gomock.Call {
 }
 
 // Set mocks base method.
-func (m *MockTickerStore) Set(t types.TickerData) {
+func (m *MockTickerStore) Set(t entity.TickerData) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "Set", t)
 }

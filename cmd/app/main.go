@@ -34,5 +34,5 @@ func main() {
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	defer cancel()
 
-	app.NewApp(ctx, cancel, cfg).Run()
+	app.NewApp(cfg).Run(ctx)
 }

@@ -19,24 +19,16 @@ import (
 )
 
 type App struct {
-	ctx    context.Context
-	cancel context.CancelFunc
-	log    i.Logger
-	store  i.TickerStore
+	log   i.Logger
+	store i.TickerStore
 
 	cfg *config.CrossArbConfig
 }
 
-func NewApp(ctx context.Context, cancel context.CancelFunc, cfg *config.CrossArbConfig) *App {
+func NewApp(cfg *config.CrossArbConfig) *App {
 	return &App{
-		ctx:    ctx,
-		cancel: cancel,
-		cfg:    cfg,
+		cfg: cfg,
 	}
-}
-
-func (a *App) Context() context.Context {
-	return a.ctx
 }
 
 func (a *App) Logger() i.Logger {
@@ -47,7 +39,10 @@ func (a *App) TickerStore() i.TickerStore {
 	return a.store
 }
 
-func (a *App) Run() {
+func (a *App) Run(ctxParent context.Context) {
+	ctx, cancel := context.WithCancel(ctxParent)
+	defer cancel()
+
 	a.log = logger.New(a.cfg.Log.Level)
 	a.store = storage.NewTickerStore()
 	reportSvc := report.NewReportService(a.log, a.store)
@@ -104,7 +99,7 @@ func (a *App) Run() {
 		a.log.Error("invalid scanner interval",
 			slog.String("value", a.cfg.Scanner.Interval),
 			slog.Any("err", err))
-		a.cancel()
+		cancel()
 		return
 	}
 	_, err = scanner.NewService(
@@ -122,7 +117,7 @@ func (a *App) Run() {
 	)
 	if err != nil {
 		a.log.Error("Failed to create scanner service", slog.Any("err", err))
-		a.cancel()
+		cancel()
 		return
 	}
 
@@ -161,14 +156,14 @@ func (a *App) Run() {
 		httpServer := http.NewHTTPServer(a.store)
 		if err := httpServer.Run(":8080"); err != nil {
 			a.log.Errorf("HTTP server error: %v", err)
-			a.cancel()
+			cancel()
 		}
 	}()
 
 	go func() {
 		if err := grpcServer.Run(); err != nil {
 			a.log.Errorf("gRPC server failed: %v", err)
-			a.cancel()
+			cancel()
 		}
 	}()
 
@@ -176,7 +171,7 @@ func (a *App) Run() {
 
 	a.log.Info("App started")
 
-	<-a.ctx.Done()
+	<-ctx.Done()
 
 	a.log.Info("Shutting down...")
 
