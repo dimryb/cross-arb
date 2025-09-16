@@ -5,7 +5,6 @@
 package mocks
 
 import (
-	context "context"
 	reflect "reflect"
 
 	interfaces "github.com/dimryb/cross-arb/internal/interface"
@@ -33,20 +32,6 @@ func NewMockApplication(ctrl *gomock.Controller) *MockApplication {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockApplication) EXPECT() *MockApplicationMockRecorder {
 	return m.recorder
-}
-
-// Context mocks base method.
-func (m *MockApplication) Context() context.Context {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Context")
-	ret0, _ := ret[0].(context.Context)
-	return ret0
-}
-
-// Context indicates an expected call of Context.
-func (mr *MockApplicationMockRecorder) Context() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Context", reflect.TypeOf((*MockApplication)(nil).Context))
 }
 
 // Logger mocks base method.

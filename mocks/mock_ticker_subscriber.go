@@ -7,7 +7,7 @@ package mocks
 import (
 	reflect "reflect"
 
-	types "github.com/dimryb/cross-arb/internal/entity"
+	entity "github.com/dimryb/cross-arb/internal/entity"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -61,10 +61,10 @@ func (mr *MockTickerSubscriberMockRecorder) Done() *gomock.Call {
 }
 
 // Recv mocks base method.
-func (m *MockTickerSubscriber) Recv() (types.TickerEvent, bool) {
+func (m *MockTickerSubscriber) Recv() (entity.TickerEvent, bool) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Recv")
-	ret0, _ := ret[0].(types.TickerEvent)
+	ret0, _ := ret[0].(entity.TickerEvent)
 	ret1, _ := ret[1].(bool)
 	return ret0, ret1
 }

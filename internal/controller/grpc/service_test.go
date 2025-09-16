@@ -43,7 +43,6 @@ func TestTickerService_Subscribe_Success(t *testing.T) {
 	defer cancel()
 
 	// Настраиваем ожидания
-	mockApp.EXPECT().Context().Return(appCtx).AnyTimes()
 	mockApp.EXPECT().Logger().Return(mockLog).AnyTimes()
 	mockApp.EXPECT().TickerStore().Return(mockStore).AnyTimes()
 	mockStore.EXPECT().AddSubscriber().Return(mockSub).Times(1)
