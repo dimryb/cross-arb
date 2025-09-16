@@ -52,7 +52,7 @@ components:
   storage:             { in: "internal/storage/**" }
   controllerGrpc:      { in: "internal/controller/grpc/**" }
   controllerHttp:      { in: "internal/controller/http/**" }
-  interceptors:        { in: "internal/controller/grpc/interceptors" }
+  interceptors:        { in: "internal/controller/grpc/interceptors/**" }
 
   # Use Cases
   interface:           { in: "internal/interface/**" } #TODO: разнести по зависимым пакетам
