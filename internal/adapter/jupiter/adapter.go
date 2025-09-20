@@ -52,63 +52,31 @@ func (j *Adapter) Name() string { return "jupiter" }
 func (j *Adapter) Quote(
 	ctx context.Context,
 	pair string,
-) (bid, ask float64, err error) {
+	baseAmount int64,
+) (float64, float64, error) {
 	mints, ok := j.pairConfig[pair]
 	if !ok {
 		return 0, 0, fmt.Errorf("неизвестная пара %s", pair)
 	}
 
-	// ask: сколько QUOTE за 1 BASE
-	ask, err = j.quote(ctx, mints.BaseMint, mints.QuoteMint, nil)
+	resp, err := j.client.Quote(ctx, mints.InputMint, mints.OutputMint, baseAmount, nil)
 	if err != nil {
-		return 0, 0, fmt.Errorf("ask: %w", err)
+		return 0, 0, fmt.Errorf("ошибка при получении данных api: %w", err)
 	}
 
-	// rawBid: сколько BASE за 1 QUOTE
-	rawBid, err := j.quote(ctx, mints.QuoteMint, mints.BaseMint, nil)
+	inAmount, err := strconv.ParseFloat(resp.InAmount, 64)
 	if err != nil {
-		return 0, 0, fmt.Errorf("bid: %w", err)
+		return 0, 0, fmt.Errorf("ошибка преобразования параметра inAmount к float64: %w", err)
 	}
-	if rawBid == 0 {
-		return 0, 0, fmt.Errorf("zero raw bid")
-	}
-
-	// bid в тех же единицах, что и ask: QUOTE за 1 BASE
-	bid = 1 / rawBid
-	return bid, ask, nil
-}
-
-// quote возвращает: "сколько OUT токенов за 1 IN токен".
-func (j *Adapter) quote(
-	ctx context.Context,
-	inMint string,
-	outMint string,
-	opts *jupiter.QuoteOptions,
-) (float64, error) {
-	inUnit, err := jupiter.UnitAmountByMint(inMint) // 10^decimals(IN)
+	outAmount, err := strconv.ParseFloat(resp.OutAmount, 64)
 	if err != nil {
-		return 0, err
+		return 0, 0, fmt.Errorf("ошибка преобразования параметра outAmount к float64: %w", err)
 	}
 
-	resp, err := j.client.Quote(ctx, inMint, outMint, inUnit, opts)
-	if err != nil {
-		return 0, err
-	}
-	if resp == nil {
-		return 0, fmt.Errorf("empty response from jupiter")
-	}
+	ask := inAmount / outAmount
+	bid := outAmount / inAmount
 
-	outAtoms, err := strconv.ParseFloat(resp.OutAmount, 64)
-	if err != nil {
-		return 0, fmt.Errorf("parse OutAmount: %w", err)
-	}
-
-	outUnit, err := jupiter.UnitAmountByMint(outMint) // 10^decimals(OUT)
-	if err != nil {
-		return 0, err
-	}
-
-	return outAtoms / float64(outUnit), nil
+	return ask, bid, nil
 }
 
 // TradingFee Jupiter комиссия 0 (только сеть).
