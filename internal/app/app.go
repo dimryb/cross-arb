@@ -65,8 +65,8 @@ func (a *App) Run(ctxParent context.Context) {
 			a.log.Fatalf("missing mint address for Jupiter pair %q", symbol)
 		}
 		pairMap[symbol] = jupiter.MintPair{
-			BaseMint:  p.Base,
-			QuoteMint: p.Quote,
+			InputMint:  p.Base,
+			OutputMint: p.Quote,
 		}
 	}
 

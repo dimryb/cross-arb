@@ -2,6 +2,6 @@ package jupiter
 
 // MintPair хранит адреса SPL-токенов.
 type MintPair struct {
-	BaseMint  string
-	QuoteMint string
+	InputMint  string
+	OutputMint string
 }
