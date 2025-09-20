@@ -130,7 +130,7 @@ func (a *App) Run(ctxParent context.Context) {
 
 	// ВАЖНО: запускаем сканер
 	go func() {
-		if err := svc.Start(a.ctx); err != nil {
+		if err := svc.Start(ctx); err != nil {
 			a.log.Errorf("scanner stopped: %v", err)
 		}
 	}()
