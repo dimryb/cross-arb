@@ -37,12 +37,13 @@ func NewJupiterClient(logger i.Logger, baseURL string) (*Client, error) {
 
 // QuoteOptions содержит опциональные параметры для запроса котировки.
 type QuoteOptions struct {
-	SlippageBps                *int  `json:"slippageBps,omitempty"`
-	RestrictIntermediateTokens *bool `json:"restrictIntermediateTokens,omitempty"`
-	OnlyDirectRoutes           *bool `json:"onlyDirectRoutes,omitempty"`
-	AsLegacyTransaction        *bool `json:"asLegacyTransaction,omitempty"`
-	PlatformFeeBps             *int  `json:"platformFeeBps,omitempty"`
-	MaxAccounts                *int  `json:"maxAccounts,omitempty"`
+	SlippageBps                *int      `json:"slippageBps,omitempty"`
+	SwapMode                   *SwapMode `json:"swapMode,omitempty"`
+	RestrictIntermediateTokens *bool     `json:"restrictIntermediateTokens,omitempty"`
+	OnlyDirectRoutes           *bool     `json:"onlyDirectRoutes,omitempty"`
+	AsLegacyTransaction        *bool     `json:"asLegacyTransaction,omitempty"`
+	PlatformFeeBps *int `json:"platformFeeBps,omitempty"`
+	MaxAccounts    *int `json:"maxAccounts,omitempty"`
 }
 
 // DefaultQuoteOptions возвращает опции по умолчанию.
