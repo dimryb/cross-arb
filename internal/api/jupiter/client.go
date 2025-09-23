@@ -132,6 +132,10 @@ func (c *Client) buildQuoteURL(inputMint, outputMint string, amount int64, opts 
 	q.Add("outputMint", outputMint)
 	q.Add("amount", strconv.FormatInt(amount, 10))
 
+	if opts.SwapMode != nil {
+		q.Add("swapMode", string(*opts.SwapMode))
+	}
+
 	if opts.SlippageBps != nil {
 		q.Add("slippageBps", strconv.Itoa(*opts.SlippageBps))
 	}
