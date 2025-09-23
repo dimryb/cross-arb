@@ -21,7 +21,10 @@ type Client struct {
 }
 
 // NewJupiterClient создает новый клиент для Jupiter Swap API.
-// Подробнее: https://dev.jup.ag/docs/api/swap-api/quote
+// Подробнее про /quote: https://dev.jup.ag/docs/api/swap-api/quote
+// Примечание: inputMint и outputMint — это mint-адреса SPL-токенов.
+// Jupiter принимает суммы в атомах (целых единицах токена), однако в нашем клиенте
+// прием ведется в человеко-понятных единицах, и дальше они конвертируются в атомы.
 func NewJupiterClient(logger i.Logger, baseURL string) (*Client, error) {
 	parsedURL, err := url.Parse(baseURL)
 	if err != nil {
@@ -36,12 +39,16 @@ func NewJupiterClient(logger i.Logger, baseURL string) (*Client, error) {
 }
 
 // QuoteOptions содержит опциональные параметры для запроса котировки.
+// Параметры влияют на формирование маршрутов и транзакции.
 type QuoteOptions struct {
 	SlippageBps                *int      `json:"slippageBps,omitempty"`
 	SwapMode                   *SwapMode `json:"swapMode,omitempty"`
 	RestrictIntermediateTokens *bool     `json:"restrictIntermediateTokens,omitempty"`
 	OnlyDirectRoutes           *bool     `json:"onlyDirectRoutes,omitempty"`
 	AsLegacyTransaction        *bool     `json:"asLegacyTransaction,omitempty"`
+	// PlatformFeeBps это комиссия платформы, выраженная в базисных пунктах (100 bps = 1%).
+	// Используется вместе с 'feeAccount' в эндпоинте /swap.
+	// Подробнее про добавление комиссии: https://dev.jup.ag/docs/swap-api/add-fees-to-swap.
 	PlatformFeeBps *int `json:"platformFeeBps,omitempty"`
 	MaxAccounts    *int `json:"maxAccounts,omitempty"`
 }
@@ -52,6 +59,9 @@ func DefaultQuoteOptions() *QuoteOptions {
 }
 
 // Quote получает котировку для обмена токенов.
+// Параметр amountAtoms — целое количество атомов. Семантика зависит от swapMode:
+//   - ExactIn: это количество атомов ВХОДНОГО токена (input mint)
+//   - ExactOut: это количество атомов ВЫХОДНОГО токена (output mint)
 func (c *Client) Quote(
 	ctx context.Context,
 	inputMint, outputMint string,
@@ -123,6 +133,7 @@ func (c *Client) Quote(
 }
 
 // buildQuoteURL строит URL для запроса котировки.
+// amountAtoms — целое число атомов ВХОДНОГО токена (inputMint).
 func (c *Client) buildQuoteURL(inputMint, outputMint string, amountAtoms uint64, opts *QuoteOptions) string {
 	requestURL := *c.baseURL
 	requestURL.Path += "/quote"
