@@ -37,7 +37,8 @@ func UnitAmount(ticker string) (int64, error) {
 	return int64(math.Pow10(int(dec))), nil
 }
 
-// UnitAmount возвращает int64, равный 1*10^decimals для заданного тикера.
+// UnitAmountByMint возвращает int64, равный 1*10^decimals для заданного тикера,
+// чтобы привести валюты к одной "шкале" и выполнять вычисления в атомах.
 func UnitAmountByMint(mint string) (int64, error) {
 	dec, err := getDecimalsByMint(mint)
 	if err != nil {
