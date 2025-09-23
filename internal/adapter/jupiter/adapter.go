@@ -50,35 +50,60 @@ func NewAdapter(l i.Logger, cfg *AdapterConfig) *Adapter {
 // Name удовлетворяет интерфейсу EXAdapter.
 func (j *Adapter) Name() string { return "jupiter" }
 
-// Quote для Jupiter: цены в QUOTE за 1 BASE для пары, например SOL/USDT.
+// Quote возвращает эффективные котировки bid/ask (QUOTE per BASE) для указанного объёма BASE
+// в человеко-понятных единицах (например, 1.0 SOL). Внутри метод конвертирует объём BASE
+// в атомы и вызывает Jupiter Client, который принимает атомы:
+//   - bid: ExactIn BASE->QUOTE
+//   - ask: ExactOut QUOTE->BASE
 func (j *Adapter) Quote(
 	ctx context.Context,
 	pair string,
-	baseAmount int64,
+	baseAmount float64,
 ) (float64, float64, error) {
 	mints, ok := j.pairConfig[pair]
 	if !ok {
 		return 0, 0, fmt.Errorf("неизвестная пара %s", pair)
 	}
 
-	resp, err := j.client.Quote(ctx, mints.InputMint, mints.OutputMint, baseAmount, nil)
+	// 1) Узнаём размерность токенов (сколько атомов в 1 BASE/QUOTE): 10^decimals
+	baseUnits, err := jupiter.UnitAmountByMint(mints.InputMint)
 	if err != nil {
-		return 0, 0, fmt.Errorf("ошибка при получении данных api: %w", err)
+		return 0, 0, fmt.Errorf("decimals base: %w", err)
+	}
+	quoteUnits, err := jupiter.UnitAmountByMint(mints.OutputMint)
+	if err != nil {
+		return 0, 0, fmt.Errorf("decimals quote: %w", err)
 	}
 
-	inAmount, err := strconv.ParseFloat(resp.InAmount, 64)
-	if err != nil {
-		return 0, 0, fmt.Errorf("ошибка преобразования параметра inAmount к float64: %w", err)
+	if baseUnits < 0 {
+		return 0, 0, fmt.Errorf("отрицательный decimals: baseUnits=%d", baseUnits)
 	}
-	outAmount, err := strconv.ParseFloat(resp.OutAmount, 64)
-	if err != nil {
-		return 0, 0, fmt.Errorf("ошибка преобразования параметра outAmount к float64: %w", err)
+	if quoteUnits < 0 {
+		return 0, 0, fmt.Errorf("отрицательный decimals: quoteUnits=%d", quoteUnits)
 	}
 
-	ask := inAmount / outAmount
-	bid := outAmount / inAmount
+	baseUnit := uint64(baseUnits)
+	quoteUnit := uint64(quoteUnits)
 
-	return ask, bid, nil
+	// Переводим запрошенный объём BASE (человеко-читаемый объем) в атомы BASE для вызовов клиента
+	baseAmountAtoms, err := toAtomsExactUint(baseAmount, baseUnit)
+	if err != nil || baseAmountAtoms == 0 {
+		return 0, 0, fmt.Errorf("некорректный объём baseAmount=%v: %v", baseAmount, err)
+	}
+
+	// Считаем BID через отдельный метод (ExactIn BASE atoms)
+	bid, err := j.computeBid(ctx, mints, baseAmountAtoms, baseUnit, quoteUnit)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	// 3) ASK: ExactOut QUOTE->BASE на baseAmountAtoms атомов BASE
+	ask, err := j.computeAsk(ctx, mints, baseAmountAtoms, baseUnit, quoteUnit)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return bid, ask, nil
 }
 
 func (j *Adapter) computeAsk(
