@@ -26,8 +26,8 @@ const (
 
 // PlatformFee представляет структуру комиссии платформы.
 type PlatformFee struct {
-	Amount string `json:"amountToExchange"`
-	FeeBps string `json:"feeBps"`
+	Amount string `json:"amount"`
+	FeeBps uint16 `json:"feeBps"`
 }
 
 // RoutePlan представляет единичный маршрут в обмене.
