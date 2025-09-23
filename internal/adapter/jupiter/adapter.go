@@ -81,6 +81,86 @@ func (j *Adapter) Quote(
 	return ask, bid, nil
 }
 
+func (j *Adapter) computeAsk(
+	ctx context.Context,
+	mints MintPair,
+	baseAmountAtoms uint64,
+	baseUnit, quoteUnit uint64,
+) (float64, error) {
+
+	// computeAsk считает эффективную цену ASK (QUOTE per BASE) в режиме ExactOut,
+	// рассчитывая сколько QUOTE требуется для получения фиксированного количества BASE (в атомах).
+	mode := jupiter.SwapModeExactOut
+	opts := jupiter.QuoteOptions{SwapMode: &mode}
+
+	resp, err := j.client.Quote(ctx, mints.OutputMint, mints.InputMint, baseAmountAtoms, &opts)
+	if err == nil {
+		inQuote, err := parseU64(resp.InAmount, "inAmount(ask)")
+		if err != nil {
+			return 0, err
+		}
+		outBase, err := parseU64(resp.OutAmount, "outAmount(ask)")
+		if err != nil {
+			return 0, err
+		}
+		if outBase == 0 || inQuote == 0 {
+			return 0, fmt.Errorf("пустой маршрут для ask: in=%d out=%d", inQuote, outBase)
+		}
+		return ratPrice(inQuote, quoteUnit, outBase, baseUnit), nil // QUOTE per BASE
+	}
+	return 0, fmt.Errorf("ошибка при получении данных api: %w", err)
+}
+
+// computeBid считает эффективную цену BID (QUOTE per BASE) в режиме ExactIn,
+// рассчитывая сколько QUOTE получится при обмене фиксированного количества BASE (в атомах).
+func (j *Adapter) computeBid(
+	ctx context.Context,
+	mints MintPair,
+	baseAmountAtoms uint64,
+	baseUnit, quoteUnit uint64,
+) (float64, error) {
+	mode := jupiter.SwapModeExactIn
+	opts := jupiter.QuoteOptions{SwapMode: &mode}
+
+	resp, err := j.client.Quote(ctx, mints.InputMint, mints.OutputMint, baseAmountAtoms, &opts)
+	if err == nil {
+		inBase, err := parseU64(resp.InAmount, "inAmount(bid)")
+		if err != nil {
+			return 0, err
+		}
+		outQuote, err := parseU64(resp.OutAmount, "outAmount(bid)")
+		if err != nil {
+			return 0, err
+		}
+		if inBase == 0 || outQuote == 0 {
+			return 0, fmt.Errorf("пустой маршрут для bid: in=%d out=%d", inBase, outQuote)
+		}
+		// QUOTE per BASE
+		return ratPrice(outQuote, quoteUnit, inBase, baseUnit), nil
+	}
+	return 0, fmt.Errorf("ошибка при получении данных api: %w", err)
+}
+
+// (numAtoms/numUnit) / (denAtoms/denUnit)
+func ratPrice(numAtoms, numUnit, denAtoms, denUnit uint64) float64 {
+	n := new(big.Int).Mul(new(big.Int).SetUint64(numAtoms), new(big.Int).SetUint64(denUnit))
+	d := new(big.Int).Mul(new(big.Int).SetUint64(denAtoms), new(big.Int).SetUint64(numUnit))
+	if d.Sign() == 0 {
+		return math.NaN()
+	}
+	r := new(big.Rat).SetFrac(n, d)
+	f, _ := r.Float64()
+	return f
+}
+
+func parseU64(s, what string) (uint64, error) {
+	u, err := strconv.ParseUint(s, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("parse %s: %w", what, err)
+	}
+	return u, nil
+}
+
 // toAtoms переводит человеко-понятный объём в атомы токена с округлением к ближайшему целому атому.
 // toAtomsExactUint переводит человеко-понятный объём в атомы токена с округлением half-up и возвращает uint64.
 func toAtomsExactUint(amount float64, unit uint64) (uint64, error) {
