@@ -88,7 +88,7 @@ func (j *Adapter) Quote(
 	// Переводим запрошенный объём BASE (человеко-читаемый объем) в атомы BASE для вызовов клиента
 	baseAmountAtoms, err := toAtomsExactUint(baseAmount, baseUnit)
 	if err != nil || baseAmountAtoms == 0 {
-		return 0, 0, fmt.Errorf("некорректный объём baseAmount=%v: %v", baseAmount, err)
+		return 0, 0, fmt.Errorf("некорректный объём baseAmount=%v: %w", baseAmount, err)
 	}
 
 	// Считаем BID через отдельный метод (ExactIn BASE atoms)
@@ -112,7 +112,6 @@ func (j *Adapter) computeAsk(
 	baseAmountAtoms uint64,
 	baseUnit, quoteUnit uint64,
 ) (float64, error) {
-
 	// computeAsk считает эффективную цену ASK (QUOTE per BASE) в режиме ExactOut,
 	// рассчитывая сколько QUOTE требуется для получения фиксированного количества BASE (в атомах).
 	mode := jupiter.SwapModeExactOut
@@ -166,7 +165,7 @@ func (j *Adapter) computeBid(
 	return 0, fmt.Errorf("ошибка при получении данных api: %w", err)
 }
 
-// (numAtoms/numUnit) / (denAtoms/denUnit)
+// (numAtoms/numUnit) / (denAtoms/denUnit).
 func ratPrice(numAtoms, numUnit, denAtoms, denUnit uint64) float64 {
 	n := new(big.Int).Mul(new(big.Int).SetUint64(numAtoms), new(big.Int).SetUint64(denUnit))
 	d := new(big.Int).Mul(new(big.Int).SetUint64(denAtoms), new(big.Int).SetUint64(numUnit))
