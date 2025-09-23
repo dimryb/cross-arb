@@ -55,7 +55,7 @@ func DefaultQuoteOptions() *QuoteOptions {
 func (c *Client) Quote(
 	ctx context.Context,
 	inputMint, outputMint string,
-	amount int64,
+	amountAtoms uint64,
 	opts *QuoteOptions,
 ) (*QuoteResponse, error) {
 	start := time.Now()
@@ -63,7 +63,7 @@ func (c *Client) Quote(
 	c.logger.Debug("Начало запроса котировки",
 		"от_токена", inputMint,
 		"к_токену", outputMint,
-		"сумма", amount,
+		"сумма_атомы", amountAtoms,
 	)
 
 	// Валидация входных параметров
@@ -73,15 +73,15 @@ func (c *Client) Quote(
 	if outputMint == "" {
 		return nil, fmt.Errorf("ошибка валидации: outputMint не может быть пустым")
 	}
-	if amount <= 0 {
-		return nil, fmt.Errorf("ошибка валидации: сумма должна быть положительной, получено: %v", amount)
+	if amountAtoms == 0 {
+		return nil, fmt.Errorf("ошибка валидации: сумма (атомы) должна быть положительной, получено: %v", amountAtoms)
 	}
 
 	if opts == nil {
 		opts = DefaultQuoteOptions()
 	}
 
-	requestURL := c.buildQuoteURL(inputMint, outputMint, amount, opts)
+	requestURL := c.buildQuoteURL(inputMint, outputMint, amountAtoms, opts)
 	c.logger.Debug("Построен URL запроса", "url", requestURL)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, requestURL, nil)
@@ -114,7 +114,7 @@ func (c *Client) Quote(
 
 	c.logger.Debug("Котировка успешно получена",
 		"обмен", fmt.Sprintf("%s → %s", inputMint, outputMint),
-		"входная_сумма", amount,
+		"входная_сумма_атомы", amountAtoms,
 		"выходная_сумма", quoteResponse.OutAmount,
 		"время_мс", time.Since(start).Milliseconds(),
 	)
@@ -123,14 +123,14 @@ func (c *Client) Quote(
 }
 
 // buildQuoteURL строит URL для запроса котировки.
-func (c *Client) buildQuoteURL(inputMint, outputMint string, amount int64, opts *QuoteOptions) string {
+func (c *Client) buildQuoteURL(inputMint, outputMint string, amountAtoms uint64, opts *QuoteOptions) string {
 	requestURL := *c.baseURL
 	requestURL.Path += "/quote"
 
 	q := url.Values{}
 	q.Add("inputMint", inputMint)
 	q.Add("outputMint", outputMint)
-	q.Add("amount", strconv.FormatInt(amount, 10))
+	q.Add("amount", strconv.FormatUint(amountAtoms, 10))
 
 	if opts.SwapMode != nil {
 		q.Add("swapMode", string(*opts.SwapMode))
