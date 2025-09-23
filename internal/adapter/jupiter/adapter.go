@@ -3,6 +3,8 @@ package jupiter
 import (
 	"context"
 	"fmt"
+	"math"
+	"math/big"
 	"strconv"
 	"time"
 
@@ -77,6 +79,41 @@ func (j *Adapter) Quote(
 	bid := outAmount / inAmount
 
 	return ask, bid, nil
+}
+
+// toAtoms переводит человеко-понятный объём в атомы токена с округлением к ближайшему целому атому.
+// toAtomsExactUint переводит человеко-понятный объём в атомы токена с округлением half-up и возвращает uint64.
+func toAtomsExactUint(amount float64, unit uint64) (uint64, error) {
+	if math.IsNaN(amount) || math.IsInf(amount, 0) {
+		return 0, fmt.Errorf("invalid amount: %v", amount)
+	}
+	r := new(big.Rat).SetFloat64(amount)
+	if r == nil {
+		return 0, fmt.Errorf("cannot represent amount as rational: %v", amount)
+	}
+	r.Mul(r, new(big.Rat).SetInt(new(big.Int).SetUint64(unit)))
+
+	num := new(big.Int).Set(r.Num())
+	den := new(big.Int).Set(r.Denom())
+	if den.Sign() == 0 {
+		return 0, fmt.Errorf("division by zero")
+	}
+	neg := num.Sign() < 0
+	if neg {
+		num.Neg(num)
+	}
+	q, rem := new(big.Int).QuoRem(num, den, new(big.Int))
+	twiceRem := new(big.Int).Lsh(rem, 1)
+	if twiceRem.Cmp(den) >= 0 {
+		q.Add(q, big.NewInt(1))
+	}
+	if neg {
+		q.Neg(q)
+	}
+	if q.Sign() < 0 || !q.IsUint64() {
+		return 0, fmt.Errorf("atom amount overflow or negative")
+	}
+	return q.Uint64(), nil
 }
 
 // TradingFee Jupiter комиссия 0 (только сеть).
