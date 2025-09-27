@@ -1,4 +1,4 @@
-package jupiter
+package entity
 
 // MintPair хранит адреса SPL-токенов торговой пары.
 type MintPair struct {

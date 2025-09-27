@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/dimryb/cross-arb/internal/api/jupiter"
+	"github.com/dimryb/cross-arb/internal/entity"
 	i "github.com/dimryb/cross-arb/internal/interface"
 )
 
@@ -16,8 +17,8 @@ import (
 type AdapterConfig struct {
 	BaseURL string
 	Enabled bool
-	Timeout time.Duration       // Может использоваться в NewJupiterAdapterFromConfig
-	Pairs   map[string]MintPair // symbol → [base_mint, quote_mint]
+	Timeout time.Duration              // Может использоваться в NewJupiterAdapterFromConfig
+	Pairs   map[string]entity.MintPair // symbol → [base_mint, quote_mint]
 }
 
 // Adapter JupiterAdapter использует публичный Quote-API агрегатора Jupiter (Solana).
@@ -26,7 +27,7 @@ type Adapter struct {
 	client     *jupiter.Client
 	logger     i.Logger
 	baseURL    string
-	pairConfig map[string]MintPair // "SOL/USDT" → {baseMint, quoteMint}
+	pairConfig map[string]entity.MintPair // "SOL/USDT" → {baseMint, quoteMint}
 }
 
 // NewAdapter создаёт адаптер.
@@ -108,7 +109,7 @@ func (j *Adapter) Quote(
 
 func (j *Adapter) computeAsk(
 	ctx context.Context,
-	mints MintPair,
+	mints entity.MintPair,
 	baseAmountAtoms uint64,
 	baseUnit, quoteUnit uint64,
 ) (float64, error) {
@@ -139,7 +140,7 @@ func (j *Adapter) computeAsk(
 // рассчитывая сколько QUOTE получится при обмене фиксированного количества BASE (в атомах).
 func (j *Adapter) computeBid(
 	ctx context.Context,
-	mints MintPair,
+	mints entity.MintPair,
 	baseAmountAtoms uint64,
 	baseUnit, quoteUnit uint64,
 ) (float64, error) {

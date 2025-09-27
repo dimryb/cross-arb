@@ -59,12 +59,12 @@ func (a *App) Run(ctxParent context.Context) {
 		a.log.Fatalf("exchange %s is disabled", config.JupExchange)
 	}
 
-	pairMap := make(map[string]jupiter.MintPair, len(jupCfg.Pairs))
+	pairMap := make(map[string]entity.MintPair, len(jupCfg.Pairs))
 	for symbol, p := range jupCfg.Pairs {
 		if p.Base == "" || p.Quote == "" {
 			a.log.Fatalf("missing mint address for Jupiter pair %q", symbol)
 		}
-		pairMap[symbol] = jupiter.MintPair{
+		pairMap[symbol] = entity.MintPair{
 			InputMint:  p.Base,
 			OutputMint: p.Quote,
 		}
