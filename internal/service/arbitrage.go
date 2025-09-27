@@ -2,15 +2,13 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"sync"
 	"time"
 
 	"github.com/dimryb/cross-arb/internal/api/jupiter"
-	spotlist "github.com/dimryb/cross-arb/internal/api/mexc/spot"
-	"github.com/dimryb/cross-arb/internal/api/mexc/utils"
+	"github.com/dimryb/cross-arb/internal/api/mexc"
 	"github.com/dimryb/cross-arb/internal/config"
 	"github.com/dimryb/cross-arb/internal/entity"
 	i "github.com/dimryb/cross-arb/internal/interface"
@@ -53,8 +51,11 @@ func (m *Arbitrage) Run() error {
 	if !ok || !mexcCfg.Enabled {
 		return fmt.Errorf("mexc exchange not configured")
 	}
-	client := utils.NewClient(mexcCfg.APIKey, mexcCfg.SecretKey, m.log)
-	spot := spotlist.NewSpotClient(m.log, mexcCfg.BaseURL, client)
+	client, err := mexc.NewMexcClient(mexcCfg.APIKey, mexcCfg.SecretKey, mexcCfg.BaseURL, m.log)
+	if err != nil {
+		return err
+	}
+	spot := mexc.NewSpotAPI(m.log, client)
 
 	wg.Add(1)
 	go func() {
@@ -84,7 +85,7 @@ func (m *Arbitrage) Run() error {
 
 	m.runMexcOrderBook(wg)
 
-	err := m.runJupiterClient(wg)
+	err = m.runJupiterClient(wg)
 	if err != nil {
 		return err
 	}
@@ -219,7 +220,7 @@ func calculatePrice(inAmount, outAmount string, inUnit, outUnit int64, invert bo
 	return outReal / inReal
 }
 
-func getMexcTicker(sc *spotlist.SpotClient, results []entity.Result, index int, symbol string) {
+func getMexcTicker(sc *mexc.SpotAPI, results []entity.Result, index int, symbol string) {
 	ticker, err := bookMexcTicker(sc, symbol)
 	processTickerResult(results, index, symbol, ticker, err)
 }
@@ -240,19 +241,23 @@ func processTickerResult(results []entity.Result, index int, symbol string, tick
 	}
 }
 
-func bookMexcTicker(sc *spotlist.SpotClient, symbol string) (entity.BookTicker, error) {
-	params := fmt.Sprintf(`{"symbol":"%s"}`, symbol)
-	resp, err := sc.BookTicker(params)
+func bookMexcTicker(sc *mexc.SpotAPI, symbol string) (entity.BookTicker, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	params := map[string]string{"symbol": symbol}
+	tickerResp, err := sc.Market.BookTicker(ctx, params)
 	if err != nil {
 		return entity.BookTicker{}, fmt.Errorf("BookTicker request failed: %w", err)
 	}
 
-	var tickerData entity.BookTicker
-	err = json.Unmarshal(resp.Body(), &tickerData)
-	if err != nil {
-		return entity.BookTicker{}, fmt.Errorf("failed to parse JSON: %w", err)
-	}
-	return tickerData, nil
+	return entity.BookTicker{
+		Symbol:   tickerResp.Symbol,
+		BidPrice: tickerResp.BidPrice,
+		BidQty:   tickerResp.BidQty,
+		AskPrice: tickerResp.AskPrice,
+		AskQty:   tickerResp.AskQty,
+	}, nil
 }
 
 func (m *Arbitrage) runMexcOrderBook(wg *sync.WaitGroup) {
@@ -262,8 +267,11 @@ func (m *Arbitrage) runMexcOrderBook(wg *sync.WaitGroup) {
 		return
 	}
 
-	client := utils.NewClient(mexcCfg.APIKey, mexcCfg.SecretKey, m.log)
-	spot := spotlist.NewSpotClient(m.log, mexcCfg.BaseURL, client)
+	client, err := mexc.NewMexcClient(mexcCfg.APIKey, mexcCfg.SecretKey, mexcCfg.BaseURL, m.log)
+	if err != nil {
+		m.log.Warnf("MEXC client creation failed: %v", err)
+	}
+	spot := mexc.NewSpotAPI(m.log, client)
 
 	wg.Add(1)
 	go func() {
@@ -356,7 +364,7 @@ func (m *Arbitrage) findBestOrder(
 	}
 }
 
-func getMexcOrder(sc *spotlist.SpotClient, results []entity.OrderBookResult, index int, symbol string, limit int) {
+func getMexcOrder(sc *mexc.SpotAPI, results []entity.OrderBookResult, index int, symbol string, limit int) {
 	book, err := bookMexcOrder(sc, symbol, limit)
 	processOrderResult(results, index, symbol, book, err)
 }
@@ -377,24 +385,22 @@ func processOrderResult(results []entity.OrderBookResult, index int, symbol stri
 	}
 }
 
-func bookMexcOrder(sc *spotlist.SpotClient, symbol string, limit int) (entity.OrderBook, error) {
-	params := fmt.Sprintf(`{"symbol":"%s", "limit":"%d"}`, symbol, limit)
-	resp, err := sc.Depth(params)
+func bookMexcOrder(sc *mexc.SpotAPI, symbol string, limit int) (entity.OrderBook, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	params := map[string]string{
+		"symbol": symbol,
+		"limit":  fmt.Sprintf("%d", limit),
+	}
+
+	depthResp, err := sc.Market.Depth(ctx, params)
 	if err != nil {
 		return entity.OrderBook{}, fmt.Errorf("MEXC Depth request failed: %w", err)
 	}
 
-	var raw struct {
-		Bids [][]string `json:"bids"`
-		Asks [][]string `json:"asks"`
-	}
-	err = json.Unmarshal(resp.Body(), &raw)
-	if err != nil {
-		return entity.OrderBook{}, fmt.Errorf("failed to parse MEXC Depth JSON: %w", err)
-	}
-
 	var bids, asks []entity.Order
-	for _, item := range raw.Bids {
+	for _, item := range depthResp.Bids {
 		if len(item) != 2 {
 			continue
 		}
@@ -404,7 +410,7 @@ func bookMexcOrder(sc *spotlist.SpotClient, symbol string, limit int) (entity.Or
 			bids = append(bids, entity.Order{Price: price, Quantity: qty})
 		}
 	}
-	for _, item := range raw.Asks {
+	for _, item := range depthResp.Asks {
 		if len(item) != 2 {
 			continue
 		}
