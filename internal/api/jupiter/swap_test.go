@@ -71,7 +71,10 @@ func TestClient_Swap_WithAllParameters_Integration(t *testing.T) {
 	defer cancel()
 
 	// 1. Получаем котировку с поддержкой legacy transaction
-	quoteOpts := &QuoteOptions{AsLegacyTransaction: boolPtr(true)}
+	quoteOpts := &QuoteOptions{
+		AsLegacyTransaction: boolPtr(true),
+		PlatformFeeBps:      intPtr(100),
+	}
 	quoteResponse, err := client.Quote(ctx, inputMint, outputMint, amountToExchange, quoteOpts)
 	if err != nil {
 		t.Fatalf("Не удалось получить котировку для теста: %v", err)
