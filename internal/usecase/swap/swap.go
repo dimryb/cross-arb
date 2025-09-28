@@ -9,6 +9,8 @@ import (
 	"github.com/gagliardetto/solana-go"
 )
 
+// TODO: Переделать
+
 // Swap — удобная обёртка над полным циклом обмена без предварительно переданной котировки.
 // Метод сам запрашивает котировку у Jupiter, после чего делегирует выполнение в SwapWithQuote.
 //
@@ -17,7 +19,7 @@ func (s *Swapper) Swap(
 	ctx context.Context,
 	signer i.TransactionSigner,
 	inputMint, outputMint string,
-	amount int64,
+	amount uint64,
 	opts *jupiter.QuoteOptions,
 ) (solana.Signature, error) {
 	quote, err := s.apiClient.Quote(ctx, inputMint, outputMint, amount, opts)

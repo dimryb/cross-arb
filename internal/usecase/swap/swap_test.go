@@ -48,7 +48,7 @@ func TestSwapper_Swap(t *testing.T) {
 		t.Fatalf("Не удалось получить mint-адреса: %v", err)
 	}
 
-	amountToExchange := int64(1000) // примерная малая сумма единиц базового токена
+	amountToExchange := uint64(1000) // примерная малая сумма единиц базового токена
 	sig, err := swapper.Swap(ctx, phantomWallet, inMint, outMint, amountToExchange, nil)
 	if err != nil {
 		// Проверяем, является ли ошибка связанной с недостаточностью средств
