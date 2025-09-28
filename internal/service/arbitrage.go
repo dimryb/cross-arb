@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dimryb/cross-arb/internal/api/jupiter"
 	"github.com/dimryb/cross-arb/internal/api/mexc"
 	"github.com/dimryb/cross-arb/internal/config"
 	"github.com/dimryb/cross-arb/internal/entity"
@@ -17,7 +16,6 @@ import (
 
 const (
 	mexcExchange = "mexc"
-	jupExchange  = "jupiter"
 )
 
 type Arbitrage struct {
@@ -85,10 +83,10 @@ func (m *Arbitrage) Run() error {
 
 	m.runMexcOrderBook(wg)
 
-	err = m.runJupiterClient(wg)
-	if err != nil {
-		return err
-	}
+	// err = m.runJupiterClient(wg)
+	// if err != nil {
+	// 	return err
+	// }
 
 	m.log.Infof("Arbitrage service is running...")
 
@@ -116,109 +114,109 @@ func (m *Arbitrage) updateStore(exchange string, r entity.Result) {
 	}
 }
 
-func (m *Arbitrage) runJupiterClient(wg *sync.WaitGroup) error {
-	jupiterCfg, ok := m.cfg.Exchanges[jupExchange]
-	if !ok || !jupiterCfg.Enabled {
-		return fmt.Errorf("jupiter exchange not configured or disabled")
-	}
-	jupClient, err := jupiter.NewJupiterClient(m.log, jupiterCfg.BaseURL)
-	if err != nil {
-		return fmt.Errorf("failed to init jupiter client: %w", err)
-	}
+// func (m *Arbitrage) runJupiterClient(wg *sync.WaitGroup) error {
+// 	jupiterCfg, ok := m.cfg.Exchanges[jupExchange]
+// 	if !ok || !jupiterCfg.Enabled {
+// 		return fmt.Errorf("jupiter exchange not configured or disabled")
+// 	}
+// 	jupClient, err := jupiter.NewJupiterClient(m.log, jupiterCfg.BaseURL)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to init jupiter client: %w", err)
+// 	}
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		ticker := time.NewTicker(time.Second)
+// 	wg.Add(1)
+// 	go func() {
+// 		defer wg.Done()
+// 		ticker := time.NewTicker(time.Second)
 
-		for {
-			select {
-			case <-m.ctx.Done():
-				return
-			case <-ticker.C:
-				results := make([]entity.Result, len(m.cfg.Symbols))
-				wgSymbols := &sync.WaitGroup{}
+// 		for {
+// 			select {
+// 			case <-m.ctx.Done():
+// 				return
+// 			case <-ticker.C:
+// 				results := make([]entity.Result, len(m.cfg.Symbols))
+// 				wgSymbols := &sync.WaitGroup{}
 
-				for ind, symbol := range m.cfg.Symbols {
-					wgSymbols.Add(1)
-					go func() {
-						defer wgSymbols.Done()
-						bookTicker, err := getJupiterTicker(jupClient, symbol)
-						processTickerResult(results, ind, symbol, bookTicker, err)
-					}()
-				}
+// 				for ind, symbol := range m.cfg.Symbols {
+// 					wgSymbols.Add(1)
+// 					go func() {
+// 						defer wgSymbols.Done()
+// 						bookTicker, err := getJupiterTicker(jupClient, symbol)
+// 						processTickerResult(results, ind, symbol, bookTicker, err)
+// 					}()
+// 				}
 
-				wgSymbols.Wait()
+// 				wgSymbols.Wait()
 
-				m.updateAllStores(jupExchange, results)
-			}
-		}
-	}()
-	return nil
-}
+// 				m.updateAllStores(jupExchange, results)
+// 			}
+// 		}
+// 	}()
+// 	return nil
+// }
 
 // getJupiterTicker запрашивает котировку Jupiter и преобразует её в BookTicker.
-func getJupiterTicker(jc *jupiter.Client, symbol string) (entity.BookTicker, error) {
-	inMint, outMint, err := jupiter.ConvertSpotToMints(symbol)
-	if err != nil {
-		return entity.BookTicker{}, fmt.Errorf("unsupported symbol format %q", symbol)
-	}
+// func getJupiterTicker(jc *jupiter.Client, symbol string) (entity.BookTicker, error) {
+// 	inMint, outMint, err := jupiter.ConvertSpotToMints(symbol)
+// 	if err != nil {
+// 		return entity.BookTicker{}, fmt.Errorf("unsupported symbol format %q", symbol)
+// 	}
 
-	base, quote, err := jupiter.ParseSpotSymbol(symbol)
-	if err != nil {
-		return entity.BookTicker{}, err
-	}
+// 	base, quote, err := jupiter.ParseSpotSymbol(symbol)
+// 	if err != nil {
+// 		return entity.BookTicker{}, err
+// 	}
 
-	// Получаем единичные количества для нормализации
-	baseUnit, err := jupiter.UnitAmount(base)
-	if err != nil {
-		return entity.BookTicker{}, fmt.Errorf("failed to get unit amount for %s: %w", base, err)
-	}
-	quoteUnit, err := jupiter.UnitAmount(quote)
-	if err != nil {
-		return entity.BookTicker{}, fmt.Errorf("failed to get unit amount for %s: %w", quote, err)
-	}
+// 	// Получаем единичные количества для нормализации
+// 	baseUnit, err := jupiter.UnitAmount(base)
+// 	if err != nil {
+// 		return entity.BookTicker{}, fmt.Errorf("failed to get unit amount for %s: %w", base, err)
+// 	}
+// 	quoteUnit, err := jupiter.UnitAmount(quote)
+// 	if err != nil {
+// 		return entity.BookTicker{}, fmt.Errorf("failed to get unit amount for %s: %w", quote, err)
+// 	}
 
-	// Запрос 1: base → quote (ASK - цена продажи базового актива)
-	askQuote, err := jc.Quote(context.Background(), inMint, outMint, baseUnit, jupiter.DefaultQuoteOptions())
-	if err != nil {
-		return entity.BookTicker{}, fmt.Errorf("failed to get ask quote: %w", err)
-	}
+// 	// Запрос 1: base → quote (ASK - цена продажи базового актива)
+// 	askQuote, err := jc.Quote(context.Background(), inMint, outMint, baseUnit, jupiter.DefaultQuoteOptions())
+// 	if err != nil {
+// 		return entity.BookTicker{}, fmt.Errorf("failed to get ask quote: %w", err)
+// 	}
 
-	// Запрос 2: quote → base (BID - сколько базового актива получим за единицу котировочного)
-	bidQuote, err := jc.Quote(context.Background(), outMint, inMint, quoteUnit, jupiter.DefaultQuoteOptions())
-	if err != nil {
-		return entity.BookTicker{}, fmt.Errorf("failed to get bid quote: %w", err)
-	}
+// 	// Запрос 2: quote → base (BID - сколько базового актива получим за единицу котировочного)
+// 	bidQuote, err := jc.Quote(context.Background(), outMint, inMint, quoteUnit, jupiter.DefaultQuoteOptions())
+// 	if err != nil {
+// 		return entity.BookTicker{}, fmt.Errorf("failed to get bid quote: %w", err)
+// 	}
 
-	askPrice := calculatePrice(askQuote.InAmount, askQuote.OutAmount, baseUnit, quoteUnit, false)
-	bidPrice := calculatePrice(bidQuote.InAmount, bidQuote.OutAmount, quoteUnit, baseUnit, true)
+// 	askPrice := calculatePrice(askQuote.InAmount, askQuote.OutAmount, baseUnit, quoteUnit, false)
+// 	bidPrice := calculatePrice(bidQuote.InAmount, bidQuote.OutAmount, quoteUnit, baseUnit, true)
 
-	return entity.BookTicker{
-		Symbol:   symbol,
-		BidPrice: fmt.Sprintf("%.6f", bidPrice),
-		BidQty:   "0",
-		AskPrice: fmt.Sprintf("%.6f", askPrice),
-		AskQty:   "0",
-	}, nil
-}
+// 	return entity.BookTicker{
+// 		Symbol:   symbol,
+// 		BidPrice: fmt.Sprintf("%.6f", bidPrice),
+// 		BidQty:   "0",
+// 		AskPrice: fmt.Sprintf("%.6f", askPrice),
+// 		AskQty:   "0",
+// 	}, nil
+// }
 
-func calculatePrice(inAmount, outAmount string, inUnit, outUnit int64, invert bool) float64 {
-	inAmt := parseFloat(inAmount)
-	outAmt := parseFloat(outAmount)
+// func calculatePrice(inAmount, outAmount string, inUnit, outUnit int64, invert bool) float64 {
+// 	inAmt := parseFloat(inAmount)
+// 	outAmt := parseFloat(outAmount)
 
-	if inAmt == 0 || outAmt == 0 {
-		return 0.0
-	}
+// 	if inAmt == 0 || outAmt == 0 {
+// 		return 0.0
+// 	}
 
-	inReal := inAmt / float64(inUnit)
-	outReal := outAmt / float64(outUnit)
+// 	inReal := inAmt / float64(inUnit)
+// 	outReal := outAmt / float64(outUnit)
 
-	if invert {
-		return inReal / outReal
-	}
-	return outReal / inReal
-}
+// 	if invert {
+// 		return inReal / outReal
+// 	}
+// 	return outReal / inReal
+// }
 
 func getMexcTicker(sc *mexc.SpotAPI, results []entity.Result, index int, symbol string) {
 	ticker, err := bookMexcTicker(sc, symbol)
