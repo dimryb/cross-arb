@@ -48,7 +48,29 @@ func (a *App) Run(ctxParent context.Context) {
 	reportSvc := report.NewReportService(a.log, a.store)
 
 	// --- Adapters ---
-	mexcAdapter := mexc.NewAdapter(a.log, 3*time.Second)
+	mexcCfg, ok := a.cfg.Exchanges[config.MexcExchange]
+	if !ok {
+		a.log.Fatalf("exchange %s not found in configuration", config.MexcExchange)
+	}
+	if !mexcCfg.Enabled {
+		a.log.Fatalf("exchange %s is disabled", config.MexcExchange)
+	}
+
+	mexcPairMap := make(map[string]entity.MintPair, len(mexcCfg.Pairs))
+	for symbol := range mexcCfg.Pairs {
+		mexcPairMap[symbol] = entity.MintPair{
+			InputMint:  "",
+			OutputMint: "",
+		}
+	}
+	mexcAdapter := mexc.NewAdapter(a.log, &mexc.AdapterConfig{
+		APIKey:    mexcCfg.APIKey,
+		SecretKey: mexcCfg.SecretKey,
+		BaseURL:   mexcCfg.BaseURL,
+		Enabled:   true,
+		Timeout:   mexcCfg.Timeout,
+		Pairs:     mexcPairMap,
+	})
 
 	// Jupiter: собираем конфиг напрямую (заменяет фабрику)
 	jupCfg, ok := a.cfg.Exchanges[config.JupExchange]
